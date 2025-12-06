@@ -1,6 +1,7 @@
 import { ReactNode } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { supabase } from "@/integrations/supabase/client";
 import cropxonIcon from "@/assets/cropxon-icon.png";
 import { 
   LayoutDashboard, 
@@ -9,7 +10,8 @@ import {
   Users, 
   MessageSquare,
   Settings,
-  ChevronLeft
+  LogOut,
+  Home
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -28,6 +30,12 @@ const navItems = [
 
 export const AdminLayout = ({ children }: AdminLayoutProps) => {
   const location = useLocation();
+  const navigate = useNavigate();
+
+  const handleSignOut = async () => {
+    await supabase.auth.signOut();
+    navigate("/admin/login");
+  };
 
   return (
     <div className="min-h-screen bg-background flex">
@@ -35,7 +43,7 @@ export const AdminLayout = ({ children }: AdminLayoutProps) => {
       <aside className="w-64 bg-card border-r border-border flex flex-col">
         {/* Logo */}
         <div className="p-6 border-b border-border">
-          <Link to="/" className="flex items-center gap-3">
+          <Link to="/admin" className="flex items-center gap-3">
             <img src={cropxonIcon} alt="CropXon" className="h-10 w-10" />
             <div>
               <span className="text-foreground font-heading font-bold">CropXon</span>
@@ -67,14 +75,18 @@ export const AdminLayout = ({ children }: AdminLayoutProps) => {
           })}
         </nav>
 
-        {/* Back to Dashboard */}
-        <div className="p-4 border-t border-border">
-          <Link to="/dashboard">
+        {/* Footer Actions */}
+        <div className="p-4 border-t border-border space-y-2">
+          <Link to="/">
             <Button variant="outline" className="w-full gap-2">
-              <ChevronLeft className="h-4 w-4" />
-              Back to Dashboard
+              <Home className="h-4 w-4" />
+              Back to Website
             </Button>
           </Link>
+          <Button variant="ghost" className="w-full gap-2 text-muted-foreground" onClick={handleSignOut}>
+            <LogOut className="h-4 w-4" />
+            Sign Out
+          </Button>
         </div>
       </aside>
 

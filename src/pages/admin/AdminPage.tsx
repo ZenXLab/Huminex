@@ -19,9 +19,9 @@ const AdminPage = () => {
 
   useEffect(() => {
     if (!authLoading && !user) {
-      navigate("/auth");
+      navigate("/admin/login");
     } else if (!authLoading && !roleLoading && !isAdmin) {
-      navigate("/dashboard");
+      navigate("/portal");
     }
   }, [user, authLoading, isAdmin, roleLoading, navigate]);
 
