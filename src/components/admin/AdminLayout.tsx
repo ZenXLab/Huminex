@@ -11,7 +11,16 @@ import {
   MessageSquare,
   Settings,
   LogOut,
-  Home
+  Home,
+  BarChart3,
+  MousePointer,
+  Server,
+  Megaphone,
+  UserPlus,
+  Shield,
+  FileCode,
+  Plug,
+  Bell
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -21,17 +30,21 @@ interface AdminLayoutProps {
 
 const navItems = [
   { name: "Overview", href: "/admin", icon: LayoutDashboard },
-  { name: "Analytics", href: "/admin/analytics", icon: LayoutDashboard },
+  { name: "Analytics", href: "/admin/analytics", icon: BarChart3 },
+  { name: "CRM Leads", href: "/admin/crm", icon: UserPlus },
+  { name: "Clickstream", href: "/admin/clickstream", icon: MousePointer },
+  { name: "Marketing", href: "/admin/marketing", icon: Megaphone },
+  { name: "MSP Monitoring", href: "/admin/msp", icon: Server },
   { name: "Onboarding", href: "/admin/onboarding", icon: Users },
   { name: "Quotes", href: "/admin/quotes", icon: FileText },
   { name: "Invoices", href: "/admin/invoices", icon: Receipt },
   { name: "Users", href: "/admin/users", icon: Users },
   { name: "Inquiries", href: "/admin/inquiries", icon: MessageSquare },
-  { name: "Notices", href: "/admin/notices", icon: MessageSquare },
-  { name: "Compliance", href: "/admin/compliance", icon: Settings },
-  { name: "Audit Logs", href: "/admin/audit", icon: Settings },
+  { name: "Notices", href: "/admin/notices", icon: Bell },
+  { name: "Compliance", href: "/admin/compliance", icon: Shield },
+  { name: "Audit Logs", href: "/admin/audit", icon: FileCode },
   { name: "System Logs", href: "/admin/logs", icon: Settings },
-  { name: "Integrations", href: "/admin/integrations", icon: Settings },
+  { name: "Integrations", href: "/admin/integrations", icon: Plug },
   { name: "Portal Settings", href: "/admin/portal-settings", icon: Settings },
 ];
 

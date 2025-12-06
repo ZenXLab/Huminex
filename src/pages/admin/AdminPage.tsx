@@ -17,6 +17,10 @@ import { AdminCompliance } from "@/components/admin/modules/AdminCompliance";
 import { AdminSystemLogs } from "@/components/admin/modules/AdminSystemLogs";
 import { AdminIntegrations } from "@/components/admin/modules/AdminIntegrations";
 import { AdminPortalSettings } from "@/components/admin/modules/AdminPortalSettings";
+import { AdminCRM } from "@/components/admin/modules/AdminCRM";
+import { AdminClickstream } from "@/components/admin/modules/AdminClickstream";
+import { AdminMSPMonitoring } from "@/components/admin/modules/AdminMSPMonitoring";
+import { AdminMarketing } from "@/components/admin/modules/AdminMarketing";
 import { Loader2 } from "lucide-react";
 
 const AdminPage = () => {
@@ -50,6 +54,10 @@ const AdminPage = () => {
     
     if (path === "/admin" || path === "/admin/") return <AdminOverview />;
     if (path.startsWith("/admin/analytics")) return <AdminAnalytics />;
+    if (path.startsWith("/admin/crm")) return <AdminCRM />;
+    if (path.startsWith("/admin/clickstream")) return <AdminClickstream />;
+    if (path.startsWith("/admin/marketing")) return <AdminMarketing />;
+    if (path.startsWith("/admin/msp")) return <AdminMSPMonitoring />;
     if (path.startsWith("/admin/onboarding")) return <AdminOnboardingApprovals />;
     if (path.startsWith("/admin/quotes")) return <AdminQuotes />;
     if (path.startsWith("/admin/invoices")) return <AdminInvoices />;
