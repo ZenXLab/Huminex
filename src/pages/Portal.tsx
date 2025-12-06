@@ -3,7 +3,9 @@ import { useNavigate, Link, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { PremiumCard, PremiumCardContent } from "@/components/ui/premium-card";
+import { DashboardWidgets } from "@/components/portal/DashboardWidgets";
+import { ProjectWorkspace } from "@/components/portal/ProjectWorkspace";
+import { FileRepository } from "@/components/portal/FileRepository";
 import { 
   LayoutDashboard, 
   FolderKanban, 
@@ -16,50 +18,22 @@ import {
   Settings, 
   LogOut,
   Menu,
-  X,
   Bell,
   Search,
-  ChevronRight,
-  TrendingUp,
-  Clock,
-  CheckCircle2,
-  AlertCircle,
-  Users,
-  ArrowUpRight,
   Plus
 } from "lucide-react";
 import cropxonIcon from "@/assets/cropxon-icon.png";
 
 const sidebarItems = [
-  { name: "Overview", href: "/portal", icon: LayoutDashboard },
+  { name: "Dashboard", href: "/portal", icon: LayoutDashboard },
   { name: "Projects", href: "/portal/projects", icon: FolderKanban },
-  { name: "Documents", href: "/portal/documents", icon: FileText },
+  { name: "Files", href: "/portal/files", icon: FileText },
   { name: "Invoices", href: "/portal/invoices", icon: Receipt },
   { name: "Support", href: "/portal/support", icon: HeadphonesIcon },
   { name: "Meetings", href: "/portal/meetings", icon: Calendar },
   { name: "AI Dashboard", href: "/portal/ai", icon: Brain },
   { name: "Security", href: "/portal/security", icon: Shield },
   { name: "Settings", href: "/portal/settings", icon: Settings },
-];
-
-const quickStats = [
-  { label: "Active Projects", value: "3", icon: FolderKanban, color: "from-purple-400 to-purple-600", change: "+1 this month" },
-  { label: "Pending Invoices", value: "₹45,000", icon: Receipt, color: "from-cyan-400 to-teal-500", change: "2 due soon" },
-  { label: "Support Tickets", value: "1", icon: HeadphonesIcon, color: "from-pink-400 to-rose-500", change: "Open ticket" },
-  { label: "Meetings", value: "2", icon: Calendar, color: "from-emerald-400 to-green-500", change: "This week" },
-];
-
-const recentProjects = [
-  { name: "E-Commerce Platform", status: "In Progress", progress: 65, phase: "Development" },
-  { name: "Mobile App MVP", status: "Review", progress: 90, phase: "Testing" },
-  { name: "AI Chatbot Integration", status: "Planning", progress: 20, phase: "Discovery" },
-];
-
-const quickActions = [
-  { name: "Create Ticket", icon: Plus, color: "bg-purple-500" },
-  { name: "Upload Files", icon: FileText, color: "bg-cyan-500" },
-  { name: "Book Meeting", icon: Calendar, color: "bg-pink-500" },
-  { name: "View Invoice", icon: Receipt, color: "bg-emerald-500" },
 ];
 
 export default function Portal() {
@@ -87,7 +61,7 @@ export default function Portal() {
       .from("profiles")
       .select("*")
       .eq("id", user.id)
-      .single();
+      .maybeSingle();
     setProfile(data);
   };
 
@@ -99,7 +73,32 @@ export default function Portal() {
     );
   }
 
-  const isActive = (path: string) => location.pathname === path;
+  const isActive = (path: string) => {
+    if (path === "/portal") return location.pathname === "/portal";
+    return location.pathname.startsWith(path);
+  };
+
+  const renderContent = () => {
+    const path = location.pathname;
+    
+    if (path === "/portal" || path === "/portal/") {
+      return <DashboardWidgets />;
+    }
+    if (path.startsWith("/portal/projects")) {
+      return <ProjectWorkspace />;
+    }
+    if (path.startsWith("/portal/files")) {
+      return <FileRepository />;
+    }
+    
+    // Default placeholder for other routes
+    return (
+      <div className="text-center py-12">
+        <h2 className="text-2xl font-heading font-bold mb-2">Coming Soon</h2>
+        <p className="text-muted-foreground">This section is under development</p>
+      </div>
+    );
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -232,125 +231,7 @@ export default function Portal() {
             </p>
           </div>
 
-          {/* Quick Stats */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-            {quickStats.map((stat) => {
-              const Icon = stat.icon;
-              return (
-                <PremiumCard 
-                  key={stat.label} 
-                  className="group"
-                  hoverable
-                  glowColor="purple"
-                >
-                  <PremiumCardContent className="p-5">
-                    <div className="flex items-start justify-between mb-3">
-                      <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${stat.color} flex items-center justify-center`}>
-                        <Icon className="w-5 h-5 text-white" />
-                      </div>
-                      <ArrowUpRight className="w-4 h-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
-                    </div>
-                    <p className="text-2xl font-heading font-bold text-foreground mb-1">{stat.value}</p>
-                    <p className="text-sm text-muted-foreground">{stat.label}</p>
-                    <p className="text-xs text-primary mt-2">{stat.change}</p>
-                  </PremiumCardContent>
-                </PremiumCard>
-              );
-            })}
-          </div>
-
-          <div className="grid lg:grid-cols-3 gap-6">
-            {/* Active Projects */}
-            <div className="lg:col-span-2">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-lg font-heading font-semibold text-foreground">Active Projects</h2>
-                <Button variant="ghost" size="sm" className="text-primary gap-1">
-                  View All <ChevronRight className="w-4 h-4" />
-                </Button>
-              </div>
-              
-              <div className="space-y-4">
-                {recentProjects.map((project, index) => (
-                  <PremiumCard key={index} className="group" hoverable glowColor="cyan">
-                    <PremiumCardContent className="p-5">
-                      <div className="flex items-start justify-between mb-4">
-                        <div>
-                          <h3 className="font-medium text-foreground mb-1">{project.name}</h3>
-                          <p className="text-sm text-muted-foreground">{project.phase}</p>
-                        </div>
-                        <span className={`
-                          px-2.5 py-1 rounded-full text-xs font-medium
-                          ${project.status === "In Progress" ? "bg-primary/10 text-primary" : ""}
-                          ${project.status === "Review" ? "bg-amber-500/10 text-amber-500" : ""}
-                          ${project.status === "Planning" ? "bg-muted text-muted-foreground" : ""}
-                        `}>
-                          {project.status}
-                        </span>
-                      </div>
-                      
-                      <div className="space-y-2">
-                        <div className="flex items-center justify-between text-sm">
-                          <span className="text-muted-foreground">Progress</span>
-                          <span className="font-medium text-foreground">{project.progress}%</span>
-                        </div>
-                        <div className="h-2 bg-muted rounded-full overflow-hidden">
-                          <div 
-                            className="h-full bg-gradient-to-r from-primary to-accent rounded-full transition-all duration-500"
-                            style={{ width: `${project.progress}%` }}
-                          />
-                        </div>
-                      </div>
-                    </PremiumCardContent>
-                  </PremiumCard>
-                ))}
-              </div>
-            </div>
-
-            {/* Quick Actions */}
-            <div>
-              <h2 className="text-lg font-heading font-semibold text-foreground mb-4">Quick Actions</h2>
-              
-              <div className="grid grid-cols-2 gap-3 mb-6">
-                {quickActions.map((action) => {
-                  const Icon = action.icon;
-                  return (
-                    <button
-                      key={action.name}
-                      className="p-4 bg-card border border-border/60 rounded-2xl hover:border-primary/30 hover:shadow-lg transition-all duration-300 text-center group"
-                    >
-                      <div className={`w-10 h-10 rounded-xl ${action.color} flex items-center justify-center mx-auto mb-2 group-hover:scale-110 transition-transform`}>
-                        <Icon className="w-5 h-5 text-white" />
-                      </div>
-                      <p className="text-xs font-medium text-foreground">{action.name}</p>
-                    </button>
-                  );
-                })}
-              </div>
-
-              {/* Recent Activity */}
-              <h2 className="text-lg font-heading font-semibold text-foreground mb-4">Recent Activity</h2>
-              <PremiumCard variant="outlined">
-                <PremiumCardContent className="p-4 space-y-4">
-                  {[
-                    { icon: CheckCircle2, text: "Project milestone approved", time: "2h ago", color: "text-emerald" },
-                    { icon: FileText, text: "New document uploaded", time: "5h ago", color: "text-primary" },
-                    { icon: Receipt, text: "Invoice #INV-001 sent", time: "1d ago", color: "text-accent" },
-                  ].map((activity, index) => {
-                    const Icon = activity.icon;
-                    return (
-                      <div key={index} className="flex items-start gap-3">
-                        <Icon className={`w-4 h-4 mt-0.5 ${activity.color}`} />
-                        <div className="flex-1">
-                          <p className="text-sm text-foreground">{activity.text}</p>
-                          <p className="text-xs text-muted-foreground">{activity.time}</p>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </PremiumCardContent>
-              </PremiumCard>
-            </div>
-          </div>
+          {renderContent()}
         </main>
       </div>
     </div>

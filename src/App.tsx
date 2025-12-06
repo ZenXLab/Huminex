@@ -4,6 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { HelmetProvider } from "react-helmet-async";
+import { ClickstreamTracker } from "@/components/ClickstreamTracker";
 
 // Public pages
 import Index from "./pages/Index";
@@ -40,6 +41,7 @@ const App = () => (
         <Toaster />
         <Sonner />
         <BrowserRouter>
+          <ClickstreamTracker />
           <Routes>
             {/* Public Routes */}
             <Route path="/" element={<Index />} />
@@ -48,7 +50,7 @@ const App = () => (
             
             {/* Portal (Client) Routes */}
             <Route path="/portal/login" element={<PortalAuth />} />
-            <Route path="/portal" element={<Portal />} />
+            <Route path="/portal/*" element={<Portal />} />
             <Route path="/onboarding" element={<Onboarding />} />
             <Route path="/dashboard" element={<Dashboard />} />
             
