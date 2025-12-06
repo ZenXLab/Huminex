@@ -125,6 +125,118 @@ export type Database = {
         }
         Relationships: []
       }
+      client_feedback: {
+        Row: {
+          comment: string | null
+          created_at: string
+          feedback_type: string | null
+          id: string
+          milestone_id: string | null
+          project_id: string | null
+          rating: number | null
+          user_id: string | null
+        }
+        Insert: {
+          comment?: string | null
+          created_at?: string
+          feedback_type?: string | null
+          id?: string
+          milestone_id?: string | null
+          project_id?: string | null
+          rating?: number | null
+          user_id?: string | null
+        }
+        Update: {
+          comment?: string | null
+          created_at?: string
+          feedback_type?: string | null
+          id?: string
+          milestone_id?: string | null
+          project_id?: string | null
+          rating?: number | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "client_feedback_milestone_id_fkey"
+            columns: ["milestone_id"]
+            isOneToOne: false
+            referencedRelation: "project_milestones"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "client_feedback_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "client_feedback_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      client_files: {
+        Row: {
+          created_at: string
+          file_path: string
+          file_size: number | null
+          file_type: string | null
+          folder: string | null
+          id: string
+          name: string
+          project_id: string | null
+          uploaded_by: string | null
+          user_id: string | null
+          version: number | null
+        }
+        Insert: {
+          created_at?: string
+          file_path: string
+          file_size?: number | null
+          file_type?: string | null
+          folder?: string | null
+          id?: string
+          name: string
+          project_id?: string | null
+          uploaded_by?: string | null
+          user_id?: string | null
+          version?: number | null
+        }
+        Update: {
+          created_at?: string
+          file_path?: string
+          file_size?: number | null
+          file_type?: string | null
+          folder?: string | null
+          id?: string
+          name?: string
+          project_id?: string | null
+          uploaded_by?: string | null
+          user_id?: string | null
+          version?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "client_files_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "client_files_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       client_notices: {
         Row: {
           content: string
@@ -397,6 +509,120 @@ export type Database = {
           },
         ]
       }
+      leads: {
+        Row: {
+          assigned_to: string | null
+          company: string | null
+          converted_at: string | null
+          created_at: string
+          email: string
+          id: string
+          last_contact_at: string | null
+          name: string
+          notes: string | null
+          phone: string | null
+          score: number | null
+          source: string | null
+          status: string | null
+          updated_at: string
+        }
+        Insert: {
+          assigned_to?: string | null
+          company?: string | null
+          converted_at?: string | null
+          created_at?: string
+          email: string
+          id?: string
+          last_contact_at?: string | null
+          name: string
+          notes?: string | null
+          phone?: string | null
+          score?: number | null
+          source?: string | null
+          status?: string | null
+          updated_at?: string
+        }
+        Update: {
+          assigned_to?: string | null
+          company?: string | null
+          converted_at?: string | null
+          created_at?: string
+          email?: string
+          id?: string
+          last_contact_at?: string | null
+          name?: string
+          notes?: string | null
+          phone?: string | null
+          score?: number | null
+          source?: string | null
+          status?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      meetings: {
+        Row: {
+          created_at: string
+          description: string | null
+          duration_minutes: number | null
+          id: string
+          meeting_link: string | null
+          meeting_type: string | null
+          notes: string | null
+          project_id: string | null
+          recording_url: string | null
+          scheduled_at: string
+          status: string | null
+          title: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          duration_minutes?: number | null
+          id?: string
+          meeting_link?: string | null
+          meeting_type?: string | null
+          notes?: string | null
+          project_id?: string | null
+          recording_url?: string | null
+          scheduled_at: string
+          status?: string | null
+          title: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          duration_minutes?: number | null
+          id?: string
+          meeting_link?: string | null
+          meeting_type?: string | null
+          notes?: string | null
+          project_id?: string | null
+          recording_url?: string | null
+          scheduled_at?: string
+          status?: string | null
+          title?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "meetings_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "meetings_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       portal_settings: {
         Row: {
           created_at: string
@@ -456,6 +682,106 @@ export type Database = {
           updated_at?: string | null
         }
         Relationships: []
+      }
+      project_milestones: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          description: string | null
+          due_date: string | null
+          id: string
+          name: string
+          project_id: string | null
+          status: string | null
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          description?: string | null
+          due_date?: string | null
+          id?: string
+          name: string
+          project_id?: string | null
+          status?: string | null
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          description?: string | null
+          due_date?: string | null
+          id?: string
+          name?: string
+          project_id?: string | null
+          status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_milestones_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      projects: {
+        Row: {
+          budget: number | null
+          created_at: string
+          description: string | null
+          due_date: string | null
+          health_score: number | null
+          id: string
+          name: string
+          phase: string | null
+          progress: number | null
+          start_date: string | null
+          status: string
+          team_members: Json | null
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          budget?: number | null
+          created_at?: string
+          description?: string | null
+          due_date?: string | null
+          health_score?: number | null
+          id?: string
+          name: string
+          phase?: string | null
+          progress?: number | null
+          start_date?: string | null
+          status?: string
+          team_members?: Json | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          budget?: number | null
+          created_at?: string
+          description?: string | null
+          due_date?: string | null
+          health_score?: number | null
+          id?: string
+          name?: string
+          phase?: string | null
+          progress?: number | null
+          start_date?: string | null
+          status?: string
+          team_members?: Json | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "projects_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       quotes: {
         Row: {
@@ -534,6 +860,69 @@ export type Database = {
           },
         ]
       }
+      support_tickets: {
+        Row: {
+          assigned_to: string | null
+          created_at: string
+          description: string | null
+          id: string
+          priority: string | null
+          project_id: string | null
+          resolved_at: string | null
+          sla_due_at: string | null
+          status: string | null
+          subject: string
+          ticket_number: string
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          assigned_to?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          priority?: string | null
+          project_id?: string | null
+          resolved_at?: string | null
+          sla_due_at?: string | null
+          status?: string | null
+          subject: string
+          ticket_number: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          assigned_to?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          priority?: string | null
+          project_id?: string | null
+          resolved_at?: string | null
+          sla_due_at?: string | null
+          status?: string | null
+          subject?: string
+          ticket_number?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "support_tickets_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "support_tickets_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       system_logs: {
         Row: {
           created_at: string
@@ -560,6 +949,80 @@ export type Database = {
           source?: string
         }
         Relationships: []
+      }
+      team_members: {
+        Row: {
+          availability: string | null
+          avatar_url: string | null
+          created_at: string
+          department: string | null
+          email: string
+          id: string
+          name: string
+          role: string
+          skills: Json | null
+          user_id: string | null
+        }
+        Insert: {
+          availability?: string | null
+          avatar_url?: string | null
+          created_at?: string
+          department?: string | null
+          email: string
+          id?: string
+          name: string
+          role: string
+          skills?: Json | null
+          user_id?: string | null
+        }
+        Update: {
+          availability?: string | null
+          avatar_url?: string | null
+          created_at?: string
+          department?: string | null
+          email?: string
+          id?: string
+          name?: string
+          role?: string
+          skills?: Json | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      ticket_messages: {
+        Row: {
+          created_at: string
+          id: string
+          is_internal: boolean | null
+          message: string
+          ticket_id: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_internal?: boolean | null
+          message: string
+          ticket_id?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_internal?: boolean | null
+          message?: string
+          ticket_id?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ticket_messages_ticket_id_fkey"
+            columns: ["ticket_id"]
+            isOneToOne: false
+            referencedRelation: "support_tickets"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_roles: {
         Row: {
@@ -589,6 +1052,7 @@ export type Database = {
     Functions: {
       generate_invoice_number: { Args: never; Returns: string }
       generate_quote_number: { Args: never; Returns: string }
+      generate_ticket_number: { Args: never; Returns: string }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
