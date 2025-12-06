@@ -21,11 +21,18 @@ interface AdminLayoutProps {
 
 const navItems = [
   { name: "Overview", href: "/admin", icon: LayoutDashboard },
+  { name: "Analytics", href: "/admin/analytics", icon: LayoutDashboard },
+  { name: "Onboarding", href: "/admin/onboarding", icon: Users },
   { name: "Quotes", href: "/admin/quotes", icon: FileText },
   { name: "Invoices", href: "/admin/invoices", icon: Receipt },
   { name: "Users", href: "/admin/users", icon: Users },
   { name: "Inquiries", href: "/admin/inquiries", icon: MessageSquare },
-  { name: "Settings", href: "/admin/settings", icon: Settings },
+  { name: "Notices", href: "/admin/notices", icon: MessageSquare },
+  { name: "Compliance", href: "/admin/compliance", icon: Settings },
+  { name: "Audit Logs", href: "/admin/audit", icon: Settings },
+  { name: "System Logs", href: "/admin/logs", icon: Settings },
+  { name: "Integrations", href: "/admin/integrations", icon: Settings },
+  { name: "Portal Settings", href: "/admin/portal-settings", icon: Settings },
 ];
 
 export const AdminLayout = ({ children }: AdminLayoutProps) => {
