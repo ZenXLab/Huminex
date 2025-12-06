@@ -7,6 +7,8 @@ import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import Auth from "./pages/Auth";
 import Industries from "./pages/Industries";
+import Dashboard from "./pages/Dashboard";
+import AdminPage from "./pages/admin/AdminPage";
 
 // Service Pages
 import DigitalEngineering from "./pages/services/DigitalEngineering";
@@ -30,6 +32,11 @@ const App = () => (
           <Route path="/" element={<Index />} />
           <Route path="/auth" element={<Auth />} />
           <Route path="/industries" element={<Industries />} />
+          <Route path="/dashboard" element={<Dashboard />} />
+          
+          {/* Admin Routes */}
+          <Route path="/admin" element={<AdminPage />} />
+          <Route path="/admin/*" element={<AdminPage />} />
           
           {/* Service Pages */}
           <Route path="/services/digital-engineering" element={<DigitalEngineering />} />
@@ -41,7 +48,6 @@ const App = () => (
           <Route path="/services/cybersecurity" element={<Cybersecurity />} />
           <Route path="/services/industry-solutions" element={<IndustrySolutions />} />
           
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
