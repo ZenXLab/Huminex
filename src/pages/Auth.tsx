@@ -7,7 +7,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { NetworkBackground } from "@/components/NetworkBackground";
 import cropxonIcon from "@/assets/cropxon-icon.png";
-import { Eye, EyeOff, Mail, Lock, User, Building } from "lucide-react";
+import { Eye, EyeOff, Mail, Lock, User, Building, ArrowLeft } from "lucide-react";
 import { z } from "zod";
 
 const loginSchema = z.object({
@@ -35,19 +35,18 @@ const Auth = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
         if (session?.user) {
-          navigate("/");
+          // Redirect to dashboard after successful login
+          navigate("/dashboard");
         }
       }
     );
 
-    // Check for existing session
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session?.user) {
-        navigate("/");
+        navigate("/dashboard");
       }
     });
 
@@ -81,7 +80,6 @@ const Auth = () => {
         }
       } else {
         toast.success("Welcome back!");
-        navigate("/");
       }
     } catch (error) {
       if (error instanceof z.ZodError) {
@@ -104,7 +102,7 @@ const Auth = () => {
         companyName: formData.companyName,
       });
 
-      const redirectUrl = `${window.location.origin}/`;
+      const redirectUrl = `${window.location.origin}/dashboard`;
 
       const { error } = await supabase.auth.signUp({
         email: validated.email,
@@ -127,7 +125,6 @@ const Auth = () => {
         }
       } else {
         toast.success("Account created successfully! Welcome to ATLAS.");
-        navigate("/");
       }
     } catch (error) {
       if (error instanceof z.ZodError) {
@@ -145,6 +142,15 @@ const Auth = () => {
       </div>
 
       <div className="relative z-10 w-full max-w-md mx-4">
+        {/* Back to Home */}
+        <a 
+          href="/" 
+          className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors mb-6"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          Back to Home
+        </a>
+
         {/* Logo */}
         <div className="text-center mb-8">
           <a href="/" className="inline-flex flex-col items-center gap-2">

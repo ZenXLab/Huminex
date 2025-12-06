@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Menu, X, ChevronDown, User } from "lucide-react";
+import { Menu, X, ChevronDown, User, LayoutDashboard } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import cropxonIcon from "@/assets/cropxon-icon.png";
@@ -41,9 +41,8 @@ export const Header = ({ onQuoteClick }: HeaderProps) => {
     <header className="fixed top-0 left-0 right-0 z-50 bg-card/95 backdrop-blur-xl border-b border-border/50">
       <nav className="container mx-auto px-4 lg:px-8">
         <div className="flex items-center justify-between h-20">
-          {/* Logo - Enhanced Visibility */}
+          {/* Logo */}
           <Link to="/" className="flex items-center gap-3 group">
-            {/* Logo with clean styling for light theme */}
             <div className="relative">
               <div className="absolute inset-0 bg-primary/10 blur-xl rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
               <img 
@@ -95,7 +94,6 @@ export const Header = ({ onQuoteClick }: HeaderProps) => {
               )}
             </div>
 
-            {/* Industries Link */}
             <Link to="/industries" className="px-4 py-2 text-foreground/80 hover:text-foreground transition-colors font-medium">
               Industries
             </Link>
@@ -157,10 +155,13 @@ export const Header = ({ onQuoteClick }: HeaderProps) => {
           <div className="hidden lg:flex items-center gap-3">
             {user ? (
               <>
-                <span className="text-sm text-muted-foreground">
-                  {user.email}
-                </span>
-                <Button variant="outline" size="sm" onClick={signOut}>
+                <Link to="/dashboard">
+                  <Button variant="outline" size="sm" className="gap-2">
+                    <LayoutDashboard className="h-4 w-4" />
+                    Dashboard
+                  </Button>
+                </Link>
+                <Button variant="ghost" size="sm" onClick={signOut}>
                   Sign Out
                 </Button>
               </>
@@ -219,9 +220,17 @@ export const Header = ({ onQuoteClick }: HeaderProps) => {
               </a>
 
               {user ? (
-                <Button variant="outline" className="mt-4" onClick={() => { signOut(); setMobileMenuOpen(false); }}>
-                  Sign Out
-                </Button>
+                <>
+                  <Link to="/dashboard" onClick={() => setMobileMenuOpen(false)}>
+                    <Button variant="outline" className="mt-4 w-full gap-2">
+                      <LayoutDashboard className="h-4 w-4" />
+                      Dashboard
+                    </Button>
+                  </Link>
+                  <Button variant="ghost" className="mt-2" onClick={() => { signOut(); setMobileMenuOpen(false); }}>
+                    Sign Out
+                  </Button>
+                </>
               ) : (
                 <Link to="/auth" onClick={() => setMobileMenuOpen(false)}>
                   <Button variant="outline" className="mt-4 w-full">Sign In</Button>
