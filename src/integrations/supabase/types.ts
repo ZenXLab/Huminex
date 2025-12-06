@@ -642,6 +642,45 @@ export type Database = {
         }
         Relationships: []
       }
+      coupon_codes: {
+        Row: {
+          code: string
+          created_at: string
+          current_uses: number | null
+          discount_type: string
+          discount_value: number
+          id: string
+          is_active: boolean
+          max_uses: number | null
+          valid_from: string | null
+          valid_until: string | null
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          current_uses?: number | null
+          discount_type?: string
+          discount_value?: number
+          id?: string
+          is_active?: boolean
+          max_uses?: number | null
+          valid_from?: string | null
+          valid_until?: string | null
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          current_uses?: number | null
+          discount_type?: string
+          discount_value?: number
+          id?: string
+          is_active?: boolean
+          max_uses?: number | null
+          valid_from?: string | null
+          valid_until?: string | null
+        }
+        Relationships: []
+      }
       inquiries: {
         Row: {
           company: string | null
@@ -902,6 +941,107 @@ export type Database = {
           },
         ]
       }
+      onboarding_sessions: {
+        Row: {
+          approval_notes: string | null
+          approved_at: string | null
+          approved_by: string | null
+          assigned_pm: string | null
+          assigned_team: Json | null
+          client_id: string
+          client_type: string
+          company_name: string | null
+          consent_accepted: Json | null
+          created_at: string
+          current_step: number | null
+          dashboard_tier: string | null
+          email: string
+          full_name: string
+          id: string
+          industry_subtype: string | null
+          industry_type: string
+          phone: string | null
+          pricing_snapshot: Json | null
+          quote_id: string | null
+          selected_addons: Json | null
+          selected_services: Json | null
+          status: string
+          updated_at: string
+          user_id: string | null
+          verification_code: string | null
+          verification_sent_at: string | null
+          verified_at: string | null
+        }
+        Insert: {
+          approval_notes?: string | null
+          approved_at?: string | null
+          approved_by?: string | null
+          assigned_pm?: string | null
+          assigned_team?: Json | null
+          client_id: string
+          client_type: string
+          company_name?: string | null
+          consent_accepted?: Json | null
+          created_at?: string
+          current_step?: number | null
+          dashboard_tier?: string | null
+          email: string
+          full_name: string
+          id?: string
+          industry_subtype?: string | null
+          industry_type: string
+          phone?: string | null
+          pricing_snapshot?: Json | null
+          quote_id?: string | null
+          selected_addons?: Json | null
+          selected_services?: Json | null
+          status?: string
+          updated_at?: string
+          user_id?: string | null
+          verification_code?: string | null
+          verification_sent_at?: string | null
+          verified_at?: string | null
+        }
+        Update: {
+          approval_notes?: string | null
+          approved_at?: string | null
+          approved_by?: string | null
+          assigned_pm?: string | null
+          assigned_team?: Json | null
+          client_id?: string
+          client_type?: string
+          company_name?: string | null
+          consent_accepted?: Json | null
+          created_at?: string
+          current_step?: number | null
+          dashboard_tier?: string | null
+          email?: string
+          full_name?: string
+          id?: string
+          industry_subtype?: string | null
+          industry_type?: string
+          phone?: string | null
+          pricing_snapshot?: Json | null
+          quote_id?: string | null
+          selected_addons?: Json | null
+          selected_services?: Json | null
+          status?: string
+          updated_at?: string
+          user_id?: string | null
+          verification_code?: string | null
+          verification_sent_at?: string | null
+          verified_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "onboarding_sessions_quote_id_fkey"
+            columns: ["quote_id"]
+            isOneToOne: false
+            referencedRelation: "quotes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       portal_settings: {
         Row: {
           created_at: string
@@ -929,6 +1069,36 @@ export type Database = {
           updated_at?: string
           updated_by?: string | null
           value?: Json
+        }
+        Relationships: []
+      }
+      pricing_modifiers: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          is_active: boolean
+          modifier_key: string
+          modifier_type: string
+          multiplier: number
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          modifier_key: string
+          modifier_type: string
+          multiplier?: number
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          modifier_key?: string
+          modifier_type?: string
+          multiplier?: number
         }
         Relationships: []
       }
@@ -1150,6 +1320,75 @@ export type Database = {
           },
         ]
       }
+      service_addons: {
+        Row: {
+          category: string | null
+          created_at: string
+          description: string | null
+          id: string
+          is_active: boolean
+          name: string
+          price: number
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          name: string
+          price?: number
+        }
+        Update: {
+          category?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          name?: string
+          price?: number
+        }
+        Relationships: []
+      }
+      service_pricing: {
+        Row: {
+          base_price: number
+          created_at: string
+          description: string | null
+          features: Json | null
+          id: string
+          is_active: boolean
+          plan_tier: string
+          service_category: string
+          service_name: string
+          updated_at: string
+        }
+        Insert: {
+          base_price?: number
+          created_at?: string
+          description?: string | null
+          features?: Json | null
+          id?: string
+          is_active?: boolean
+          plan_tier?: string
+          service_category: string
+          service_name: string
+          updated_at?: string
+        }
+        Update: {
+          base_price?: number
+          created_at?: string
+          description?: string | null
+          features?: Json | null
+          id?: string
+          is_active?: boolean
+          plan_tier?: string
+          service_category?: string
+          service_name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       support_tickets: {
         Row: {
           assigned_to: string | null
@@ -1340,6 +1579,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      generate_client_id: { Args: never; Returns: string }
       generate_invoice_number: { Args: never; Returns: string }
       generate_quote_number: { Args: never; Returns: string }
       generate_ticket_number: { Args: never; Returns: string }
