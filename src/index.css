@@ -2,7 +2,8 @@
 @tailwind components;
 @tailwind utilities;
 
-@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap');
+/* Typography: Plus Jakarta Sans - Premium Geometric Sans-Serif */
+/* This is a modern, clean typeface used by premium tech companies */
 
 @layer base {
   :root {

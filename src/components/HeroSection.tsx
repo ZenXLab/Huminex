@@ -35,9 +35,9 @@ export const HeroSection = ({ onQuoteClick }: HeroSectionProps) => {
           </div>
 
           {/* Main Headline */}
-          <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-heading font-bold mb-6 animate-fade-in-up">
+          <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-heading font-extrabold tracking-tight mb-6 animate-fade-in-up">
             <span className="text-foreground">ATLAS</span>
-            <span className="block text-2xl sm:text-3xl md:text-4xl lg:text-5xl mt-2 text-gradient">
+            <span className="block text-xl sm:text-2xl md:text-3xl lg:text-4xl mt-3 font-semibold text-gradient">
               Consulting & Digital Transformation
             </span>
           </h1>
