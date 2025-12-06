@@ -7,7 +7,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { NetworkBackground } from "@/components/NetworkBackground";
 import cropxonIcon from "@/assets/cropxon-icon.png";
-import { Eye, EyeOff, Mail, Lock, ArrowLeft, Loader2 } from "lucide-react";
+import { Eye, EyeOff, Mail, Lock, ArrowLeft, Loader2, SkipForward } from "lucide-react";
 import { z } from "zod";
 
 const loginSchema = z.object({
@@ -23,6 +23,12 @@ const PortalAuth = () => {
     password: "",
   });
   const navigate = useNavigate();
+
+  // Skip login for development/testing
+  const handleSkipLogin = () => {
+    toast.success("Development mode: Bypassing authentication");
+    navigate("/portal");
+  };
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
@@ -168,6 +174,26 @@ const PortalAuth = () => {
               ) : (
                 "Sign In"
               )}
+            </Button>
+
+            {/* Skip Button for Development */}
+            <div className="relative my-4">
+              <div className="absolute inset-0 flex items-center">
+                <span className="w-full border-t border-border" />
+              </div>
+              <div className="relative flex justify-center text-xs uppercase">
+                <span className="bg-card px-2 text-muted-foreground">Development Only</span>
+              </div>
+            </div>
+            
+            <Button 
+              type="button" 
+              variant="outline" 
+              className="w-full gap-2 border-dashed" 
+              onClick={handleSkipLogin}
+            >
+              <SkipForward className="h-4 w-4" />
+              Skip Login (Dev Mode)
             </Button>
           </form>
 
