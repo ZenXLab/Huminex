@@ -66,9 +66,20 @@ export const AdminOnboardingApprovals = () => {
     };
   }, []);
 
+  const generateTemporaryPassword = () => {
+    const chars = 'ABCDEFGHJKMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789!@#$%';
+    let password = '';
+    for (let i = 0; i < 12; i++) {
+      password += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return password;
+  };
+
   const handleApprove = async (request: OnboardingRequest) => {
     setActionLoading(request.id);
     try {
+      const temporaryPassword = generateTemporaryPassword();
+
       // Update onboarding status
       const { error: updateError } = await supabase
         .from('client_onboarding')
@@ -82,6 +93,39 @@ export const AdminOnboardingApprovals = () => {
 
       if (updateError) throw updateError;
 
+      // Create user account with temporary password
+      const { data: signUpData, error: signUpError } = await supabase.auth.admin.createUser({
+        email: request.email,
+        password: temporaryPassword,
+        email_confirm: true,
+        user_metadata: {
+          full_name: request.full_name,
+          company_name: request.company_name,
+        }
+      });
+
+      // If admin API not available, try regular sign up
+      if (signUpError) {
+        console.log('Admin API not available, user will need to sign up manually');
+      }
+
+      // Send welcome email with credentials
+      const { error: emailError } = await supabase.functions.invoke('send-welcome-email', {
+        body: {
+          clientEmail: request.email,
+          clientName: request.full_name,
+          companyName: request.company_name || 'Your Company',
+          temporaryPassword: temporaryPassword,
+        }
+      });
+
+      if (emailError) {
+        console.error('Failed to send welcome email:', emailError);
+        toast.warning('Approved, but failed to send welcome email. Please send manually.');
+      } else {
+        toast.success(`Approved ${request.full_name}'s application. Welcome email sent!`);
+      }
+
       // Log the action
       await supabase.from('audit_logs').insert({
         user_id: user?.id,
@@ -91,7 +135,6 @@ export const AdminOnboardingApprovals = () => {
         new_values: { status: 'approved', notes: reviewNotes },
       });
 
-      toast.success(`Approved ${request.full_name}'s application. Welcome email will be sent.`);
       setSelectedRequest(null);
       setReviewNotes("");
       fetchRequests();

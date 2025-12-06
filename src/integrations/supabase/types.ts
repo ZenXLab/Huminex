@@ -14,6 +14,66 @@ export type Database = {
   }
   public: {
     Tables: {
+      admin_notifications: {
+        Row: {
+          created_at: string
+          id: string
+          is_read: boolean
+          message: string
+          notification_type: string
+          target_admin_id: string | null
+          title: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_read?: boolean
+          message: string
+          notification_type?: string
+          target_admin_id?: string | null
+          title: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_read?: boolean
+          message?: string
+          notification_type?: string
+          target_admin_id?: string | null
+          title?: string
+        }
+        Relationships: []
+      }
+      admin_settings: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          key: string
+          updated_at: string
+          updated_by: string | null
+          value: Json
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          key: string
+          updated_at?: string
+          updated_by?: string | null
+          value: Json
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          key?: string
+          updated_at?: string
+          updated_by?: string | null
+          value?: Json
+        }
+        Relationships: []
+      }
       api_usage: {
         Row: {
           created_at: string
@@ -237,6 +297,148 @@ export type Database = {
           },
         ]
       }
+      client_msp_alerts: {
+        Row: {
+          alert_type: string
+          created_at: string
+          id: string
+          is_resolved: boolean
+          message: string
+          resolved_at: string | null
+          server_id: string
+          severity: string
+          tenant_id: string
+        }
+        Insert: {
+          alert_type: string
+          created_at?: string
+          id?: string
+          is_resolved?: boolean
+          message: string
+          resolved_at?: string | null
+          server_id: string
+          severity?: string
+          tenant_id: string
+        }
+        Update: {
+          alert_type?: string
+          created_at?: string
+          id?: string
+          is_resolved?: boolean
+          message?: string
+          resolved_at?: string | null
+          server_id?: string
+          severity?: string
+          tenant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "client_msp_alerts_server_id_fkey"
+            columns: ["server_id"]
+            isOneToOne: false
+            referencedRelation: "client_msp_servers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "client_msp_alerts_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "client_tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      client_msp_metrics: {
+        Row: {
+          cpu_usage: number | null
+          disk_usage: number | null
+          id: string
+          memory_usage: number | null
+          network_in: number | null
+          network_out: number | null
+          recorded_at: string
+          server_id: string
+          uptime_seconds: number | null
+        }
+        Insert: {
+          cpu_usage?: number | null
+          disk_usage?: number | null
+          id?: string
+          memory_usage?: number | null
+          network_in?: number | null
+          network_out?: number | null
+          recorded_at?: string
+          server_id: string
+          uptime_seconds?: number | null
+        }
+        Update: {
+          cpu_usage?: number | null
+          disk_usage?: number | null
+          id?: string
+          memory_usage?: number | null
+          network_in?: number | null
+          network_out?: number | null
+          recorded_at?: string
+          server_id?: string
+          uptime_seconds?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "client_msp_metrics_server_id_fkey"
+            columns: ["server_id"]
+            isOneToOne: false
+            referencedRelation: "client_msp_servers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      client_msp_servers: {
+        Row: {
+          created_at: string
+          hostname: string | null
+          id: string
+          ip_address: string | null
+          last_ping_at: string | null
+          name: string
+          server_type: string
+          status: string
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          hostname?: string | null
+          id?: string
+          ip_address?: string | null
+          last_ping_at?: string | null
+          name: string
+          server_type?: string
+          status?: string
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          hostname?: string | null
+          id?: string
+          ip_address?: string | null
+          last_ping_at?: string | null
+          name?: string
+          server_type?: string
+          status?: string
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "client_msp_servers_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "client_tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       client_notices: {
         Row: {
           content: string
@@ -320,6 +522,83 @@ export type Database = {
           reviewed_by?: string | null
           service_interests?: Json | null
           status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      client_tenant_users: {
+        Row: {
+          created_at: string
+          id: string
+          role: string
+          tenant_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role?: string
+          tenant_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: string
+          tenant_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "client_tenant_users_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "client_tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      client_tenants: {
+        Row: {
+          address: string | null
+          contact_email: string
+          contact_phone: string | null
+          created_at: string
+          id: string
+          logo_url: string | null
+          name: string
+          settings: Json | null
+          slug: string
+          status: string
+          tenant_type: string
+          updated_at: string
+        }
+        Insert: {
+          address?: string | null
+          contact_email: string
+          contact_phone?: string | null
+          created_at?: string
+          id?: string
+          logo_url?: string | null
+          name: string
+          settings?: Json | null
+          slug: string
+          status?: string
+          tenant_type?: string
+          updated_at?: string
+        }
+        Update: {
+          address?: string | null
+          contact_email?: string
+          contact_phone?: string | null
+          created_at?: string
+          id?: string
+          logo_url?: string | null
+          name?: string
+          settings?: Json | null
+          slug?: string
+          status?: string
+          tenant_type?: string
           updated_at?: string
         }
         Relationships: []
@@ -661,6 +940,7 @@ export type Database = {
           full_name: string | null
           id: string
           phone: string | null
+          tenant_id: string | null
           updated_at: string | null
         }
         Insert: {
@@ -670,6 +950,7 @@ export type Database = {
           full_name?: string | null
           id: string
           phone?: string | null
+          tenant_id?: string | null
           updated_at?: string | null
         }
         Update: {
@@ -679,9 +960,18 @@ export type Database = {
           full_name?: string | null
           id?: string
           phone?: string | null
+          tenant_id?: string | null
           updated_at?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "profiles_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "client_tenants"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       project_milestones: {
         Row: {

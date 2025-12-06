@@ -15,6 +15,7 @@ import { PortalSettings } from "@/components/portal/PortalSettings";
 import { PortalAIDashboard } from "@/components/portal/PortalAIDashboard";
 import { PortalFeedback } from "@/components/portal/PortalFeedback";
 import { PortalResources } from "@/components/portal/PortalResources";
+import { PortalMSPMonitoring } from "@/components/portal/PortalMSPMonitoring";
 import { 
   LayoutDashboard, 
   FolderKanban, 
@@ -31,7 +32,8 @@ import {
   Plus,
   Users,
   Star,
-  BookOpen
+  BookOpen,
+  Server
 } from "lucide-react";
 import cropxonIcon from "@/assets/cropxon-icon.png";
 import { cn } from "@/lib/utils";
@@ -64,9 +66,10 @@ const sidebarSections = [
     ]
   },
   {
-    title: "AI & Insights",
+    title: "AI & Monitoring",
     items: [
       { name: "AI Dashboard", href: "/portal/ai", icon: Brain },
+      { name: "MSP Monitoring", href: "/portal/msp", icon: Server },
     ]
   },
   {
@@ -139,6 +142,7 @@ export default function Portal() {
     if (path.startsWith("/portal/team")) return <PortalTeam />;
     if (path.startsWith("/portal/settings")) return <PortalSettings userId={user?.id} profile={profile} />;
     if (path.startsWith("/portal/ai")) return <PortalAIDashboard userId={user?.id} />;
+    if (path.startsWith("/portal/msp")) return <PortalMSPMonitoring />;
     if (path.startsWith("/portal/feedback")) return <PortalFeedback userId={user?.id} />;
     if (path.startsWith("/portal/resources")) return <PortalResources />;
     
