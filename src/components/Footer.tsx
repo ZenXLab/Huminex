@@ -53,9 +53,10 @@ export const Footer = () => {
 
             {/* Legal Info */}
             <div className="space-y-2 text-sm text-muted-foreground">
-              <p><span className="text-foreground/70">CIN:</span> U72900XX2024PTC000000</p>
-              <p><span className="text-foreground/70">GSTIN:</span> 00XXXXX0000X0X0</p>
-              <p><span className="text-foreground/70">Udyam:</span> UDYAM-XX-00-0000000</p>
+              <p><span className="text-foreground/70">CIN:</span> U62010OD2025PTC051089</p>
+              <p><span className="text-foreground/70">GSTIN:</span> 21AANCC1954F1ZW</p>
+              <p><span className="text-foreground/70">Udyam:</span> UDYAM-OD-03-0076858</p>
+              <p><span className="text-foreground/70">DPIIT:</span> DIPP230789 (Valid till: 15-10-2035)</p>
             </div>
           </div>
 
