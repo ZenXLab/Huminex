@@ -10,6 +10,8 @@ import Auth from "./pages/Auth";
 import Industries from "./pages/Industries";
 import Dashboard from "./pages/Dashboard";
 import AdminPage from "./pages/admin/AdminPage";
+import Onboarding from "./pages/Onboarding";
+import Portal from "./pages/Portal";
 
 // Service Pages
 import DigitalEngineering from "./pages/services/DigitalEngineering";
@@ -35,6 +37,9 @@ const App = () => (
             <Route path="/auth" element={<Auth />} />
             <Route path="/industries" element={<Industries />} />
             <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/onboarding" element={<Onboarding />} />
+            <Route path="/portal" element={<Portal />} />
+            <Route path="/portal/*" element={<Portal />} />
             
             {/* Admin Routes */}
             <Route path="/admin" element={<AdminPage />} />
