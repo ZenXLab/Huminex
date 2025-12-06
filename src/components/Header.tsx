@@ -44,22 +44,20 @@ export const Header = () => {
         <div className="flex items-center justify-between h-20">
           {/* Logo - Enhanced Visibility */}
           <Link to="/" className="flex items-center gap-3 group">
-            {/* Logo with glow effect for better visibility */}
+            {/* Logo with clean styling for light theme */}
             <div className="relative">
-              <div className="absolute inset-0 bg-accent/20 blur-xl rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-              <div className="relative p-1.5 bg-foreground/10 rounded-xl border border-accent/30 backdrop-blur-sm">
-                <img 
-                  src={cropxonIcon} 
-                  alt="CropXon" 
-                  className="h-10 w-10 object-contain drop-shadow-[0_0_8px_rgba(0,166,166,0.5)]" 
-                />
-              </div>
+              <div className="absolute inset-0 bg-primary/10 blur-xl rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+              <img 
+                src={cropxonIcon} 
+                alt="CropXon" 
+                className="relative h-12 w-12 object-contain" 
+              />
             </div>
             <div className="flex flex-col">
-              <span className="text-foreground font-heading font-bold text-lg tracking-tight drop-shadow-[0_0_10px_rgba(79,242,242,0.3)]">
+              <span className="text-foreground font-heading font-bold text-lg tracking-tight">
                 CropXon
               </span>
-              <span className="text-accent font-heading font-semibold text-sm -mt-1">
+              <span className="text-primary font-heading font-semibold text-sm -mt-1">
                 ATLAS
               </span>
             </div>

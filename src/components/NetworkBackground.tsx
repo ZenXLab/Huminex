@@ -59,7 +59,7 @@ export const NetworkBackground = () => {
           const distance = Math.sqrt(dx * dx + dy * dy);
 
           if (distance < connectionDistance) {
-            const opacity = (1 - distance / connectionDistance) * 0.4;
+            const opacity = (1 - distance / connectionDistance) * 0.5;
             ctx.beginPath();
             ctx.strokeStyle = `rgba(0, 166, 166, ${opacity})`;
             ctx.lineWidth = 1;
@@ -71,8 +71,8 @@ export const NetworkBackground = () => {
 
         // Draw node
         ctx.beginPath();
-        ctx.fillStyle = "rgba(79, 242, 242, 0.6)";
-        ctx.arc(node.x, node.y, 2, 0, Math.PI * 2);
+        ctx.fillStyle = "rgba(0, 166, 166, 0.7)";
+        ctx.arc(node.x, node.y, 3, 0, Math.PI * 2);
         ctx.fill();
       });
 

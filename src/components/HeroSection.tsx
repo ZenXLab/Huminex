@@ -17,11 +17,11 @@ export const HeroSection = () => {
           {/* Logo Icon */}
           <div className="flex justify-center mb-8 animate-fade-in-up">
             <div className="relative">
-              <div className="absolute inset-0 blur-3xl bg-primary/30 rounded-full animate-pulse-glow" />
+              <div className="absolute inset-0 blur-3xl bg-primary/20 rounded-full animate-pulse-glow" />
               <img 
                 src={cropxonIcon} 
                 alt="CropXon" 
-                className="relative h-24 w-24 object-contain animate-float"
+                className="relative h-28 w-28 object-contain animate-float"
               />
             </div>
           </div>
