@@ -71,7 +71,7 @@ export default function Portal() {
 
   useEffect(() => {
     if (!loading && !user) {
-      navigate("/onboarding");
+      navigate("/portal/login");
     }
   }, [user, loading, navigate]);
 

@@ -4,16 +4,24 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { HelmetProvider } from "react-helmet-async";
+
+// Public pages
 import Index from "./pages/Index";
-import NotFound from "./pages/NotFound";
 import Auth from "./pages/Auth";
 import Industries from "./pages/Industries";
-import Dashboard from "./pages/Dashboard";
-import AdminPage from "./pages/admin/AdminPage";
-import Onboarding from "./pages/Onboarding";
-import Portal from "./pages/Portal";
+import NotFound from "./pages/NotFound";
 
-// Service Pages
+// Portal (Client) pages
+import Portal from "./pages/Portal";
+import PortalAuth from "./pages/portal/PortalAuth";
+import Onboarding from "./pages/Onboarding";
+import Dashboard from "./pages/Dashboard";
+
+// Admin pages
+import AdminAuth from "./pages/admin/AdminAuth";
+import AdminPage from "./pages/admin/AdminPage";
+
+// Service pages
 import DigitalEngineering from "./pages/services/DigitalEngineering";
 import AIAutomation from "./pages/services/AIAutomation";
 import ExperienceDesign from "./pages/services/ExperienceDesign";
@@ -26,23 +34,26 @@ import IndustrySolutions from "./pages/services/IndustrySolutions";
 const queryClient = new QueryClient();
 
 const App = () => (
-  <HelmetProvider>
-    <QueryClientProvider client={queryClient}>
+  <QueryClientProvider client={queryClient}>
+    <HelmetProvider>
       <TooltipProvider>
         <Toaster />
         <Sonner />
         <BrowserRouter>
           <Routes>
+            {/* Public Routes */}
             <Route path="/" element={<Index />} />
             <Route path="/auth" element={<Auth />} />
             <Route path="/industries" element={<Industries />} />
-            <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/onboarding" element={<Onboarding />} />
+            
+            {/* Portal (Client) Routes */}
+            <Route path="/portal/login" element={<PortalAuth />} />
             <Route path="/portal" element={<Portal />} />
-            <Route path="/portal/*" element={<Portal />} />
+            <Route path="/onboarding" element={<Onboarding />} />
+            <Route path="/dashboard" element={<Dashboard />} />
             
             {/* Admin Routes */}
-            <Route path="/admin" element={<AdminPage />} />
+            <Route path="/admin/login" element={<AdminAuth />} />
             <Route path="/admin/*" element={<AdminPage />} />
             
             {/* Service Pages */}
@@ -59,8 +70,8 @@ const App = () => (
           </Routes>
         </BrowserRouter>
       </TooltipProvider>
-    </QueryClientProvider>
-  </HelmetProvider>
+    </HelmetProvider>
+  </QueryClientProvider>
 );
 
 export default App;
