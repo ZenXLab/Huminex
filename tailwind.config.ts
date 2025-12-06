@@ -13,6 +13,10 @@ export default {
       },
     },
     extend: {
+      fontFamily: {
+        heading: ["Space Grotesk", "sans-serif"],
+        body: ["Inter", "sans-serif"],
+      },
       colors: {
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
@@ -57,6 +61,15 @@ export default {
           border: "hsl(var(--sidebar-border))",
           ring: "hsl(var(--sidebar-ring))",
         },
+        teal: {
+          dark: "hsl(var(--teal-dark))",
+          deep: "hsl(var(--teal-deep))",
+          accent: "hsl(var(--teal-accent))",
+          neon: "hsl(var(--teal-neon))",
+        },
+        grey: {
+          soft: "hsl(var(--grey-soft))",
+        },
       },
       borderRadius: {
         lg: "var(--radius)",
@@ -65,25 +78,38 @@ export default {
       },
       keyframes: {
         "accordion-down": {
-          from: {
-            height: "0",
-          },
-          to: {
-            height: "var(--radix-accordion-content-height)",
-          },
+          from: { height: "0" },
+          to: { height: "var(--radix-accordion-content-height)" },
         },
         "accordion-up": {
-          from: {
-            height: "var(--radix-accordion-content-height)",
-          },
-          to: {
-            height: "0",
-          },
+          from: { height: "var(--radix-accordion-content-height)" },
+          to: { height: "0" },
+        },
+        shimmer: {
+          "0%": { backgroundPosition: "-200% 0" },
+          "100%": { backgroundPosition: "200% 0" },
+        },
+        "border-glow": {
+          "0%, 100%": { borderColor: "hsl(var(--primary) / 0.3)" },
+          "50%": { borderColor: "hsl(var(--accent) / 0.8)" },
         },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
+        shimmer: "shimmer 2s linear infinite",
+        "border-glow": "border-glow 3s ease-in-out infinite",
+      },
+      backgroundImage: {
+        "gradient-radial": "radial-gradient(var(--tw-gradient-stops))",
+        "hero-pattern": "var(--gradient-hero)",
+        "card-gradient": "var(--gradient-card)",
+        "neon-gradient": "var(--gradient-neon)",
+      },
+      boxShadow: {
+        neon: "var(--shadow-neon)",
+        "card-hover": "var(--shadow-glow)",
+        card: "var(--shadow-card)",
       },
     },
   },
