@@ -26,11 +26,11 @@ import {
   FileCode,
   Plug,
   Target,
-  TrendingUp,
-  Wallet,
-  AlertTriangle,
   Lock,
-  Activity
+  Activity,
+  Building2,
+  DollarSign,
+  ClipboardList
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -57,7 +57,9 @@ const navSections = [
     title: "Client Management",
     items: [
       { name: "All Clients", href: "/admin/users", icon: Users },
+      { name: "Tenants", href: "/admin/tenants", icon: Building2 },
       { name: "Onboarding", href: "/admin/onboarding", icon: Target },
+      { name: "Onboarding Tracker", href: "/admin/onboarding-tracker", icon: ClipboardList },
       { name: "Notices", href: "/admin/notices", icon: Bell },
     ]
   },
@@ -71,6 +73,7 @@ const navSections = [
   {
     title: "Billing & Payments",
     items: [
+      { name: "Pricing Management", href: "/admin/pricing", icon: DollarSign },
       { name: "Quotes", href: "/admin/quotes", icon: FileText },
       { name: "Invoices", href: "/admin/invoices", icon: Receipt },
     ]
