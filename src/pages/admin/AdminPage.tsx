@@ -9,6 +9,14 @@ import { AdminInvoices } from "@/components/admin/AdminInvoices";
 import { AdminUsers } from "@/components/admin/AdminUsers";
 import { AdminInquiries } from "@/components/admin/AdminInquiries";
 import { AdminSettings } from "@/components/admin/AdminSettings";
+import { AdminAnalytics } from "@/components/admin/modules/AdminAnalytics";
+import { AdminOnboardingApprovals } from "@/components/admin/modules/AdminOnboardingApprovals";
+import { AdminAuditLogs } from "@/components/admin/modules/AdminAuditLogs";
+import { AdminClientNotices } from "@/components/admin/modules/AdminClientNotices";
+import { AdminCompliance } from "@/components/admin/modules/AdminCompliance";
+import { AdminSystemLogs } from "@/components/admin/modules/AdminSystemLogs";
+import { AdminIntegrations } from "@/components/admin/modules/AdminIntegrations";
+import { AdminPortalSettings } from "@/components/admin/modules/AdminPortalSettings";
 import { Loader2 } from "lucide-react";
 
 const AdminPage = () => {
@@ -37,28 +45,23 @@ const AdminPage = () => {
     return null;
   }
 
-  // Determine which component to render based on path
   const renderContent = () => {
     const path = location.pathname;
     
-    if (path === "/admin" || path === "/admin/") {
-      return <AdminOverview />;
-    }
-    if (path.startsWith("/admin/quotes")) {
-      return <AdminQuotes />;
-    }
-    if (path.startsWith("/admin/invoices")) {
-      return <AdminInvoices />;
-    }
-    if (path.startsWith("/admin/users")) {
-      return <AdminUsers />;
-    }
-    if (path.startsWith("/admin/inquiries")) {
-      return <AdminInquiries />;
-    }
-    if (path.startsWith("/admin/settings")) {
-      return <AdminSettings />;
-    }
+    if (path === "/admin" || path === "/admin/") return <AdminOverview />;
+    if (path.startsWith("/admin/analytics")) return <AdminAnalytics />;
+    if (path.startsWith("/admin/onboarding")) return <AdminOnboardingApprovals />;
+    if (path.startsWith("/admin/quotes")) return <AdminQuotes />;
+    if (path.startsWith("/admin/invoices")) return <AdminInvoices />;
+    if (path.startsWith("/admin/users")) return <AdminUsers />;
+    if (path.startsWith("/admin/inquiries")) return <AdminInquiries />;
+    if (path.startsWith("/admin/audit")) return <AdminAuditLogs />;
+    if (path.startsWith("/admin/notices")) return <AdminClientNotices />;
+    if (path.startsWith("/admin/compliance")) return <AdminCompliance />;
+    if (path.startsWith("/admin/logs")) return <AdminSystemLogs />;
+    if (path.startsWith("/admin/integrations")) return <AdminIntegrations />;
+    if (path.startsWith("/admin/portal-settings")) return <AdminPortalSettings />;
+    if (path.startsWith("/admin/settings")) return <AdminSettings />;
     
     return <AdminOverview />;
   };
