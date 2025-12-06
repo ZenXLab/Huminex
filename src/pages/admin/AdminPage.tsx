@@ -21,6 +21,10 @@ import { AdminCRM } from "@/components/admin/modules/AdminCRM";
 import { AdminClickstream } from "@/components/admin/modules/AdminClickstream";
 import { AdminMSPMonitoring } from "@/components/admin/modules/AdminMSPMonitoring";
 import { AdminMarketing } from "@/components/admin/modules/AdminMarketing";
+import { AdminProjects } from "@/components/admin/modules/AdminProjects";
+import { AdminTickets } from "@/components/admin/modules/AdminTickets";
+import { AdminMeetings } from "@/components/admin/modules/AdminMeetings";
+import { AdminFiles } from "@/components/admin/modules/AdminFiles";
 import { Loader2 } from "lucide-react";
 
 const AdminPage = () => {
@@ -59,6 +63,10 @@ const AdminPage = () => {
     if (path.startsWith("/admin/marketing")) return <AdminMarketing />;
     if (path.startsWith("/admin/msp")) return <AdminMSPMonitoring />;
     if (path.startsWith("/admin/onboarding")) return <AdminOnboardingApprovals />;
+    if (path.startsWith("/admin/projects")) return <AdminProjects />;
+    if (path.startsWith("/admin/files")) return <AdminFiles />;
+    if (path.startsWith("/admin/tickets")) return <AdminTickets />;
+    if (path.startsWith("/admin/meetings")) return <AdminMeetings />;
     if (path.startsWith("/admin/quotes")) return <AdminQuotes />;
     if (path.startsWith("/admin/invoices")) return <AdminInvoices />;
     if (path.startsWith("/admin/users")) return <AdminUsers />;
@@ -66,6 +74,7 @@ const AdminPage = () => {
     if (path.startsWith("/admin/audit")) return <AdminAuditLogs />;
     if (path.startsWith("/admin/notices")) return <AdminClientNotices />;
     if (path.startsWith("/admin/compliance")) return <AdminCompliance />;
+    if (path.startsWith("/admin/security")) return <AdminCompliance />;
     if (path.startsWith("/admin/logs")) return <AdminSystemLogs />;
     if (path.startsWith("/admin/integrations")) return <AdminIntegrations />;
     if (path.startsWith("/admin/portal-settings")) return <AdminPortalSettings />;
