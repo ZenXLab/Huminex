@@ -3,7 +3,15 @@ import { NetworkBackground } from "./NetworkBackground";
 import { ArrowRight, Calculator } from "lucide-react";
 import cropxonIcon from "@/assets/cropxon-icon.png";
 
-export const HeroSection = () => {
+interface HeroSectionProps {
+  onQuoteClick?: () => void;
+}
+
+export const HeroSection = ({ onQuoteClick }: HeroSectionProps) => {
+  const scrollToSolutions = () => {
+    document.getElementById("pillars")?.scrollIntoView({ behavior: "smooth" });
+  };
+
   return (
     <section className="relative min-h-screen flex items-center justify-center overflow-hidden hero-gradient pt-20">
       <NetworkBackground />
@@ -46,11 +54,11 @@ export const HeroSection = () => {
 
           {/* CTA Buttons */}
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 animate-fade-in-up animation-delay-600">
-            <Button variant="hero" size="xl" className="group">
+            <Button variant="hero" size="xl" className="group" onClick={scrollToSolutions}>
               Explore Solutions
               <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
             </Button>
-            <Button variant="hero-outline" size="xl" className="group">
+            <Button variant="hero-outline" size="xl" className="group" onClick={onQuoteClick}>
               <Calculator className="h-5 w-5" />
               Get a Quote
             </Button>
