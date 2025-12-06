@@ -1,17 +1,19 @@
 import { useState } from "react";
 import { Menu, X, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Link } from "react-router-dom";
 import cropxonLogo from "@/assets/cropxon-logo.png";
+import cropxonIcon from "@/assets/cropxon-icon.png";
 
 const services = [
-  { name: "Digital Engineering", href: "#pillars" },
-  { name: "AI & Automation", href: "#pillars" },
-  { name: "Experience Design Studio", href: "#pillars" },
-  { name: "Cloud & DevOps", href: "#pillars" },
-  { name: "Enterprise Consulting", href: "#pillars" },
-  { name: "Managed IT (MSP)", href: "#pillars" },
-  { name: "Cybersecurity", href: "#pillars" },
-  { name: "Industry Solutions", href: "#pillars" },
+  { name: "Digital Engineering", href: "/services/digital-engineering" },
+  { name: "AI & Automation", href: "/services/ai-automation" },
+  { name: "Experience Design Studio", href: "/services/experience-design" },
+  { name: "Cloud & DevOps", href: "/services/cloud-devops" },
+  { name: "Enterprise Consulting", href: "/services/enterprise-consulting" },
+  { name: "Managed IT (MSP)", href: "/services/managed-it" },
+  { name: "Cybersecurity", href: "/services/cybersecurity" },
+  { name: "Industry Solutions", href: "/services/industry-solutions" },
 ];
 
 const industries = [
@@ -27,7 +29,7 @@ const resources = [
 ];
 
 const company = [
-  { name: "About CropXon", href: "#about" },
+  { name: "About CropXon", href: "/#about" },
   { name: "Leadership", href: "#" },
   { name: "Careers", href: "#" },
 ];
@@ -37,23 +39,38 @@ export const Header = () => {
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 bg-card/80 backdrop-blur-xl border-b border-border/50">
+    <header className="fixed top-0 left-0 right-0 z-50 bg-card/95 backdrop-blur-xl border-b border-border/50">
       <nav className="container mx-auto px-4 lg:px-8">
         <div className="flex items-center justify-between h-20">
-          {/* Logo */}
-          <a href="/" className="flex items-center gap-3">
-            <img src={cropxonLogo} alt="CropXon ATLAS" className="h-10 w-auto" />
-            <div className="hidden sm:block">
-              <span className="text-accent font-heading font-bold text-lg">ATLAS</span>
+          {/* Logo - Enhanced Visibility */}
+          <Link to="/" className="flex items-center gap-3 group">
+            {/* Logo with glow effect for better visibility */}
+            <div className="relative">
+              <div className="absolute inset-0 bg-accent/20 blur-xl rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+              <div className="relative p-1.5 bg-foreground/10 rounded-xl border border-accent/30 backdrop-blur-sm">
+                <img 
+                  src={cropxonIcon} 
+                  alt="CropXon" 
+                  className="h-10 w-10 object-contain drop-shadow-[0_0_8px_rgba(0,166,166,0.5)]" 
+                />
+              </div>
             </div>
-          </a>
+            <div className="flex flex-col">
+              <span className="text-foreground font-heading font-bold text-lg tracking-tight drop-shadow-[0_0_10px_rgba(79,242,242,0.3)]">
+                CropXon
+              </span>
+              <span className="text-accent font-heading font-semibold text-sm -mt-1">
+                ATLAS
+              </span>
+            </div>
+          </Link>
 
           {/* Desktop Navigation */}
           <div className="hidden lg:flex items-center gap-1">
-            <a href="/" className="px-4 py-2 text-foreground/80 hover:text-foreground transition-colors font-medium">
+            <Link to="/" className="px-4 py-2 text-foreground/80 hover:text-foreground transition-colors font-medium">
               Home
-            </a>
-            <a href="#about" className="px-4 py-2 text-foreground/80 hover:text-foreground transition-colors font-medium">
+            </Link>
+            <a href="/#about" className="px-4 py-2 text-foreground/80 hover:text-foreground transition-colors font-medium">
               About
             </a>
             
@@ -69,13 +86,13 @@ export const Header = () => {
               {activeDropdown === "services" && (
                 <div className="absolute top-full left-0 w-64 bg-card border border-border rounded-xl shadow-card p-4 animate-fade-in-up">
                   {services.map((service) => (
-                    <a
+                    <Link
                       key={service.name}
-                      href={service.href}
+                      to={service.href}
                       className="block px-3 py-2 text-foreground/70 hover:text-accent hover:bg-muted/50 rounded-lg transition-colors text-sm"
                     >
                       {service.name}
-                    </a>
+                    </Link>
                   ))}
                 </div>
               )}
@@ -107,7 +124,7 @@ export const Header = () => {
               )}
             </div>
 
-            <a href="#pricing" className="px-4 py-2 text-foreground/80 hover:text-foreground transition-colors font-medium">
+            <a href="/#pricing" className="px-4 py-2 text-foreground/80 hover:text-foreground transition-colors font-medium">
               Pricing
             </a>
 
@@ -180,10 +197,29 @@ export const Header = () => {
         {mobileMenuOpen && (
           <div className="lg:hidden py-4 border-t border-border/50 animate-fade-in-up">
             <div className="flex flex-col gap-2">
-              <a href="/" className="px-4 py-3 text-foreground hover:bg-muted/50 rounded-lg">Home</a>
-              <a href="#about" className="px-4 py-3 text-foreground hover:bg-muted/50 rounded-lg">About</a>
-              <a href="#pillars" className="px-4 py-3 text-foreground hover:bg-muted/50 rounded-lg">Services</a>
-              <a href="#pricing" className="px-4 py-3 text-foreground hover:bg-muted/50 rounded-lg">Pricing</a>
+              <Link to="/" className="px-4 py-3 text-foreground hover:bg-muted/50 rounded-lg" onClick={() => setMobileMenuOpen(false)}>
+                Home
+              </Link>
+              <a href="/#about" className="px-4 py-3 text-foreground hover:bg-muted/50 rounded-lg" onClick={() => setMobileMenuOpen(false)}>
+                About
+              </a>
+              
+              {/* Mobile Services */}
+              <div className="px-4 py-2 text-muted-foreground text-sm font-semibold">Services</div>
+              {services.map((service) => (
+                <Link 
+                  key={service.name}
+                  to={service.href} 
+                  className="px-6 py-2 text-foreground/80 hover:bg-muted/50 rounded-lg text-sm"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  {service.name}
+                </Link>
+              ))}
+              
+              <a href="/#pricing" className="px-4 py-3 text-foreground hover:bg-muted/50 rounded-lg" onClick={() => setMobileMenuOpen(false)}>
+                Pricing
+              </a>
               <Button variant="hero" className="mt-4">Book a Consultation</Button>
             </div>
           </div>
