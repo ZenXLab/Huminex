@@ -38,35 +38,41 @@ export const Header = ({ onQuoteClick }: HeaderProps) => {
   const { user, signOut } = useAuth();
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 bg-card/95 backdrop-blur-xl border-b border-border/50">
+    <header className="fixed top-0 left-0 right-0 z-50 bg-card/90 backdrop-blur-xl border-b border-border/40 transition-all duration-300">
       <nav className="container mx-auto px-4 lg:px-8">
-        <div className="flex items-center justify-between h-20">
+        <div className="flex items-center justify-between h-18 lg:h-20">
           {/* Logo */}
           <Link to="/" className="flex items-center gap-3 group">
             <div className="relative">
-              <div className="absolute inset-0 bg-primary/10 blur-xl rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+              <div className="absolute inset-0 bg-primary/20 blur-2xl rounded-full opacity-0 group-hover:opacity-100 transition-all duration-500" />
               <img 
                 src={cropxonIcon} 
                 alt="CropXon" 
-                className="relative h-12 w-12 object-contain" 
+                className="relative h-10 lg:h-11 w-10 lg:w-11 object-contain transition-transform duration-300 group-hover:scale-105" 
               />
             </div>
             <div className="flex flex-col">
-              <span className="text-foreground font-heading font-bold text-lg tracking-tight">
+              <span className="text-foreground font-heading font-bold text-base lg:text-lg tracking-tight leading-none">
                 CropXon
               </span>
-              <span className="text-primary font-heading font-semibold text-sm -mt-1">
+              <span className="text-primary font-heading font-semibold text-xs lg:text-sm leading-none mt-0.5">
                 ATLAS
               </span>
             </div>
           </Link>
 
           {/* Desktop Navigation */}
-          <div className="hidden lg:flex items-center gap-1">
-            <Link to="/" className="px-4 py-2 text-foreground/80 hover:text-foreground transition-colors font-medium">
+          <div className="hidden lg:flex items-center gap-0.5">
+            <Link 
+              to="/" 
+              className="px-4 py-2 text-foreground/70 hover:text-foreground transition-all duration-200 font-medium text-sm rounded-lg hover:bg-muted/50"
+            >
               Home
             </Link>
-            <a href="/#about" className="px-4 py-2 text-foreground/80 hover:text-foreground transition-colors font-medium">
+            <a 
+              href="/#about" 
+              className="px-4 py-2 text-foreground/70 hover:text-foreground transition-all duration-200 font-medium text-sm rounded-lg hover:bg-muted/50"
+            >
               About
             </a>
             
@@ -76,29 +82,38 @@ export const Header = ({ onQuoteClick }: HeaderProps) => {
               onMouseEnter={() => setActiveDropdown("services")}
               onMouseLeave={() => setActiveDropdown(null)}
             >
-              <button className="flex items-center gap-1 px-4 py-2 text-foreground/80 hover:text-foreground transition-colors font-medium">
-                Services <ChevronDown className="h-4 w-4" />
+              <button className="flex items-center gap-1 px-4 py-2 text-foreground/70 hover:text-foreground transition-all duration-200 font-medium text-sm rounded-lg hover:bg-muted/50">
+                Services 
+                <ChevronDown className={`h-3.5 w-3.5 transition-transform duration-200 ${activeDropdown === "services" ? "rotate-180" : ""}`} />
               </button>
-              {activeDropdown === "services" && (
-                <div className="absolute top-full left-0 w-64 bg-card border border-border rounded-xl shadow-card p-4 animate-fade-in-up">
-                  {services.map((service) => (
+              <div className={`absolute top-full left-0 pt-2 transition-all duration-200 ${activeDropdown === "services" ? "opacity-100 translate-y-0 pointer-events-auto" : "opacity-0 -translate-y-2 pointer-events-none"}`}>
+                <div className="w-64 bg-card border border-border/60 rounded-xl shadow-lg p-2 backdrop-blur-xl">
+                  {services.map((service, index) => (
                     <Link
                       key={service.name}
                       to={service.href}
-                      className="block px-3 py-2 text-foreground/70 hover:text-accent hover:bg-muted/50 rounded-lg transition-colors text-sm"
+                      className="flex items-center px-3 py-2.5 text-foreground/70 hover:text-foreground hover:bg-muted/60 rounded-lg transition-all duration-200 text-sm font-medium group"
+                      style={{ animationDelay: `${index * 30}ms` }}
                     >
+                      <span className="w-1.5 h-1.5 rounded-full bg-primary/50 mr-3 group-hover:bg-primary transition-colors" />
                       {service.name}
                     </Link>
                   ))}
                 </div>
-              )}
+              </div>
             </div>
 
-            <Link to="/industries" className="px-4 py-2 text-foreground/80 hover:text-foreground transition-colors font-medium">
+            <Link 
+              to="/industries" 
+              className="px-4 py-2 text-foreground/70 hover:text-foreground transition-all duration-200 font-medium text-sm rounded-lg hover:bg-muted/50"
+            >
               Industries
             </Link>
 
-            <a href="/#pricing" className="px-4 py-2 text-foreground/80 hover:text-foreground transition-colors font-medium">
+            <a 
+              href="/#pricing" 
+              className="px-4 py-2 text-foreground/70 hover:text-foreground transition-all duration-200 font-medium text-sm rounded-lg hover:bg-muted/50"
+            >
               Pricing
             </a>
 
@@ -108,22 +123,24 @@ export const Header = ({ onQuoteClick }: HeaderProps) => {
               onMouseEnter={() => setActiveDropdown("resources")}
               onMouseLeave={() => setActiveDropdown(null)}
             >
-              <button className="flex items-center gap-1 px-4 py-2 text-foreground/80 hover:text-foreground transition-colors font-medium">
-                Resources <ChevronDown className="h-4 w-4" />
+              <button className="flex items-center gap-1 px-4 py-2 text-foreground/70 hover:text-foreground transition-all duration-200 font-medium text-sm rounded-lg hover:bg-muted/50">
+                Resources 
+                <ChevronDown className={`h-3.5 w-3.5 transition-transform duration-200 ${activeDropdown === "resources" ? "rotate-180" : ""}`} />
               </button>
-              {activeDropdown === "resources" && (
-                <div className="absolute top-full left-0 w-48 bg-card border border-border rounded-xl shadow-card p-4 animate-fade-in-up">
+              <div className={`absolute top-full left-0 pt-2 transition-all duration-200 ${activeDropdown === "resources" ? "opacity-100 translate-y-0 pointer-events-auto" : "opacity-0 -translate-y-2 pointer-events-none"}`}>
+                <div className="w-52 bg-card border border-border/60 rounded-xl shadow-lg p-2 backdrop-blur-xl">
                   {resources.map((resource) => (
                     <a
                       key={resource.name}
                       href={resource.href}
-                      className="block px-3 py-2 text-foreground/70 hover:text-accent hover:bg-muted/50 rounded-lg transition-colors text-sm"
+                      className="flex items-center px-3 py-2.5 text-foreground/70 hover:text-foreground hover:bg-muted/60 rounded-lg transition-all duration-200 text-sm font-medium group"
                     >
+                      <span className="w-1.5 h-1.5 rounded-full bg-primary/50 mr-3 group-hover:bg-primary transition-colors" />
                       {resource.name}
                     </a>
                   ))}
                 </div>
-              )}
+              </div>
             </div>
 
             {/* Company Dropdown */}
@@ -132,116 +149,145 @@ export const Header = ({ onQuoteClick }: HeaderProps) => {
               onMouseEnter={() => setActiveDropdown("company")}
               onMouseLeave={() => setActiveDropdown(null)}
             >
-              <button className="flex items-center gap-1 px-4 py-2 text-foreground/80 hover:text-foreground transition-colors font-medium">
-                Company <ChevronDown className="h-4 w-4" />
+              <button className="flex items-center gap-1 px-4 py-2 text-foreground/70 hover:text-foreground transition-all duration-200 font-medium text-sm rounded-lg hover:bg-muted/50">
+                Company 
+                <ChevronDown className={`h-3.5 w-3.5 transition-transform duration-200 ${activeDropdown === "company" ? "rotate-180" : ""}`} />
               </button>
-              {activeDropdown === "company" && (
-                <div className="absolute top-full left-0 w-48 bg-card border border-border rounded-xl shadow-card p-4 animate-fade-in-up">
+              <div className={`absolute top-full right-0 pt-2 transition-all duration-200 ${activeDropdown === "company" ? "opacity-100 translate-y-0 pointer-events-auto" : "opacity-0 -translate-y-2 pointer-events-none"}`}>
+                <div className="w-52 bg-card border border-border/60 rounded-xl shadow-lg p-2 backdrop-blur-xl">
                   {company.map((item) => (
                     <a
                       key={item.name}
                       href={item.href}
-                      className="block px-3 py-2 text-foreground/70 hover:text-accent hover:bg-muted/50 rounded-lg transition-colors text-sm"
+                      className="flex items-center px-3 py-2.5 text-foreground/70 hover:text-foreground hover:bg-muted/60 rounded-lg transition-all duration-200 text-sm font-medium group"
                     >
+                      <span className="w-1.5 h-1.5 rounded-full bg-primary/50 mr-3 group-hover:bg-primary transition-colors" />
                       {item.name}
                     </a>
                   ))}
                 </div>
-              )}
+              </div>
             </div>
           </div>
 
           {/* CTA Buttons */}
-          <div className="hidden lg:flex items-center gap-3">
+          <div className="hidden lg:flex items-center gap-2">
             {user ? (
               <>
                 <Link to="/dashboard">
-                  <Button variant="outline" size="sm" className="gap-2">
+                  <Button variant="ghost" size="sm" className="gap-2 font-medium text-sm h-9">
                     <LayoutDashboard className="h-4 w-4" />
                     Dashboard
                   </Button>
                 </Link>
-                <Button variant="ghost" size="sm" onClick={signOut}>
+                <Button variant="ghost" size="sm" onClick={signOut} className="font-medium text-sm h-9">
                   Sign Out
                 </Button>
               </>
             ) : (
               <Link to="/auth">
-                <Button variant="outline" size="sm" className="gap-2">
+                <Button variant="ghost" size="sm" className="gap-2 font-medium text-sm h-9">
                   <User className="h-4 w-4" />
                   Sign In
                 </Button>
               </Link>
             )}
-            <Button variant="hero" size="lg" onClick={onQuoteClick}>
+            <Button 
+              variant="default" 
+              size="sm" 
+              onClick={onQuoteClick}
+              className="font-semibold text-sm h-9 px-5 shadow-lg shadow-primary/20 hover:shadow-primary/30 transition-all duration-300"
+            >
               Get a Quote
             </Button>
           </div>
 
           {/* Mobile Menu Button */}
           <button
-            className="lg:hidden p-2 text-foreground"
+            className="lg:hidden p-2 text-foreground hover:bg-muted/50 rounded-lg transition-colors"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
           >
-            {mobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+            {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
           </button>
         </div>
 
         {/* Mobile Menu */}
-        {mobileMenuOpen && (
-          <div className="lg:hidden py-4 border-t border-border/50 animate-fade-in-up">
-            <div className="flex flex-col gap-2">
-              <Link to="/" className="px-4 py-3 text-foreground hover:bg-muted/50 rounded-lg" onClick={() => setMobileMenuOpen(false)}>
+        <div className={`lg:hidden overflow-hidden transition-all duration-300 ${mobileMenuOpen ? "max-h-[600px] opacity-100" : "max-h-0 opacity-0"}`}>
+          <div className="py-4 border-t border-border/40">
+            <div className="flex flex-col gap-1">
+              <Link 
+                to="/" 
+                className="px-4 py-3 text-foreground font-medium hover:bg-muted/50 rounded-xl transition-colors" 
+                onClick={() => setMobileMenuOpen(false)}
+              >
                 Home
               </Link>
-              <a href="/#about" className="px-4 py-3 text-foreground hover:bg-muted/50 rounded-lg" onClick={() => setMobileMenuOpen(false)}>
+              <a 
+                href="/#about" 
+                className="px-4 py-3 text-foreground font-medium hover:bg-muted/50 rounded-xl transition-colors" 
+                onClick={() => setMobileMenuOpen(false)}
+              >
                 About
               </a>
               
               {/* Mobile Services */}
-              <div className="px-4 py-2 text-muted-foreground text-sm font-semibold">Services</div>
+              <div className="px-4 py-2 text-muted-foreground text-xs font-semibold uppercase tracking-wider">Services</div>
               {services.map((service) => (
                 <Link 
                   key={service.name}
                   to={service.href} 
-                  className="px-6 py-2 text-foreground/80 hover:bg-muted/50 rounded-lg text-sm"
+                  className="px-6 py-2.5 text-foreground/80 hover:bg-muted/50 rounded-xl transition-colors text-sm font-medium"
                   onClick={() => setMobileMenuOpen(false)}
                 >
                   {service.name}
                 </Link>
               ))}
               
-              <Link to="/industries" className="px-4 py-3 text-foreground hover:bg-muted/50 rounded-lg" onClick={() => setMobileMenuOpen(false)}>
+              <Link 
+                to="/industries" 
+                className="px-4 py-3 text-foreground font-medium hover:bg-muted/50 rounded-xl transition-colors" 
+                onClick={() => setMobileMenuOpen(false)}
+              >
                 Industries
               </Link>
               
-              <a href="/#pricing" className="px-4 py-3 text-foreground hover:bg-muted/50 rounded-lg" onClick={() => setMobileMenuOpen(false)}>
+              <a 
+                href="/#pricing" 
+                className="px-4 py-3 text-foreground font-medium hover:bg-muted/50 rounded-xl transition-colors" 
+                onClick={() => setMobileMenuOpen(false)}
+              >
                 Pricing
               </a>
 
-              {user ? (
-                <>
-                  <Link to="/dashboard" onClick={() => setMobileMenuOpen(false)}>
-                    <Button variant="outline" className="mt-4 w-full gap-2">
-                      <LayoutDashboard className="h-4 w-4" />
-                      Dashboard
+              <div className="pt-4 px-4 space-y-2">
+                {user ? (
+                  <>
+                    <Link to="/dashboard" onClick={() => setMobileMenuOpen(false)}>
+                      <Button variant="outline" className="w-full gap-2 font-medium">
+                        <LayoutDashboard className="h-4 w-4" />
+                        Dashboard
+                      </Button>
+                    </Link>
+                    <Button variant="ghost" className="w-full font-medium" onClick={() => { signOut(); setMobileMenuOpen(false); }}>
+                      Sign Out
                     </Button>
+                  </>
+                ) : (
+                  <Link to="/auth" onClick={() => setMobileMenuOpen(false)}>
+                    <Button variant="outline" className="w-full font-medium">Sign In</Button>
                   </Link>
-                  <Button variant="ghost" className="mt-2" onClick={() => { signOut(); setMobileMenuOpen(false); }}>
-                    Sign Out
-                  </Button>
-                </>
-              ) : (
-                <Link to="/auth" onClick={() => setMobileMenuOpen(false)}>
-                  <Button variant="outline" className="mt-4 w-full">Sign In</Button>
-                </Link>
-              )}
-              <Button variant="hero" className="mt-2" onClick={() => { onQuoteClick?.(); setMobileMenuOpen(false); }}>
-                Get a Quote
-              </Button>
+                )}
+                <Button 
+                  variant="default" 
+                  className="w-full font-semibold" 
+                  onClick={() => { onQuoteClick?.(); setMobileMenuOpen(false); }}
+                >
+                  Get a Quote
+                </Button>
+              </div>
             </div>
           </div>
-        )}
+        </div>
       </nav>
     </header>
   );
