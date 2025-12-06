@@ -62,14 +62,21 @@ export default {
           border: "hsl(var(--sidebar-border))",
           ring: "hsl(var(--sidebar-ring))",
         },
-        teal: {
-          dark: "hsl(var(--teal-dark))",
-          deep: "hsl(var(--teal-deep))",
-          accent: "hsl(var(--teal-accent))",
-          neon: "hsl(var(--teal-neon))",
+        // Premium ATLAS Colors
+        electric: {
+          purple: "hsl(var(--electric-purple))",
         },
-        grey: {
-          soft: "hsl(var(--grey-soft))",
+        neon: {
+          cyan: "hsl(var(--neon-cyan))",
+        },
+        hot: {
+          pink: "hsl(var(--hot-pink))",
+        },
+        emerald: {
+          DEFAULT: "hsl(var(--emerald))",
+        },
+        deep: {
+          teal: "hsl(var(--deep-teal))",
         },
       },
       borderRadius: {
@@ -106,11 +113,16 @@ export default {
         "hero-pattern": "var(--gradient-hero)",
         "card-gradient": "var(--gradient-card)",
         "neon-gradient": "var(--gradient-neon)",
+        "glass-gradient": "var(--gradient-glass)",
+        "primary-gradient": "var(--gradient-primary)",
+        "accent-gradient": "var(--gradient-accent)",
       },
       boxShadow: {
         neon: "var(--shadow-neon)",
+        purple: "var(--shadow-purple)",
         "card-hover": "var(--shadow-glow)",
         card: "var(--shadow-card)",
+        elevated: "var(--shadow-elevated)",
       },
     },
   },
