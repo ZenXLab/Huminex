@@ -5,10 +5,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { WelcomeAnimation } from "@/components/onboarding/WelcomeAnimation";
 import { SuccessAnimation } from "@/components/onboarding/SuccessAnimation";
 import { PolicyModal } from "@/components/onboarding/PolicyModal";
+import { industryCategories } from "@/lib/industryTypes";
 import { 
   ArrowRight, 
   ArrowLeft, 
@@ -26,7 +28,8 @@ import {
   Cloud,
   Briefcase,
   Rocket,
-  Eye
+  Eye,
+  Factory
 } from "lucide-react";
 
 const OnboardingSteps = [
@@ -70,6 +73,9 @@ export default function Onboarding() {
     password: "",
     company: "",
     phone: "",
+    industryCategory: "",
+    industryType: "",
+    customIndustry: "",
     agreements: {} as Record<string, boolean>,
     selectedServices: [] as string[],
   });
@@ -267,6 +273,22 @@ export default function Onboarding() {
                       </div>
                     </div>
                     <div className="space-y-2">
+                      <Label htmlFor="email" className="text-sm font-medium">Email Address *</Label>
+                      <div className="relative">
+                        <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                        <Input 
+                          id="email"
+                          type="email"
+                          placeholder="john@company.com"
+                          className="pl-10 h-11 rounded-xl border-border/60 focus:border-primary/50"
+                          value={formData.email}
+                          onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                  <div className="grid sm:grid-cols-2 gap-4">
+                    <div className="space-y-2">
                       <Label htmlFor="company" className="text-sm font-medium">Company Name</Label>
                       <div className="relative">
                         <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
@@ -279,37 +301,74 @@ export default function Onboarding() {
                         />
                       </div>
                     </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="email" className="text-sm font-medium">Email Address *</Label>
-                    <div className="relative">
-                      <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                      <Input 
-                        id="email"
-                        type="email"
-                        placeholder="john@company.com"
-                        className="pl-10 h-11 rounded-xl border-border/60 focus:border-primary/50"
-                        value={formData.email}
-                        onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
-                      />
+                    <div className="space-y-2">
+                      <Label htmlFor="phone" className="text-sm font-medium">Phone Number</Label>
+                      <div className="relative">
+                        <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                        <Input 
+                          id="phone"
+                          type="tel"
+                          placeholder="+91 98765 43210"
+                          className="pl-10 h-11 rounded-xl border-border/60 focus:border-primary/50"
+                          value={formData.phone}
+                          onChange={(e) => setFormData(prev => ({ ...prev, phone: e.target.value }))}
+                        />
+                      </div>
                     </div>
                   </div>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="phone" className="text-sm font-medium">Phone Number</Label>
-                    <div className="relative">
-                      <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                      <Input 
-                        id="phone"
-                        type="tel"
-                        placeholder="+91 98765 43210"
-                        className="pl-10 h-11 rounded-xl border-border/60 focus:border-primary/50"
-                        value={formData.phone}
-                        onChange={(e) => setFormData(prev => ({ ...prev, phone: e.target.value }))}
-                      />
+                  <div className="grid sm:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label className="text-sm font-medium">Industry Category *</Label>
+                      <Select 
+                        value={formData.industryCategory} 
+                        onValueChange={(value) => setFormData(prev => ({ ...prev, industryCategory: value, industryType: "", customIndustry: "" }))}
+                      >
+                        <SelectTrigger className="h-11 rounded-xl">
+                          <Factory className="w-4 h-4 mr-2 text-muted-foreground" />
+                          <SelectValue placeholder="Select industry category" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {industryCategories.map((cat) => (
+                            <SelectItem key={cat.category} value={cat.category}>{cat.category}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-sm font-medium">Industry Type</Label>
+                      <Select 
+                        value={formData.industryType} 
+                        onValueChange={(value) => setFormData(prev => ({ ...prev, industryType: value }))}
+                        disabled={!formData.industryCategory}
+                      >
+                        <SelectTrigger className="h-11 rounded-xl">
+                          <SelectValue placeholder="Select specific industry" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {industryCategories
+                            .find(cat => cat.category === formData.industryCategory)
+                            ?.industries.map((ind) => (
+                              <SelectItem key={ind} value={ind}>{ind}</SelectItem>
+                            ))
+                          }
+                        </SelectContent>
+                      </Select>
                     </div>
                   </div>
+
+                  {formData.industryType === "Custom Category" && (
+                    <div className="space-y-2">
+                      <Label htmlFor="customIndustry" className="text-sm font-medium">Specify Your Industry</Label>
+                      <Input 
+                        id="customIndustry"
+                        placeholder="Enter your industry type"
+                        className="h-11 rounded-xl border-border/60 focus:border-primary/50"
+                        value={formData.customIndustry}
+                        onChange={(e) => setFormData(prev => ({ ...prev, customIndustry: e.target.value }))}
+                      />
+                    </div>
+                  )}
 
                   <div className="space-y-2">
                     <Label htmlFor="password" className="text-sm font-medium">Password *</Label>
