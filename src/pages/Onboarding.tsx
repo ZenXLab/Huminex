@@ -6,6 +6,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
+import { WelcomeAnimation } from "@/components/onboarding/WelcomeAnimation";
+import { SuccessAnimation } from "@/components/onboarding/SuccessAnimation";
+import { PolicyModal } from "@/components/onboarding/PolicyModal";
 import { 
   ArrowRight, 
   ArrowLeft, 
@@ -22,8 +25,8 @@ import {
   Palette,
   Cloud,
   Briefcase,
-  LayoutGrid,
-  Rocket
+  Rocket,
+  Eye
 } from "lucide-react";
 
 const OnboardingSteps = [
@@ -60,6 +63,7 @@ const policies = [
 export default function Onboarding() {
   const [currentStep, setCurrentStep] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
+  const [selectedPolicy, setSelectedPolicy] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     fullName: "",
     email: "",
@@ -91,7 +95,25 @@ export default function Onboarding() {
     }
   };
 
+  const validateForm = () => {
+    if (!formData.fullName.trim()) {
+      toast({ title: "Error", description: "Please enter your full name", variant: "destructive" });
+      return false;
+    }
+    if (!formData.email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+      toast({ title: "Error", description: "Please enter a valid email address", variant: "destructive" });
+      return false;
+    }
+    if (!formData.password || formData.password.length < 6) {
+      toast({ title: "Error", description: "Password must be at least 6 characters", variant: "destructive" });
+      return false;
+    }
+    return true;
+  };
+
   const handleSignUp = async () => {
+    if (!validateForm()) return;
+    
     setIsLoading(true);
     try {
       await signUp(formData.email, formData.password, {
@@ -99,11 +121,16 @@ export default function Onboarding() {
         company_name: formData.company,
         phone: formData.phone,
       });
+      toast({
+        title: "Account Created",
+        description: "Your account has been created successfully!",
+      });
       handleNext();
-    } catch (error) {
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : "Failed to create account. Please try again.";
       toast({
         title: "Error",
-        description: "Failed to create account. Please try again.",
+        description: errorMessage,
         variant: "destructive",
       });
     } finally {
@@ -131,6 +158,13 @@ export default function Onboarding() {
 
   return (
     <div className="min-h-screen bg-background relative overflow-hidden">
+      {/* Policy Modal */}
+      <PolicyModal 
+        isOpen={!!selectedPolicy} 
+        onClose={() => setSelectedPolicy(null)} 
+        policyId={selectedPolicy} 
+      />
+
       {/* Animated Background */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-primary/10 rounded-full blur-3xl animate-pulse" />
@@ -180,30 +214,8 @@ export default function Onboarding() {
           {/* Step 1: Welcome */}
           {currentStep === 1 && (
             <div className="text-center animate-fade-in-up">
-              {/* Hub Animation */}
-              <div className="relative w-48 h-48 mx-auto mb-8">
-                <div className="absolute inset-0 rounded-full bg-gradient-to-br from-primary/20 to-accent/20 animate-pulse" />
-                <div className="absolute inset-4 rounded-full border-2 border-primary/30 animate-spin" style={{ animationDuration: "10s" }} />
-                <div className="absolute inset-8 rounded-full border border-accent/40 animate-spin" style={{ animationDuration: "8s", animationDirection: "reverse" }} />
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="w-20 h-20 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center shadow-neon">
-                    <Sparkles className="w-10 h-10 text-white" />
-                  </div>
-                </div>
-                {/* Orbiting nodes */}
-                {[0, 45, 90, 135, 180, 225, 270, 315].map((angle, i) => (
-                  <div 
-                    key={angle}
-                    className="absolute w-3 h-3 rounded-full bg-accent shadow-neon animate-pulse"
-                    style={{
-                      top: `${50 + 45 * Math.sin((angle * Math.PI) / 180)}%`,
-                      left: `${50 + 45 * Math.cos((angle * Math.PI) / 180)}%`,
-                      transform: "translate(-50%, -50%)",
-                      animationDelay: `${i * 0.2}s`
-                    }}
-                  />
-                ))}
-              </div>
+              {/* Lottie Hub Animation */}
+              <WelcomeAnimation />
 
               <h1 className="text-4xl lg:text-5xl font-heading font-bold text-foreground mb-4 tracking-tight">
                 Welcome to <span className="text-gradient">ATLAS</span>
@@ -242,7 +254,7 @@ export default function Onboarding() {
                 <div className="space-y-5">
                   <div className="grid sm:grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label htmlFor="fullName" className="text-sm font-medium">Full Name</Label>
+                      <Label htmlFor="fullName" className="text-sm font-medium">Full Name *</Label>
                       <div className="relative">
                         <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                         <Input 
@@ -270,7 +282,7 @@ export default function Onboarding() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="email" className="text-sm font-medium">Email Address</Label>
+                    <Label htmlFor="email" className="text-sm font-medium">Email Address *</Label>
                     <div className="relative">
                       <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                       <Input 
@@ -300,13 +312,13 @@ export default function Onboarding() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="password" className="text-sm font-medium">Password</Label>
+                    <Label htmlFor="password" className="text-sm font-medium">Password *</Label>
                     <div className="relative">
                       <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                       <Input 
                         id="password"
                         type="password"
-                        placeholder="Create a strong password"
+                        placeholder="Create a strong password (min 6 characters)"
                         className="pl-10 h-11 rounded-xl border-border/60 focus:border-primary/50"
                         value={formData.password}
                         onChange={(e) => setFormData(prev => ({ ...prev, password: e.target.value }))}
@@ -359,7 +371,13 @@ export default function Onboarding() {
                           {policy.required && <span className="text-destructive ml-1">*</span>}
                         </Label>
                       </div>
-                      <Button variant="ghost" size="sm" className="text-xs text-primary">
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        className="text-xs text-primary gap-1"
+                        onClick={() => setSelectedPolicy(policy.id)}
+                      >
+                        <Eye className="w-3 h-3" />
                         View
                       </Button>
                     </div>
@@ -388,24 +406,21 @@ export default function Onboarding() {
                   <Mail className="w-10 h-10 text-primary" />
                 </div>
 
-                <h2 className="text-2xl font-heading font-bold text-foreground mb-2">Check Your Email</h2>
+                <h2 className="text-2xl font-heading font-bold text-foreground mb-2">Account Created!</h2>
                 <p className="text-muted-foreground mb-6">
-                  We've sent a verification link to <span className="text-foreground font-medium">{formData.email}</span>
+                  Your account has been set up successfully. You can now continue to select your services.
                 </p>
 
                 <div className="bg-muted/30 rounded-xl p-4 mb-8">
                   <p className="text-sm text-muted-foreground">
-                    Click the link in the email to verify your account. If you don't see it, check your spam folder.
+                    Email: <span className="text-foreground font-medium">{formData.email}</span>
                   </p>
                 </div>
 
                 <div className="flex flex-col gap-3">
                   <Button onClick={handleNext} className="gap-2">
-                    I've Verified My Email
+                    Continue
                     <ArrowRight className="w-4 h-4" />
-                  </Button>
-                  <Button variant="ghost" size="sm">
-                    Resend Verification Email
                   </Button>
                 </div>
               </div>
@@ -471,29 +486,8 @@ export default function Onboarding() {
           {/* Step 6: Success */}
           {currentStep === 6 && (
             <div className="text-center animate-fade-in-up">
-              {/* Success Animation */}
-              <div className="relative w-48 h-48 mx-auto mb-8">
-                <div className="absolute inset-0 rounded-full bg-gradient-to-br from-emerald/20 to-accent/20 animate-pulse" />
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="w-24 h-24 rounded-full bg-gradient-to-br from-emerald to-accent flex items-center justify-center shadow-neon animate-scale-in">
-                    <Check className="w-12 h-12 text-white" />
-                  </div>
-                </div>
-                {/* Network bloom effect */}
-                {[0, 45, 90, 135, 180, 225, 270, 315].map((angle, i) => (
-                  <div 
-                    key={angle}
-                    className="absolute w-2 h-2 rounded-full bg-emerald animate-ping"
-                    style={{
-                      top: `${50 + 40 * Math.sin((angle * Math.PI) / 180)}%`,
-                      left: `${50 + 40 * Math.cos((angle * Math.PI) / 180)}%`,
-                      transform: "translate(-50%, -50%)",
-                      animationDelay: `${i * 0.1}s`,
-                      animationDuration: "2s"
-                    }}
-                  />
-                ))}
-              </div>
+              {/* Lottie Success Animation */}
+              <SuccessAnimation />
 
               <h1 className="text-3xl lg:text-4xl font-heading font-bold text-foreground mb-4 tracking-tight">
                 Your ATLAS Workspace Is Ready
