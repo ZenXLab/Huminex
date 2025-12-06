@@ -8,89 +8,86 @@ import {
   Shield, 
   Lock, 
   LayoutGrid,
-  ArrowRight
 } from "lucide-react";
-import {
-  CodeAnimation,
-  AIBrainAnimation,
-  DesignAnimation,
-  CloudAnimation,
-  ConsultingAnimation,
-  SupportAnimation,
-  SecurityAnimation,
-  IndustryAnimation,
-} from "./LottieAnimations";
 
 const pillars = [
   {
     icon: Code,
-    animation: CodeAnimation,
     title: "Digital Engineering",
-    description: "Websites, Apps, SaaS, Portals",
-    details: "Full-stack development with modern frameworks, scalable architectures, and seamless user experiences.",
+    description: "Websites, Apps & SaaS",
     href: "/services/digital-engineering",
+    borderColor: "from-blue-400 to-blue-600",
+    iconBg: "bg-blue-50 dark:bg-blue-950/50",
+    iconColor: "text-blue-500",
   },
   {
     icon: Brain,
-    animation: AIBrainAnimation,
-    title: "AI & Intelligent Automation",
-    description: "Chatbots, RAG, Workflows, Predictive Analytics",
-    details: "Harness the power of artificial intelligence to automate, predict, and transform your operations.",
+    title: "AI & Automation",
+    description: "Chatbots & Predictive Analytics",
     href: "/services/ai-automation",
+    borderColor: "from-purple-400 to-purple-600",
+    iconBg: "bg-purple-50 dark:bg-purple-950/50",
+    iconColor: "text-purple-500",
   },
   {
     icon: Palette,
-    animation: DesignAnimation,
-    title: "Experience Design Studio",
-    description: "Branding, UX/UI, Creative, Customer Journey",
-    details: "Craft memorable experiences that resonate with your audience and drive engagement.",
+    title: "Experience Design",
+    description: "Branding & UX/UI",
     href: "/services/experience-design",
+    borderColor: "from-cyan-400 to-teal-500",
+    iconBg: "bg-cyan-50 dark:bg-cyan-950/50",
+    iconColor: "text-cyan-500",
   },
   {
     icon: Cloud,
-    animation: CloudAnimation,
-    title: "Cloud, DevOps & Platforms",
-    description: "Infrastructure, CI/CD, Microservices",
-    details: "Build resilient, scalable cloud infrastructure with automated deployment pipelines.",
+    title: "Cloud & DevOps",
+    description: "Infrastructure & CI/CD",
     href: "/services/cloud-devops",
+    borderColor: "from-rose-400 to-pink-500",
+    iconBg: "bg-rose-50 dark:bg-rose-950/50",
+    iconColor: "text-rose-500",
   },
   {
     icon: Briefcase,
-    animation: ConsultingAnimation,
     title: "Enterprise Consulting",
-    description: "CTO Services, Strategy, Governance",
-    details: "Strategic guidance and executive-level technology leadership for enterprise transformation.",
+    description: "CTO Services & Strategy",
     href: "/services/enterprise-consulting",
+    borderColor: "from-orange-400 to-amber-500",
+    iconBg: "bg-orange-50 dark:bg-orange-950/50",
+    iconColor: "text-orange-500",
   },
   {
     icon: Shield,
-    animation: SupportAnimation,
     title: "Managed IT Services",
-    description: "Monitoring, Support, Uptime, SLA",
-    details: "24/7 managed services ensuring your systems run smoothly with guaranteed SLAs.",
+    description: "Monitoring & Support",
     href: "/services/managed-it",
+    borderColor: "from-teal-400 to-emerald-500",
+    iconBg: "bg-teal-50 dark:bg-teal-950/50",
+    iconColor: "text-teal-500",
   },
   {
     icon: Lock,
-    animation: SecurityAnimation,
-    title: "Cybersecurity & Compliance",
-    description: "VAPT, SOC2, ISO, GDPR",
-    details: "Comprehensive security assessments and compliance frameworks to protect your assets.",
+    title: "Cybersecurity",
+    description: "VAPT & Compliance",
     href: "/services/cybersecurity",
+    borderColor: "from-indigo-400 to-violet-500",
+    iconBg: "bg-indigo-50 dark:bg-indigo-950/50",
+    iconColor: "text-indigo-500",
   },
   {
     icon: LayoutGrid,
-    animation: IndustryAnimation,
-    title: "Industry-Specific Solutions",
-    description: "POS, Healthcare, Education, Agri, Logistics",
-    details: "Tailored solutions designed for the unique challenges of your industry vertical.",
+    title: "Industry Solutions",
+    description: "Tailored vertical solutions",
     href: "/services/industry-solutions",
+    borderColor: "from-fuchsia-400 to-pink-500",
+    iconBg: "bg-fuchsia-50 dark:bg-fuchsia-950/50",
+    iconColor: "text-fuchsia-500",
   },
 ];
 
 export const PillarsSection = () => {
   return (
-    <section id="pillars" className="py-24 lg:py-32 relative overflow-hidden">
+    <section id="pillars" className="py-24 lg:py-32 relative overflow-hidden bg-secondary/30">
       {/* Background accents */}
       <div className="absolute top-0 right-0 w-96 h-96 bg-accent/5 rounded-full blur-3xl" />
       <div className="absolute bottom-0 left-0 w-96 h-96 bg-primary/5 rounded-full blur-3xl" />
@@ -101,7 +98,7 @@ export const PillarsSection = () => {
           <span className="inline-block px-4 py-1.5 bg-primary/10 border border-primary/20 rounded-full text-primary text-sm font-medium mb-6">
             Our Expertise
           </span>
-          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-heading font-bold mb-6">
+          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-heading font-bold mb-6 text-foreground">
             The <span className="text-gradient">8 Pillars</span> of ATLAS
           </h2>
           <p className="text-lg text-muted-foreground">
@@ -109,47 +106,40 @@ export const PillarsSection = () => {
           </p>
         </div>
 
-        {/* Pillars Grid */}
-        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        {/* Pillars Grid - Premium Card Style */}
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 lg:gap-6">
           {pillars.map((pillar, index) => {
-            const Animation = pillar.animation;
+            const Icon = pillar.icon;
             return (
               <Link
                 key={pillar.title}
                 to={pillar.href}
-                className="group relative bg-card border border-border/50 rounded-2xl p-6 card-glow neon-border animate-fade-in-up block"
-                style={{ animationDelay: `${index * 100}ms` }}
+                className="group relative animate-fade-in-up"
+                style={{ animationDelay: `${index * 80}ms` }}
               >
-                {/* Glow effect on hover */}
-                <div className="absolute inset-0 rounded-2xl bg-gradient-to-br opacity-0 group-hover:opacity-10 transition-opacity duration-500" 
-                     style={{ backgroundImage: `linear-gradient(to bottom right, hsl(var(--primary)), hsl(var(--accent)))` }} />
+                {/* Card with gradient border */}
+                <div className="relative p-[2px] rounded-2xl bg-gradient-to-br opacity-60 group-hover:opacity-100 transition-opacity duration-300"
+                     style={{ background: `linear-gradient(135deg, var(--tw-gradient-stops))` }}>
+                  <div className={`absolute inset-0 rounded-2xl bg-gradient-to-br ${pillar.borderColor} opacity-40 group-hover:opacity-100 transition-opacity duration-300`} />
+                  
+                  {/* Inner card */}
+                  <div className="relative bg-card rounded-[14px] p-6 h-full flex flex-col items-center text-center transition-all duration-300 group-hover:shadow-lg">
+                    {/* Icon Container */}
+                    <div className={`w-14 h-14 rounded-xl ${pillar.iconBg} flex items-center justify-center mb-4 transition-transform duration-300 group-hover:scale-110`}>
+                      <Icon className={`w-7 h-7 ${pillar.iconColor}`} strokeWidth={1.5} />
+                    </div>
 
-                {/* Animation Container */}
-                <div className="relative mb-4 flex justify-center">
-                  <div className="transform scale-50 origin-center group-hover:scale-60 transition-transform duration-500">
-                    <Animation />
+                    {/* Title */}
+                    <h3 className="text-sm lg:text-base font-heading font-semibold text-foreground mb-1.5 leading-tight">
+                      {pillar.title}
+                    </h3>
+                    
+                    {/* Description */}
+                    <p className="text-xs lg:text-sm text-muted-foreground leading-relaxed">
+                      {pillar.description}
+                    </p>
                   </div>
                 </div>
-
-                {/* Content */}
-                <h3 className="text-lg font-heading font-bold text-foreground mb-2 group-hover:text-accent transition-colors duration-300">
-                  {pillar.title}
-                </h3>
-                <p className="text-sm text-muted-foreground mb-3">
-                  {pillar.description}
-                </p>
-                <p className="text-sm text-foreground/60 mb-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                  {pillar.details}
-                </p>
-
-                {/* Learn More Link */}
-                <div className="flex items-center gap-2 text-primary group-hover:text-accent transition-colors duration-300">
-                  <span className="text-sm font-medium">Learn More</span>
-                  <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
-                </div>
-
-                {/* Decorative line */}
-                <div className="absolute bottom-0 left-6 right-6 h-px bg-gradient-to-r from-transparent via-primary/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
               </Link>
             );
           })}
