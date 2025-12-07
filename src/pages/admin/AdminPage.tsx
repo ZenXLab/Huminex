@@ -10,6 +10,7 @@ import { AdminUsers } from "@/components/admin/AdminUsers";
 import { AdminInquiries } from "@/components/admin/AdminInquiries";
 import { AdminSettings } from "@/components/admin/AdminSettings";
 import { AdminAnalytics } from "@/components/admin/modules/AdminAnalytics";
+import { AdminAnalyticsDashboard } from "@/components/admin/modules/AdminAnalyticsDashboard";
 import { AdminOnboardingApprovals } from "@/components/admin/modules/AdminOnboardingApprovals";
 import { AdminAuditLogs } from "@/components/admin/modules/AdminAuditLogs";
 import { AdminClientNotices } from "@/components/admin/modules/AdminClientNotices";
@@ -91,7 +92,8 @@ const AdminPage = () => {
     
     // Command Center
     if (path === "/admin" || path === "/admin/") return <AdminOverview />;
-    if (path.startsWith("/admin/analytics")) return <AdminAnalytics />;
+    if (path === "/admin/analytics") return <AdminAnalyticsDashboard />;
+    if (path.startsWith("/admin/analytics/basic")) return <AdminAnalytics />;
     if (path.startsWith("/admin/health")) return <AdminSystemHealth />;
     
     // Tenant Management
