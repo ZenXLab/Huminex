@@ -1,7 +1,7 @@
 # ATLAS Setup & Deployment Guide
 
-> **Version**: 3.2.0  
-> **Last Updated**: December 7, 2025 @ 16:45 UTC  
+> **Version**: 3.3.0  
+> **Last Updated**: December 7, 2025 @ 17:30 UTC  
 > **Author**: CropXon ATLAS Team
 
 ## Overview
@@ -9,7 +9,7 @@
 This guide covers the complete setup and deployment of the ATLAS Workforce Operating System, including:
 - Supabase project configuration
 - Database schema deployment (52 tables, 7 functions, 2 triggers)
-- Edge function deployment (6 deployed, 15 documented)
+- Edge function deployment (10 deployed, 5 documented)
 - Environment variables
 - Authentication setup
 - Storage configuration
@@ -30,23 +30,94 @@ This guide covers the complete setup and deployment of the ATLAS Workforce Opera
 | **RLS Policies** | 75+ | Row-level security |
 | **Indexes** | 50+ | Performance optimization |
 
-### Tables by Category
-- **Core** (8): profiles, user_roles, client_tenants, client_tenant_users, quotes, invoices, leads, inquiries
-- **Onboarding** (2): onboarding_sessions, client_onboarding
-- **Projects** (2): projects, project_milestones
-- **Support** (3): support_tickets, ticket_messages, meetings
-- **Files** (2): client_files, client_feedback
-- **MSP** (3): client_msp_servers, client_msp_metrics, client_msp_alerts
-- **Pricing** (4): service_pricing, service_addons, pricing_modifiers, coupon_codes
-- **Admin** (3): admin_notifications, admin_settings, portal_settings
-- **Logging** (4): audit_logs, system_logs, clickstream_events, api_usage
-- **Team** (4): team_members, compliance_items, integrations, client_notices
-- **Features** (7): global_features, tenant_features, role_feature_defaults, employee_feature_access, employee_notifications, notification_preferences, feature_unlock_log
-- **Operational** (7): payroll_runs, payslips, bgv_requests, sso_states, insurance_claims, document_verifications, document_extractions
-- **HR Module** (5): employees, attendance_records, leave_types, leave_balances, leave_requests
-- **Shift Management** (3): shifts, shift_assignments, shift_swap_requests
-- **Overtime** (1): overtime_records
-- **Geofencing** (2): geofence_zones, geofence_attendance_logs
+---
+
+## Edge Functions Summary (15 Total)
+
+| # | Function Name | Status | Purpose |
+|---|---------------|--------|---------|
+| 1 | send-notification | ✅ Deployed | Create in-app notifications for users |
+| 2 | send-bulk-notifications | ✅ Deployed | Send notifications to multiple users |
+| 3 | send-welcome-email | ✅ Deployed | Welcome email with login credentials |
+| 4 | send-feature-unlock-email | ✅ Deployed | Notify when features are unlocked |
+| 5 | send-quote-followup | ✅ Deployed | Follow-up emails for pending quotes |
+| 6 | generate-invoice-pdf | ✅ Deployed | Generate downloadable PDF invoices |
+| 7 | shift-scheduler | ✅ Deployed | Auto-schedule and publish shifts |
+| 8 | shift-swap-workflow | ✅ Deployed | Handle shift swap approvals |
+| 9 | overtime-calculator | ✅ Deployed | Calculate overtime hours/pay |
+| 10 | geofence-attendance | ✅ Deployed | GPS check-in with fake location detection |
+| 11 | run-payroll | 📝 Documented | Process payroll runs |
+| 12 | process-bgv | 📝 Documented | Background verification |
+| 13 | sso-callback | 📝 Documented | SSO OAuth callbacks |
+| 14 | process-insurance-claim | 📝 Documented | Insurance claim processing |
+| 15 | verify-document | 📝 Documented | OCR document verification |
+
+---
+
+## Database Tables Summary (52 Tables)
+
+### Core Tables (8)
+| Table | Purpose |
+|-------|---------|
+| profiles | User profile data (name, email, phone) |
+| user_roles | Role assignments for RBAC (admin, user) |
+| client_tenants | Organization/company tenant records |
+| client_tenant_users | User-tenant membership mapping |
+| quotes | Service quotes with pricing and status |
+| invoices | Client invoices with payment tracking |
+| leads | Sales leads with scoring and conversion |
+| inquiries | Contact form submissions |
+
+### HR & Workforce Tables (10)
+| Table | Purpose |
+|-------|---------|
+| employees | Employee master records |
+| attendance_records | Daily check-in/check-out |
+| leave_types | Leave type definitions |
+| leave_balances | Employee leave balances |
+| leave_requests | Leave applications and approvals |
+| shifts | Shift definitions and timing |
+| shift_assignments | Employee shift assignments |
+| shift_swap_requests | Shift swap between employees |
+| overtime_records | Overtime hours and approvals |
+| geofence_zones | Office location boundaries |
+
+### Payroll & Finance Tables (5)
+| Table | Purpose |
+|-------|---------|
+| payroll_runs | Payroll processing runs |
+| payslips | Individual employee payslips |
+| service_pricing | Service pricing tiers |
+| service_addons | Optional add-on pricing |
+| pricing_modifiers | Industry/size multipliers |
+
+### Operations & Compliance Tables (8)
+| Table | Purpose |
+|-------|---------|
+| bgv_requests | Background verification requests |
+| insurance_claims | Insurance claim submissions |
+| document_verifications | Document verification results |
+| document_extractions | OCR data extraction |
+| compliance_items | Compliance checklist tracking |
+| projects | Client project management |
+| project_milestones | Project milestone tracking |
+| integrations | Third-party integrations |
+
+### Admin & System Tables (12)
+| Table | Purpose |
+|-------|---------|
+| admin_notifications | Admin-targeted notifications |
+| admin_settings | Platform configuration |
+| portal_settings | Client portal settings |
+| audit_logs | System audit trail |
+| system_logs | Application debugging logs |
+| clickstream_events | User interaction analytics |
+| api_usage | API usage tracking |
+| team_members | Internal team profiles |
+| client_notices | Client announcements |
+| global_features | Platform feature definitions |
+| tenant_features | Tenant-specific feature flags |
+| employee_feature_access | Employee feature permissions |
 
 ---
 

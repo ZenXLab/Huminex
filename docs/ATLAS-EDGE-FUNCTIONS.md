@@ -1,7 +1,7 @@
 # ATLAS Edge Functions Documentation
 
-> **Version**: 3.2.0  
-> **Last Updated**: December 7, 2025 @ 16:45 UTC  
+> **Version**: 3.3.0  
+> **Last Updated**: December 7, 2025 @ 17:30 UTC  
 > **Author**: CropXon ATLAS Team
 
 ---
@@ -22,12 +22,96 @@
 | **RLS Policies** | 75+ | Comprehensive row-level security across all tables |
 | **Database Indexes** | 50+ | Performance optimization indexes |
 
-### Tables Added (December 7, 2025 @ 16:45 UTC)
-- **Operational**: payroll_runs, payslips, bgv_requests, sso_states, insurance_claims, document_verifications, document_extractions
-- **HR Module**: employees, attendance_records, leave_types, leave_balances, leave_requests
-- **Shift Management**: shifts, shift_assignments, shift_swap_requests
-- **Overtime**: overtime_records
-- **Geofencing**: geofence_zones, geofence_attendance_logs
+---
+
+## Edge Functions Summary Table (15 Functions)
+
+| # | Function Name | Status | Category | Purpose/Description |
+|---|---------------|--------|----------|---------------------|
+| 1 | `send-notification` | ✅ Deployed | Notifications | Creates in-app notifications for users with priority levels |
+| 2 | `send-bulk-notifications` | ✅ Deployed | Notifications | Send notifications to multiple users at once (batch processing) |
+| 3 | `send-welcome-email` | ✅ Deployed | Email | Sends welcome email with login credentials to new clients |
+| 4 | `send-feature-unlock-email` | ✅ Deployed | Email | Notifies users when new features are unlocked for them |
+| 5 | `send-quote-followup` | ✅ Deployed | Email | Automated follow-up emails for pending quotes |
+| 6 | `generate-invoice-pdf` | ✅ Deployed | PDF | Generates downloadable PDF invoices |
+| 7 | `shift-scheduler` | ✅ Deployed | Shift Mgmt | Auto-schedule shifts, publish schedules, notify employees |
+| 8 | `shift-swap-workflow` | ✅ Deployed | Shift Mgmt | Handle shift swap requests, approvals, rejections |
+| 9 | `overtime-calculator` | ✅ Deployed | Overtime | Calculate overtime hours, apply multipliers, process records |
+| 10 | `geofence-attendance` | ✅ Deployed | Geofencing | GPS-validated check-in/out with fake location detection |
+| 11 | `run-payroll` | 📝 Documented | Payroll | Process payroll runs, calculate salaries, generate payslips |
+| 12 | `process-bgv` | 📝 Documented | BGV | Submit and track background verification requests |
+| 13 | `sso-callback` | 📝 Documented | SSO | Handle SSO OAuth callbacks (Google, Microsoft, Okta) |
+| 14 | `process-insurance-claim` | 📝 Documented | Insurance | Submit and track insurance claim requests |
+| 15 | `verify-document` | 📝 Documented | Documents | OCR and verification of uploaded documents |
+
+**Legend:** ✅ Deployed = Live in Supabase | 📝 Documented = Code ready, pending deployment
+
+---
+
+## Database Tables Summary (52 Tables)
+
+| # | Table Name | Category | Purpose |
+|---|------------|----------|---------|
+| 1 | profiles | Core | User profile data (name, email, phone, company) |
+| 2 | user_roles | Core | User role assignments (admin, user) for RBAC |
+| 3 | client_tenants | Core | Organization/company tenant records |
+| 4 | client_tenant_users | Core | Maps users to their tenant memberships |
+| 5 | quotes | Sales & CRM | Service quotes with pricing, status, contact info |
+| 6 | invoices | Sales & CRM | Client invoices with amounts, due dates, status |
+| 7 | leads | Sales & CRM | Sales leads with scores, sources, conversion tracking |
+| 8 | inquiries | Sales & CRM | Contact form submissions and service inquiries |
+| 9 | onboarding_sessions | Onboarding | Client onboarding wizard progress and data |
+| 10 | client_onboarding | Onboarding | Simple onboarding requests (pre-approval stage) |
+| 11 | projects | Project Mgmt | Client projects with status, budget, timeline |
+| 12 | project_milestones | Project Mgmt | Project milestones with due dates and completion |
+| 13 | support_tickets | Support | Support tickets with priority, SLA, assignment |
+| 14 | ticket_messages | Support | Messages/replies within support tickets |
+| 15 | meetings | Communication | Scheduled meetings with clients and team |
+| 16 | client_files | File Mgmt | Client uploaded files with versioning |
+| 17 | client_feedback | Feedback | Client feedback ratings and comments |
+| 18 | client_msp_servers | MSP | Monitored servers for managed service clients |
+| 19 | client_msp_metrics | MSP | Server performance metrics (CPU, memory, disk) |
+| 20 | client_msp_alerts | MSP | Server alerts and incident notifications |
+| 21 | service_pricing | Pricing | Service pricing tiers and features |
+| 22 | service_addons | Pricing | Optional add-on services with pricing |
+| 23 | pricing_modifiers | Pricing | Industry/size pricing multipliers |
+| 24 | coupon_codes | Pricing | Discount coupons with usage limits |
+| 25 | admin_notifications | Admin | Admin-targeted notifications |
+| 26 | admin_settings | Admin | Platform-wide admin configuration |
+| 27 | portal_settings | Admin | Client portal configuration settings |
+| 28 | audit_logs | Logging | System audit trail for compliance |
+| 29 | system_logs | Logging | Application logs for debugging |
+| 30 | clickstream_events | Analytics | User interaction tracking for analytics |
+| 31 | api_usage | Analytics | API endpoint usage tracking |
+| 32 | team_members | Team | Internal team member profiles |
+| 33 | compliance_items | Compliance | Compliance checklist items and status |
+| 34 | integrations | Integrations | Third-party integration configurations |
+| 35 | client_notices | Communication | Announcements and notices for clients |
+| 36 | global_features | Features | Platform-wide feature definitions |
+| 37 | tenant_features | Features | Tenant-specific feature flags |
+| 38 | role_feature_defaults | Features | Default features by role |
+| 39 | employee_feature_access | Features | Individual employee feature permissions |
+| 40 | employee_notifications | Notifications | Employee notification records |
+| 41 | notification_preferences | Notifications | User notification channel preferences |
+| 42 | feature_unlock_log | Logging | Log of feature unlock events |
+| 43 | payroll_runs | Payroll | Monthly/weekly payroll processing runs |
+| 44 | payslips | Payroll | Individual employee payslips |
+| 45 | bgv_requests | BGV | Background verification requests |
+| 46 | sso_states | SSO | OAuth state tokens for SSO flows |
+| 47 | insurance_claims | Insurance | Employee insurance claim submissions |
+| 48 | document_verifications | Documents | Document verification requests and results |
+| 49 | document_extractions | Documents | OCR/data extraction from documents |
+| 50 | employees | HR | Employee master records with employment details |
+| 51 | attendance_records | HR | Daily attendance check-in/check-out records |
+| 52 | leave_types | HR | Leave type definitions (annual, sick, etc.) |
+| 53 | leave_balances | HR | Employee leave balance tracking |
+| 54 | leave_requests | HR | Leave application requests and approvals |
+| 55 | shifts | Shift Mgmt | Shift definitions with timing and settings |
+| 56 | shift_assignments | Shift Mgmt | Employee shift assignments |
+| 57 | shift_swap_requests | Shift Mgmt | Shift swap requests between employees |
+| 58 | overtime_records | Overtime | Overtime hours tracking with approval status |
+| 59 | geofence_zones | Geofencing | Office location geofence boundaries |
+| 60 | geofence_attendance_logs | Geofencing | GPS-validated attendance entries |
 
 ---
 
