@@ -4,25 +4,25 @@ import {
   Plus,
   Upload,
   Download,
-  Filter,
   MoreHorizontal,
   Mail,
   Phone,
   MapPin,
   Building,
   Edit,
-  Trash2,
-  Eye,
-  UserCheck,
   UserX,
-  ChevronLeft,
-  ChevronRight,
-  X,
+  Eye,
   Calendar,
   Briefcase,
   Shield,
-  FileText,
   Clock,
+  X,
+  ChevronLeft,
+  ChevronRight,
+  Users,
+  TrendingUp,
+  UserPlus,
+  FileText,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -46,6 +46,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
 import { InviteEmployeeModal } from "@/components/tenant/modals/InviteEmployeeModal";
+import { toast } from "sonner";
 
 const mockEmployees = [
   { id: 1, name: "Sarah Johnson", email: "sarah.j@acme.com", phone: "+91 98765 43210", role: "Engineering Manager", department: "Engineering", location: "Bangalore", status: "active", avatar: null, joinDate: "2023-03-15" },
@@ -99,25 +100,84 @@ const TenantWorkforce: React.FC = () => {
     );
   };
 
+  const handleImportCSV = () => {
+    toast.info("Import CSV: Upload your employee data file to bulk import");
+  };
+
+  const handleExport = () => {
+    toast.success("Generating workforce report... Download will start shortly.");
+  };
+
+  const handleBulkEdit = () => {
+    toast.info(`Editing ${selectedEmployees.length} employees...`);
+  };
+
+  const handleDeactivate = () => {
+    toast.error(`Deactivating ${selectedEmployees.length} employees...`);
+    setSelectedEmployees([]);
+  };
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 animate-fade-up">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-[#0F1E3A]">Workforce Directory</h1>
-          <p className="text-sm text-[#6B7280]">{mockEmployees.length} employees in your organization</p>
+          <p className="text-sm text-[#6B7280]">
+            <span className="font-medium text-[#0FB07A]">{mockEmployees.length}</span> employees in your organization
+          </p>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" className="border-gray-200 text-[#6B7280] gap-2">
+          <Button 
+            variant="outline" 
+            className="border-gray-200 text-[#6B7280] gap-2 hover:border-[#005EEB]/30 hover-lift"
+            onClick={handleImportCSV}
+          >
             <Upload className="w-4 h-4" /> Import CSV
           </Button>
-          <Button variant="outline" className="border-gray-200 text-[#6B7280] gap-2">
+          <Button 
+            variant="outline" 
+            className="border-gray-200 text-[#6B7280] gap-2 hover:border-[#005EEB]/30 hover-lift"
+            onClick={handleExport}
+          >
             <Download className="w-4 h-4" /> Export
           </Button>
-          <Button className="bg-[#005EEB] hover:bg-[#004ACC] gap-2" onClick={() => setShowInviteModal(true)}>
-            <Plus className="w-4 h-4" /> Invite Employee
+          <Button 
+            className="bg-[#005EEB] hover:bg-[#004ACC] gap-2 shadow-lg shadow-[#005EEB]/20" 
+            onClick={() => setShowInviteModal(true)}
+          >
+            <UserPlus className="w-4 h-4" /> Invite Employee
           </Button>
         </div>
+      </div>
+
+      {/* Stats Cards */}
+      <div className="grid grid-cols-4 gap-4">
+        {[
+          { label: "Total Employees", value: mockEmployees.length, icon: Users, color: "#005EEB" },
+          { label: "Active", value: mockEmployees.filter(e => e.status === "active").length, icon: TrendingUp, color: "#0FB07A" },
+          { label: "On Probation", value: mockEmployees.filter(e => e.status === "probation").length, icon: Clock, color: "#FFB020" },
+          { label: "Contractors", value: mockEmployees.filter(e => e.status === "contractor").length, icon: Briefcase, color: "#00C2FF" },
+        ].map((stat) => (
+          <div
+            key={stat.label}
+            className="p-4 bg-white rounded-xl border border-gray-200 hover:shadow-lg transition-all hover-lift"
+            style={{ boxShadow: "0 6px 18px rgba(16,24,40,0.06)" }}
+          >
+            <div className="flex items-center gap-3">
+              <div
+                className="w-12 h-12 rounded-xl flex items-center justify-center"
+                style={{ backgroundColor: `${stat.color}15` }}
+              >
+                <stat.icon className="w-6 h-6" style={{ color: stat.color }} />
+              </div>
+              <div>
+                <p className="text-2xl font-bold text-[#0F1E3A]">{stat.value}</p>
+                <p className="text-xs text-[#6B7280]">{stat.label}</p>
+              </div>
+            </div>
+          </div>
+        ))}
       </div>
 
       {/* Filters */}
@@ -161,16 +221,26 @@ const TenantWorkforce: React.FC = () => {
 
       {/* Bulk Actions */}
       {selectedEmployees.length > 0 && (
-        <div className="flex items-center gap-3 p-3 bg-[#005EEB]/5 rounded-lg border border-[#005EEB]/20">
-          <span className="text-sm font-medium text-[#005EEB]">
-            {selectedEmployees.length} selected
+        <div className="flex items-center gap-3 p-4 bg-gradient-to-r from-[#005EEB]/10 to-[#00C2FF]/5 rounded-xl border border-[#005EEB]/20 animate-scale-in">
+          <span className="text-sm font-semibold text-[#005EEB]">
+            {selectedEmployees.length} employee{selectedEmployees.length > 1 ? 's' : ''} selected
           </span>
           <div className="flex gap-2 ml-auto">
-            <Button size="sm" variant="outline" className="border-[#005EEB]/30 text-[#005EEB]">
-              Bulk Edit
+            <Button 
+              size="sm" 
+              variant="outline" 
+              className="border-[#005EEB]/30 text-[#005EEB] hover:bg-[#005EEB]/10"
+              onClick={handleBulkEdit}
+            >
+              <Edit className="w-3 h-3 mr-1" /> Bulk Edit
             </Button>
-            <Button size="sm" variant="outline" className="border-[#E23E57]/30 text-[#E23E57]">
-              Deactivate
+            <Button 
+              size="sm" 
+              variant="outline" 
+              className="border-[#E23E57]/30 text-[#E23E57] hover:bg-[#E23E57]/10"
+              onClick={handleDeactivate}
+            >
+              <UserX className="w-3 h-3 mr-1" /> Deactivate
             </Button>
           </div>
         </div>

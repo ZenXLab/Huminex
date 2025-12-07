@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { NavLink, useLocation } from "react-router-dom";
 import {
   LayoutDashboard,
@@ -20,7 +20,6 @@ import {
   Headphones,
   Settings,
   ChevronDown,
-  ChevronRight,
   PanelLeftClose,
   PanelLeft,
   Bell,
@@ -31,12 +30,14 @@ import {
   Link2,
   Database,
   Globe,
+  Sparkles,
 } from "lucide-react";
 import { useTenant } from "./TenantLayout";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { toast } from "sonner";
 
 interface NavItem {
   label: string;
@@ -138,11 +139,20 @@ const settingsModule: NavModule = {
 
 export const TenantSidebar: React.FC = () => {
   const { sidebarCollapsed, setSidebarCollapsed } = useTenant();
-  const [expandedModules, setExpandedModules] = useState<string[]>(["Workforce Management", "Payroll & Finance"]);
+  const [expandedModules, setExpandedModules] = useState<string[]>([]);
   const location = useLocation();
 
   const isActive = (path: string) => location.pathname === path;
   const isModuleActive = (module: NavModule) => module.items.some(item => location.pathname === item.path);
+
+  // Auto-expand module containing active route
+  useEffect(() => {
+    const allModules = [...coreModules, settingsModule];
+    const activeModule = allModules.find(isModuleActive);
+    if (activeModule && !expandedModules.includes(activeModule.title)) {
+      setExpandedModules(prev => [...prev, activeModule.title]);
+    }
+  }, [location.pathname]);
 
   const toggleModule = (title: string) => {
     setExpandedModules(prev => 
@@ -152,6 +162,10 @@ export const TenantSidebar: React.FC = () => {
     );
   };
 
+  const handleNavClick = (item: NavItem) => {
+    toast.info(`Navigating to ${item.label}...`, { duration: 1500 });
+  };
+
   const renderNavItem = (item: NavItem, collapsed: boolean, indent: boolean = false) => {
     const Icon = item.icon;
     const active = isActive(item.path);
@@ -159,24 +173,34 @@ export const TenantSidebar: React.FC = () => {
     const content = (
       <NavLink
         to={item.path}
+        onClick={() => handleNavClick(item)}
         className={cn(
-          "flex items-center gap-3 px-3 py-2 rounded-lg transition-all duration-200",
-          "hover:bg-[#F7F9FC] hover:translate-x-0.5 group",
-          active && "bg-[#005EEB]/8 text-[#005EEB] border-l-2 border-[#005EEB] -ml-[2px] pl-[14px]",
+          "flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-300 group relative overflow-hidden",
+          "hover:bg-gradient-to-r hover:from-[#005EEB]/5 hover:to-transparent",
+          active && "bg-gradient-to-r from-[#005EEB]/10 to-[#00C2FF]/5 text-[#005EEB]",
           !active && "text-[#6B7280]",
           collapsed && "justify-center px-2",
           indent && !collapsed && "ml-4"
         )}
       >
-        <Icon className={cn(
-          "w-4 h-4 flex-shrink-0 transition-all duration-200",
-          active ? "text-[#005EEB]" : "text-[#9CA3AF] group-hover:text-[#6B7280] group-hover:scale-110"
-        )} />
+        {active && (
+          <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-gradient-to-b from-[#005EEB] to-[#00C2FF] rounded-r-full" />
+        )}
+        <div className={cn(
+          "w-8 h-8 rounded-lg flex items-center justify-center transition-all duration-300",
+          active ? "bg-[#005EEB]/10" : "group-hover:bg-[#005EEB]/5",
+          "group-hover:scale-110"
+        )}>
+          <Icon className={cn(
+            "w-4 h-4 transition-all duration-300",
+            active ? "text-[#005EEB]" : "text-[#9CA3AF] group-hover:text-[#005EEB]"
+          )} />
+        </div>
         {!collapsed && (
           <>
             <span className={cn(
-              "flex-1 text-[13px] font-medium transition-colors duration-200",
-              active ? "text-[#005EEB]" : "text-[#4B5563] group-hover:text-[#1F2937]"
+              "flex-1 text-[13px] font-medium transition-all duration-300",
+              active ? "text-[#005EEB]" : "text-[#4B5563] group-hover:text-[#0F1E3A]"
             )}>
               {item.label}
             </span>
@@ -184,8 +208,8 @@ export const TenantSidebar: React.FC = () => {
               <Badge
                 variant="outline"
                 className={cn(
-                  "text-[10px] px-1.5 py-0 h-5 font-medium animate-pulse",
-                  item.badgeVariant === "warning" && "border-[#FFB020] text-[#FFB020] bg-[#FFB020]/10",
+                  "text-[10px] px-2 py-0.5 h-5 font-semibold border",
+                  item.badgeVariant === "warning" && "border-[#FFB020] text-[#FFB020] bg-[#FFB020]/10 animate-pulse",
                   item.badgeVariant === "danger" && "border-[#E23E57] text-[#E23E57] bg-[#E23E57]/10",
                   item.badgeVariant === "success" && "border-[#0FB07A] text-[#0FB07A] bg-[#0FB07A]/10",
                   !item.badgeVariant && "border-[#6B7280] text-[#6B7280]"
@@ -203,9 +227,13 @@ export const TenantSidebar: React.FC = () => {
       return (
         <Tooltip key={item.path}>
           <TooltipTrigger asChild>{content}</TooltipTrigger>
-          <TooltipContent side="right" className="font-medium text-xs">
-            {item.label}
-            {item.badge && <span className="ml-2 opacity-70">({item.badge})</span>}
+          <TooltipContent side="right" className="font-medium text-xs bg-[#0F1E3A] text-white border-none">
+            <div className="flex items-center gap-2">
+              {item.label}
+              {item.badge && (
+                <span className="px-1.5 py-0.5 rounded text-[10px] bg-white/20">{item.badge}</span>
+              )}
+            </div>
           </TooltipContent>
         </Tooltip>
       );
@@ -221,21 +249,32 @@ export const TenantSidebar: React.FC = () => {
 
     if (sidebarCollapsed) {
       return (
-        <div key={module.title} className="space-y-1">
+        <div key={module.title} className="mb-1">
           <Tooltip>
             <TooltipTrigger asChild>
-              <div 
+              <button 
+                onClick={() => {
+                  setSidebarCollapsed(false);
+                  if (!expandedModules.includes(module.title)) {
+                    setExpandedModules(prev => [...prev, module.title]);
+                  }
+                }}
                 className={cn(
-                  "flex items-center justify-center p-2 rounded-lg cursor-pointer transition-all duration-200",
-                  "hover:scale-105",
-                  hasActiveItem ? "bg-[#005EEB]/10" : "hover:bg-[#F7F9FC]"
+                  "flex items-center justify-center p-2.5 rounded-xl cursor-pointer transition-all duration-300 w-full",
+                  "hover:scale-105 hover:bg-[#F7F9FC]",
+                  hasActiveItem && "bg-gradient-to-r from-[#005EEB]/10 to-transparent"
                 )}
-                style={{ borderLeft: hasActiveItem ? `2px solid ${module.color}` : undefined }}
+                style={{ borderLeft: hasActiveItem ? `3px solid ${module.color}` : undefined }}
               >
-                <Icon className="w-5 h-5 transition-transform duration-200" style={{ color: module.color }} />
-              </div>
+                <div
+                  className="w-9 h-9 rounded-xl flex items-center justify-center transition-all duration-300"
+                  style={{ backgroundColor: `${module.color}15` }}
+                >
+                  <Icon className="w-5 h-5" style={{ color: module.color }} />
+                </div>
+              </button>
             </TooltipTrigger>
-            <TooltipContent side="right" className="font-medium text-xs">
+            <TooltipContent side="right" className="font-medium text-xs bg-[#0F1E3A] text-white border-none">
               {module.title}
             </TooltipContent>
           </Tooltip>
@@ -248,44 +287,49 @@ export const TenantSidebar: React.FC = () => {
         <button
           onClick={() => toggleModule(module.title)}
           className={cn(
-            "flex items-center gap-3 w-full px-3 py-2.5 rounded-lg transition-all duration-200",
-            "hover:bg-[#F7F9FC] group",
+            "flex items-center gap-3 w-full px-3 py-3 rounded-xl transition-all duration-300 group",
+            "hover:bg-gradient-to-r hover:from-[#F7F9FC] hover:to-transparent",
             hasActiveItem && "bg-[#F7F9FC]"
           )}
         >
           <div 
             className={cn(
-              "w-8 h-8 rounded-lg flex items-center justify-center transition-all duration-200",
-              "group-hover:scale-105",
-              hasActiveItem ? "bg-opacity-15" : "bg-opacity-10"
+              "w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-300",
+              "group-hover:scale-105 group-hover:shadow-lg"
             )}
-            style={{ backgroundColor: `${module.color}15` }}
+            style={{ 
+              backgroundColor: `${module.color}15`,
+              boxShadow: hasActiveItem ? `0 4px 12px ${module.color}30` : undefined
+            }}
           >
-            <Icon className="w-4 h-4 transition-transform duration-200" style={{ color: module.color }} />
+            <Icon className="w-5 h-5 transition-transform duration-300" style={{ color: module.color }} />
           </div>
           <span className={cn(
-            "flex-1 text-left text-[13px] font-semibold transition-colors duration-200",
-            hasActiveItem ? "text-[#0F1E3A]" : "text-[#4B5563]"
+            "flex-1 text-left text-[13px] font-semibold transition-colors duration-300",
+            hasActiveItem ? "text-[#0F1E3A]" : "text-[#4B5563] group-hover:text-[#0F1E3A]"
           )}>
             {module.title}
           </span>
           <div className={cn(
-            "transition-transform duration-300",
-            isExpanded && "rotate-180"
+            "w-6 h-6 rounded-lg flex items-center justify-center transition-all duration-300 bg-[#F7F9FC]",
+            isExpanded && "rotate-180 bg-[#005EEB]/10"
           )}>
-            <ChevronDown className="w-4 h-4 text-[#9CA3AF]" />
+            <ChevronDown className={cn(
+              "w-4 h-4 transition-colors",
+              isExpanded ? "text-[#005EEB]" : "text-[#9CA3AF]"
+            )} />
           </div>
         </button>
 
         <div className={cn(
-          "overflow-hidden transition-all duration-300 ease-in-out",
-          isExpanded ? "max-h-96 opacity-100" : "max-h-0 opacity-0"
+          "overflow-hidden transition-all duration-400 ease-out",
+          isExpanded ? "max-h-[500px] opacity-100" : "max-h-0 opacity-0"
         )}>
-          <div className="mt-1 space-y-0.5 ml-2 border-l border-gray-100 pl-2">
+          <div className="mt-1 space-y-0.5 ml-3 pl-3 border-l-2 border-gray-100">
             {module.items.map((item, index) => (
               <div 
                 key={item.path}
-                className="animate-fade-in"
+                className="animate-fade-up"
                 style={{ animationDelay: `${index * 50}ms` }}
               >
                 {renderNavItem(item, false, true)}
@@ -300,60 +344,73 @@ export const TenantSidebar: React.FC = () => {
   return (
     <aside
       className={cn(
-        "fixed left-0 top-[72px] bottom-0 bg-white border-r border-gray-200 transition-all duration-300 z-40 flex flex-col",
-        sidebarCollapsed ? "w-[72px]" : "w-[280px]"
+        "fixed left-0 top-[72px] bottom-0 bg-white border-r border-gray-200 transition-all duration-400 z-40 flex flex-col",
+        sidebarCollapsed ? "w-[80px]" : "w-[280px]"
       )}
+      style={{ boxShadow: "4px 0 24px rgba(0,0,0,0.03)" }}
     >
+      {/* Header */}
       <div className={cn(
-        "flex items-center p-3 border-b border-gray-100",
+        "flex items-center p-4 border-b border-gray-100",
         sidebarCollapsed ? "justify-center" : "justify-between"
       )}>
         {!sidebarCollapsed && (
-          <span className="text-xs font-semibold text-[#9CA3AF] uppercase tracking-wider">Navigation</span>
+          <div className="flex items-center gap-2">
+            <Sparkles className="w-4 h-4 text-[#005EEB]" />
+            <span className="text-xs font-bold text-[#005EEB] uppercase tracking-wider">Navigation</span>
+          </div>
         )}
         <Button
           variant="ghost"
           size="icon"
           onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-          className="h-8 w-8 rounded-lg hover:bg-[#F7F9FC] transition-transform duration-200 hover:scale-105"
+          className="h-9 w-9 rounded-xl hover:bg-[#005EEB]/5 transition-all duration-300 hover:scale-105"
         >
           {sidebarCollapsed ? (
-            <PanelLeft className="w-4 h-4 text-[#6B7280]" />
+            <PanelLeft className="w-5 h-5 text-[#005EEB]" />
           ) : (
-            <PanelLeftClose className="w-4 h-4 text-[#6B7280]" />
+            <PanelLeftClose className="w-5 h-5 text-[#6B7280]" />
           )}
         </Button>
       </div>
 
+      {/* Navigation */}
       <nav className="flex-1 overflow-y-auto p-3 space-y-1 scrollbar-thin scrollbar-thumb-gray-200 scrollbar-track-transparent">
+        {/* Primary Nav */}
         <div className="mb-4">
           {primaryNav.map((item) => renderNavItem(item, sidebarCollapsed))}
         </div>
 
+        {/* Modules Label */}
         {!sidebarCollapsed && (
-          <div className="mb-2">
-            <span className="px-3 text-[10px] font-bold text-[#9CA3AF] uppercase tracking-wider">
+          <div className="mb-3 px-3">
+            <span className="text-[10px] font-bold text-[#9CA3AF] uppercase tracking-widest">
               Modules
             </span>
           </div>
         )}
+
+        {/* Core Modules */}
         <div className="space-y-1">
           {coreModules.map(renderModule)}
         </div>
 
-        <div className="my-4 border-t border-gray-100" />
+        {/* Divider */}
+        <div className="my-4 mx-3 border-t border-gray-100" />
 
+        {/* Settings */}
         {renderModule(settingsModule)}
       </nav>
 
+      {/* Footer */}
       {!sidebarCollapsed && (
-        <div className="p-4 border-t border-gray-100">
-          <div className="flex items-center justify-between text-xs text-[#9CA3AF]">
-            <span>ATLAS v2.0.1</span>
-            <div className="flex items-center gap-1">
-              <div className="w-2 h-2 rounded-full bg-[#0FB07A] animate-pulse" />
-              <span>Connected</span>
+        <div className="p-4 border-t border-gray-100 bg-gradient-to-r from-[#F7F9FC] to-white">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <div className="w-2 h-2 rounded-full bg-[#0FB07A] animate-pulse shadow-lg shadow-[#0FB07A]/50" />
+              <span className="text-xs text-[#6B7280] font-medium">Connected</span>
             </div>
+            <span className="text-[10px] text-[#9CA3AF] font-mono">v2.0.1</span>
           </div>
         </div>
       )}

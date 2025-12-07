@@ -11,13 +11,13 @@ import {
   Calendar,
   MapPin,
   DollarSign,
-  Clock,
-  ChevronRight,
   GripVertical,
   MoreHorizontal,
   FileText,
-  Star,
   Send,
+  Star,
+  ArrowUpRight,
+  Video,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -31,6 +31,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
 
 const mockJobs = [
   { id: 1, title: "Senior Frontend Developer", department: "Engineering", location: "Bangalore", type: "Full-time", salary: "₹18-25 LPA", posted: "2 days ago", applications: 45, status: "active" },
@@ -68,33 +69,48 @@ const TenantRecruitment: React.FC = () => {
     return "#E23E57";
   };
 
+  const handlePostJob = () => {
+    toast.success("Opening job posting form...");
+  };
+
+  const handleMoveCandidate = (name: string, fromStage: string, toStage: string) => {
+    toast.success(`Moved ${name} from ${fromStage} to ${toStage}`);
+  };
+
+  const handleCandidateClick = (candidate: typeof mockCandidates.applied[0]) => {
+    toast.info(`Opening profile for ${candidate.name}`);
+  };
+
   const CandidateCard = ({ candidate, stage }: { candidate: typeof mockCandidates.applied[0] & { interview?: string; offerSent?: string }; stage: string }) => (
-    <div className="p-3 bg-white rounded-lg border border-gray-100 hover:border-[#005EEB]/30 hover:shadow-md transition-all cursor-pointer group">
+    <button
+      onClick={() => handleCandidateClick(candidate)}
+      className="w-full p-4 bg-white rounded-xl border border-gray-100 hover:border-[#005EEB]/30 hover:shadow-lg transition-all cursor-pointer group text-left animate-fade-up"
+    >
       <div className="flex items-start gap-3">
-        <div className="cursor-grab">
-          <GripVertical className="w-4 h-4 text-[#6B7280] opacity-0 group-hover:opacity-100 transition-opacity" />
+        <div className="cursor-grab opacity-0 group-hover:opacity-100 transition-opacity">
+          <GripVertical className="w-4 h-4 text-[#6B7280]" />
         </div>
-        <Avatar className="w-10 h-10">
-          <AvatarFallback className="bg-[#005EEB]/10 text-[#005EEB] text-sm">
+        <Avatar className="w-11 h-11">
+          <AvatarFallback className="bg-gradient-to-br from-[#005EEB]/15 to-[#00C2FF]/10 text-[#005EEB] text-sm font-semibold">
             {candidate.name.split(" ").map(n => n[0]).join("")}
           </AvatarFallback>
         </Avatar>
         <div className="flex-1 min-w-0">
-          <p className="font-medium text-[#0F1E3A] truncate">{candidate.name}</p>
+          <p className="font-semibold text-[#0F1E3A] truncate group-hover:text-[#005EEB] transition-colors">{candidate.name}</p>
           <p className="text-xs text-[#6B7280] truncate">{candidate.role}</p>
           {candidate.interview && (
-            <p className="text-xs text-[#005EEB] mt-1 flex items-center gap-1">
+            <p className="text-xs text-[#005EEB] mt-1.5 flex items-center gap-1 font-medium">
               <Calendar className="w-3 h-3" /> {candidate.interview}
             </p>
           )}
           {candidate.offerSent && (
-            <Badge className="mt-1 bg-[#0FB07A]/10 text-[#0FB07A] border-[#0FB07A]/20 text-[10px]">
+            <Badge className="mt-1.5 bg-[#0FB07A]/10 text-[#0FB07A] border-[#0FB07A]/20 text-[10px] font-semibold">
               Offer sent {candidate.offerSent}
             </Badge>
           )}
         </div>
         <div
-          className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold"
+          className="w-10 h-10 rounded-xl flex items-center justify-center text-xs font-bold"
           style={{
             backgroundColor: `${getScoreColor(candidate.score)}15`,
             color: getScoreColor(candidate.score),
@@ -103,18 +119,21 @@ const TenantRecruitment: React.FC = () => {
           {candidate.score}
         </div>
       </div>
-    </div>
+    </button>
   );
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 animate-fade-up">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-[#0F1E3A]">Talent Acquisition</h1>
           <p className="text-sm text-[#6B7280]">Manage job postings and candidate pipeline</p>
         </div>
-        <Button className="bg-[#005EEB] hover:bg-[#004ACC] gap-2">
+        <Button 
+          className="bg-[#005EEB] hover:bg-[#004ACC] gap-2 shadow-lg shadow-[#005EEB]/20"
+          onClick={handlePostJob}
+        >
           <Plus className="w-4 h-4" /> Post New Job
         </Button>
       </div>
@@ -126,11 +145,15 @@ const TenantRecruitment: React.FC = () => {
           { label: "Total Candidates", value: 156, icon: Users, color: "#00C2FF" },
           { label: "Interviews This Week", value: 12, icon: Calendar, color: "#FFB020" },
           { label: "Offers Pending", value: 3, icon: FileText, color: "#0FB07A" },
-        ].map((stat) => (
-          <div
+        ].map((stat, i) => (
+          <button
             key={stat.label}
-            className="p-4 bg-white rounded-xl border border-gray-200"
-            style={{ boxShadow: "0 6px 18px rgba(16,24,40,0.06)" }}
+            onClick={() => toast.info(`${stat.label}: ${stat.value}`)}
+            className="p-4 bg-white rounded-xl border border-gray-200 hover:shadow-lg hover:border-[#005EEB]/30 transition-all hover-lift text-left animate-fade-up"
+            style={{ 
+              boxShadow: "0 6px 18px rgba(16,24,40,0.06)",
+              animationDelay: `${i * 100}ms`
+            }}
           >
             <div className="flex items-center gap-3">
               <div
@@ -144,7 +167,7 @@ const TenantRecruitment: React.FC = () => {
                 <p className="text-xs text-[#6B7280]">{stat.label}</p>
               </div>
             </div>
-          </div>
+          </button>
         ))}
       </div>
 
@@ -293,8 +316,12 @@ const TenantRecruitment: React.FC = () => {
                       <span>{candidate.interview}</span>
                     </div>
                   </div>
-                  <Button size="sm" className="bg-[#005EEB] hover:bg-[#004ACC]">
-                    Join Meeting
+                  <Button 
+                    size="sm" 
+                    className="bg-[#005EEB] hover:bg-[#004ACC] gap-1 shadow-lg shadow-[#005EEB]/20"
+                    onClick={() => toast.success(`Joining meeting with ${candidate.name}`)}
+                  >
+                    <Video className="w-3 h-3" /> Join Meeting
                   </Button>
                 </div>
               </div>

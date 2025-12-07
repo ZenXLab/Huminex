@@ -14,6 +14,7 @@ import {
   ChevronRight,
   Plus,
   Settings,
+  ArrowUpRight,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -21,6 +22,7 @@ import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
 import { RunPayrollModal } from "@/components/tenant/modals/RunPayrollModal";
+import { toast } from "sonner";
 
 const mockPayrollRuns = [
   { id: 1, month: "January 2026", status: "draft", employees: 184, gross: 1850000, net: 1620000, runDate: null },
@@ -64,10 +66,23 @@ const TenantPayroll: React.FC = () => {
     }
   };
 
+  const handleViewRun = (run: typeof mockPayrollRuns[0]) => {
+    toast.info(`Opening payroll details for ${run.month}`);
+    setSelectedRun(run);
+  };
+
+  const handleSettings = () => {
+    toast.info("Opening payroll settings...");
+  };
+
+  const handleFileNow = (title: string) => {
+    toast.success(`Filing ${title}...`);
+  };
+
   const currentRun = mockPayrollRuns[0];
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 animate-fade-up">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -75,11 +90,15 @@ const TenantPayroll: React.FC = () => {
           <p className="text-sm text-[#6B7280]">Manage payroll runs, salary components, and compliance</p>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" className="border-gray-200 text-[#6B7280] gap-2">
+          <Button 
+            variant="outline" 
+            className="border-gray-200 text-[#6B7280] gap-2 hover:border-[#005EEB]/30 hover-lift"
+            onClick={handleSettings}
+          >
             <Settings className="w-4 h-4" /> Settings
           </Button>
           <Button
-            className="bg-[#E23E57] hover:bg-[#C73550] gap-2"
+            className="bg-gradient-to-r from-[#E23E57] to-[#D63150] hover:from-[#D63150] hover:to-[#C02848] gap-2 shadow-lg shadow-[#E23E57]/30"
             onClick={() => setShowRunPayroll(true)}
           >
             <Play className="w-4 h-4" /> Run Payroll
@@ -88,18 +107,15 @@ const TenantPayroll: React.FC = () => {
       </div>
 
       {/* Current Cycle Card */}
-      <div className="bg-white rounded-xl border border-gray-200 p-6" style={{ boxShadow: "0 6px 18px rgba(16,24,40,0.06)" }}>
-        <div className="flex items-center justify-between mb-4">
+      <div className="bg-white rounded-2xl border border-gray-200 p-6 hover:shadow-lg transition-all" style={{ boxShadow: "0 6px 18px rgba(16,24,40,0.06)" }}>
+        <div className="flex items-center justify-between mb-5">
           <div>
             <p className="text-sm text-[#6B7280]">Current Payroll Cycle</p>
             <h2 className="text-xl font-bold text-[#0F1E3A]">{currentRun.month}</h2>
           </div>
           <Badge
             variant="outline"
-            className={cn(
-              "capitalize px-3 py-1",
-              `bg-[${getStatusConfig(currentRun.status).bg}]/10 text-[${getStatusConfig(currentRun.status).color}] border-[${getStatusConfig(currentRun.status).color}]/20`
-            )}
+            className="capitalize px-3 py-1.5 bg-[#6B7280]/10 text-[#6B7280] border-[#6B7280]/20"
           >
             <FileText className="w-3 h-3 mr-1" />
             {getStatusConfig(currentRun.status).label}
@@ -108,55 +124,55 @@ const TenantPayroll: React.FC = () => {
 
         {/* Stats */}
         <div className="grid grid-cols-4 gap-4 mb-6">
-          <div className="p-4 bg-[#F7F9FC] rounded-lg">
-            <div className="flex items-center gap-2 mb-2">
-              <Users className="w-5 h-5 text-[#005EEB]" />
-              <span className="text-sm text-[#6B7280]">Employees</span>
-            </div>
-            <p className="text-2xl font-bold text-[#0F1E3A]">{currentRun.employees}</p>
-          </div>
-          <div className="p-4 bg-[#F7F9FC] rounded-lg">
-            <div className="flex items-center gap-2 mb-2">
-              <TrendingUp className="w-5 h-5 text-[#0FB07A]" />
-              <span className="text-sm text-[#6B7280]">Gross Payroll</span>
-            </div>
-            <p className="text-2xl font-bold text-[#0F1E3A]">{formatCurrency(currentRun.gross)}</p>
-          </div>
-          <div className="p-4 bg-[#F7F9FC] rounded-lg">
-            <div className="flex items-center gap-2 mb-2">
-              <DollarSign className="w-5 h-5 text-[#00C2FF]" />
-              <span className="text-sm text-[#6B7280]">Net Payout</span>
-            </div>
-            <p className="text-2xl font-bold text-[#0F1E3A]">{formatCurrency(currentRun.net)}</p>
-          </div>
-          <div className="p-4 bg-[#FFB020]/10 rounded-lg">
-            <div className="flex items-center gap-2 mb-2">
-              <AlertTriangle className="w-5 h-5 text-[#FFB020]" />
-              <span className="text-sm text-[#6B7280]">Pending Actions</span>
-            </div>
-            <p className="text-2xl font-bold text-[#FFB020]">12</p>
-          </div>
+          {[
+            { label: "Employees", value: currentRun.employees, icon: Users, color: "#005EEB" },
+            { label: "Gross Payroll", value: formatCurrency(currentRun.gross), icon: TrendingUp, color: "#0FB07A" },
+            { label: "Net Payout", value: formatCurrency(currentRun.net), icon: DollarSign, color: "#00C2FF" },
+            { label: "Pending Actions", value: "12", icon: AlertTriangle, color: "#FFB020", alert: true },
+          ].map((stat) => (
+            <button
+              key={stat.label}
+              onClick={() => toast.info(`${stat.label}: ${stat.value}`)}
+              className={cn(
+                "p-4 rounded-xl text-left transition-all hover-lift",
+                stat.alert ? "bg-gradient-to-br from-[#FFB020]/15 to-[#FFB020]/5" : "bg-[#F7F9FC]"
+              )}
+            >
+              <div className="flex items-center gap-2 mb-2">
+                <stat.icon className="w-5 h-5" style={{ color: stat.color }} />
+                <span className="text-sm text-[#6B7280]">{stat.label}</span>
+              </div>
+              <p className={cn(
+                "text-2xl font-bold",
+                stat.alert ? "text-[#FFB020]" : "text-[#0F1E3A]"
+              )}>
+                {stat.value}
+              </p>
+            </button>
+          ))}
         </div>
 
         {/* Progress */}
-        <div className="space-y-2">
+        <div className="space-y-3">
           <div className="flex items-center justify-between text-sm">
             <span className="text-[#6B7280]">Payroll Progress</span>
-            <span className="font-medium text-[#0F1E3A]">2 of 4 steps complete</span>
+            <span className="font-semibold text-[#005EEB]">2 of 4 steps complete</span>
           </div>
-          <Progress value={50} className="h-2" />
-          <div className="flex justify-between mt-3">
+          <Progress value={50} className="h-2.5" />
+          <div className="flex justify-between mt-4">
             {["Collect Data", "Review", "Approve", "Disburse"].map((step, i) => (
               <div key={step} className="flex items-center gap-2">
                 <div
                   className={cn(
-                    "w-6 h-6 rounded-full flex items-center justify-center text-xs font-medium",
-                    i < 2 ? "bg-[#0FB07A] text-white" : "bg-[#F7F9FC] text-[#6B7280]"
+                    "w-8 h-8 rounded-full flex items-center justify-center text-xs font-semibold transition-all",
+                    i < 2 
+                      ? "bg-gradient-to-br from-[#0FB07A] to-[#00C2FF] text-white shadow-lg shadow-[#0FB07A]/30" 
+                      : "bg-[#F7F9FC] text-[#6B7280]"
                   )}
                 >
                   {i < 2 ? <CheckCircle className="w-4 h-4" /> : i + 1}
                 </div>
-                <span className={cn("text-xs", i < 2 ? "text-[#0F1E3A]" : "text-[#6B7280]")}>{step}</span>
+                <span className={cn("text-xs font-medium", i < 2 ? "text-[#0F1E3A]" : "text-[#6B7280]")}>{step}</span>
               </div>
             ))}
           </div>
@@ -204,8 +220,14 @@ const TenantPayroll: React.FC = () => {
                       </td>
                       <td className="px-4 py-4 text-[#6B7280]">{run.runDate || "—"}</td>
                       <td className="px-4 py-4 text-right">
-                        <Button variant="ghost" size="sm" className="text-[#005EEB] gap-1">
-                          View <ChevronRight className="w-4 h-4" />
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          className="text-[#005EEB] gap-1 group"
+                          onClick={() => handleViewRun(run)}
+                        >
+                          View 
+                          <ArrowUpRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
                         </Button>
                       </td>
                     </tr>
@@ -290,7 +312,11 @@ const TenantPayroll: React.FC = () => {
                 </div>
                 <p className="text-sm text-[#6B7280]">Due: {item.deadline}</p>
                 {item.status === "pending" && (
-                  <Button size="sm" className="w-full mt-3 bg-[#005EEB] hover:bg-[#004ACC]">
+                  <Button 
+                    size="sm" 
+                    className="w-full mt-3 bg-[#005EEB] hover:bg-[#004ACC] shadow-lg shadow-[#005EEB]/20"
+                    onClick={() => handleFileNow(item.title)}
+                  >
                     File Now
                   </Button>
                 )}
