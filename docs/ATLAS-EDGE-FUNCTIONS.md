@@ -1,8 +1,23 @@
 # ATLAS Edge Functions Documentation
 
-> **Version**: 2.0.0  
-> **Last Updated**: December 2024  
+> **Version**: 3.0.0  
+> **Last Updated**: December 7, 2025  
 > **Author**: CropXon ATLAS Team
+
+---
+
+## Summary Statistics
+
+| Component | Count |
+|-----------|-------|
+| **Database Tables** | 35 |
+| **Database Functions** | 6 |
+| **Database Triggers** | 0 |
+| **Edge Functions (Documented)** | 15 |
+| **Storage Buckets** | 1 |
+| **Secrets Configured** | 6 |
+
+---
 
 ## Overview
 
@@ -12,18 +27,31 @@ This document contains all Edge Functions for the ATLAS platform. Edge Functions
 - Background processing
 - Third-party integrations
 - Multi-tenant operations
+- Payroll processing
+- BGV verification
+- SSO authentication
+- Insurance claims
+- Document verification
 
 ---
 
 ## Table of Contents
 
-1. [Directory Structure](#directory-structure)
-2. [Required Secrets](#required-secrets)
-3. [Shared Utilities](#shared-utilities)
-4. [Notification Functions](#notification-functions)
-5. [Email Functions](#email-functions)
-6. [PDF Generation Functions](#pdf-generation-functions)
-7. [Usage Examples](#usage-examples)
+1. [Summary Statistics](#summary-statistics)
+2. [Directory Structure](#directory-structure)
+3. [Required Secrets](#required-secrets)
+4. [Shared Utilities](#shared-utilities)
+5. [Notification Functions](#notification-functions)
+6. [Email Functions](#email-functions)
+7. [Payroll Functions](#payroll-functions)
+8. [BGV Functions](#bgv-functions)
+9. [SSO Functions](#sso-functions)
+10. [Insurance Functions](#insurance-functions)
+11. [Document Verification Functions](#document-verification-functions)
+12. [PDF Generation Functions](#pdf-generation-functions)
+13. [Error Handling](#error-handling)
+14. [Testing](#testing)
+15. [Security Considerations](#security-considerations)
 
 ---
 
@@ -2045,6 +2073,964 @@ self.addEventListener('notificationclick', function(event) {
 
 ---
 
+## Insurance Functions
+
+### 10. process-insurance-claim
+
+**Purpose**: Initiates and processes insurance claims for employees through integrated insurance providers.
+
+**Endpoint**: `POST /functions/v1/process-insurance-claim`
+
+**File**: `supabase/functions/process-insurance-claim/index.ts`
+
+#### Required Secrets
+
+| Secret | Description |
+|--------|-------------|
+| `INSURANCE_PROVIDER_API_KEY` | API key for insurance provider |
+| `INSURANCE_PROVIDER_URL` | Insurance provider API endpoint |
+
+#### Request Payload
+
+```typescript
+interface InsuranceClaimPayload {
+  tenant_id: string;
+  employee_id: string;
+  claim_type: 'health' | 'dental' | 'vision' | 'life' | 'disability' | 'accident';
+  claim_amount: number;
+  claim_date: string;          // ISO date
+  description: string;
+  documents?: Array<{
+    name: string;
+    url: string;
+    type: string;
+  }>;
+  hospital_details?: {
+    name: string;
+    address: string;
+    admission_date?: string;
+    discharge_date?: string;
+  };
+  policy_number?: string;
+  priority?: 'normal' | 'urgent';
+}
+```
+
+#### Response
+
+```typescript
+interface InsuranceClaimResponse {
+  success: boolean;
+  claim_id: string;
+  reference_number: string;
+  status: 'submitted' | 'pending_documents' | 'under_review';
+  estimated_processing_days: number;
+  next_steps?: string[];
+}
+```
+
+#### Complete Implementation
+
+```typescript
+// supabase/functions/process-insurance-claim/index.ts
+
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+};
+
+interface InsuranceClaimPayload {
+  tenant_id: string;
+  employee_id: string;
+  claim_type: 'health' | 'dental' | 'vision' | 'life' | 'disability' | 'accident';
+  claim_amount: number;
+  claim_date: string;
+  description: string;
+  documents?: Array<{ name: string; url: string; type: string }>;
+  hospital_details?: {
+    name: string;
+    address: string;
+    admission_date?: string;
+    discharge_date?: string;
+  };
+  policy_number?: string;
+  priority?: 'normal' | 'urgent';
+}
+
+serve(async (req: Request) => {
+  if (req.method === 'OPTIONS') {
+    return new Response(null, { headers: corsHeaders });
+  }
+
+  try {
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    const insuranceApiKey = Deno.env.get('INSURANCE_PROVIDER_API_KEY');
+    const insuranceProviderUrl = Deno.env.get('INSURANCE_PROVIDER_URL') || 'https://api.insurance-provider.com/v1';
+    
+    const supabase = createClient(supabaseUrl, supabaseKey);
+    const payload: InsuranceClaimPayload = await req.json();
+
+    // Validate required fields
+    if (!payload.tenant_id || !payload.employee_id || !payload.claim_type || !payload.claim_amount) {
+      throw new Error('Missing required fields: tenant_id, employee_id, claim_type, claim_amount');
+    }
+
+    console.log('[process-insurance-claim] Processing claim:', {
+      tenant_id: payload.tenant_id,
+      employee_id: payload.employee_id,
+      claim_type: payload.claim_type,
+      amount: payload.claim_amount
+    });
+
+    // Fetch employee and policy details
+    const { data: employee, error: empError } = await supabase
+      .from('employees')
+      .select('id, name, email, insurance_policy_id')
+      .eq('id', payload.employee_id)
+      .eq('tenant_id', payload.tenant_id)
+      .single();
+
+    if (empError || !employee) {
+      throw new Error('Employee not found or not in tenant');
+    }
+
+    // Generate unique claim reference
+    const referenceNumber = `CLM-${Date.now()}-${Math.random().toString(36).substr(2, 6).toUpperCase()}`;
+
+    // Calculate estimated processing time
+    const estimatedDays = payload.priority === 'urgent' ? 3 : 7;
+
+    // Create claim record in database
+    const { data: claim, error: insertError } = await supabase
+      .from('insurance_claims')
+      .insert({
+        tenant_id: payload.tenant_id,
+        employee_id: payload.employee_id,
+        reference_number: referenceNumber,
+        claim_type: payload.claim_type,
+        claim_amount: payload.claim_amount,
+        claim_date: payload.claim_date,
+        description: payload.description,
+        documents: payload.documents || [],
+        hospital_details: payload.hospital_details || null,
+        policy_number: payload.policy_number || employee.insurance_policy_id,
+        status: 'submitted',
+        priority: payload.priority || 'normal',
+        submitted_at: new Date().toISOString()
+      })
+      .select()
+      .single();
+
+    if (insertError) throw insertError;
+
+    // Submit to external insurance provider if configured
+    let providerResponse = null;
+    if (insuranceApiKey) {
+      try {
+        const externalResponse = await fetch(`${insuranceProviderUrl}/claims`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${insuranceApiKey}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            reference_id: referenceNumber,
+            policy_number: payload.policy_number,
+            claim_type: payload.claim_type,
+            amount: payload.claim_amount,
+            claimant: {
+              name: employee.name,
+              email: employee.email
+            },
+            documents: payload.documents,
+            hospital_details: payload.hospital_details
+          })
+        });
+
+        providerResponse = await externalResponse.json();
+
+        // Update with provider reference
+        if (providerResponse.claim_id) {
+          await supabase
+            .from('insurance_claims')
+            .update({
+              provider_claim_id: providerResponse.claim_id,
+              status: 'under_review'
+            })
+            .eq('id', claim.id);
+        }
+
+        console.log('[process-insurance-claim] Provider response:', providerResponse);
+      } catch (providerError) {
+        console.error('[process-insurance-claim] Provider call failed:', providerError);
+      }
+    }
+
+    // Send notification to HR/Admin
+    await supabase.functions.invoke('send-notification', {
+      body: {
+        title: 'New Insurance Claim Submitted',
+        message: `${employee.name} submitted a ${payload.claim_type} claim for ₹${payload.claim_amount.toLocaleString()}`,
+        notification_type: 'info',
+        category: 'billing',
+        action_url: `/tenant/insurance/claims/${claim.id}`
+      }
+    });
+
+    // Determine next steps based on claim type
+    const nextSteps = [];
+    if (!payload.documents || payload.documents.length === 0) {
+      nextSteps.push('Upload supporting documents (bills, prescriptions, discharge summary)');
+    }
+    if (payload.claim_type === 'health' && !payload.hospital_details) {
+      nextSteps.push('Provide hospital/clinic details');
+    }
+    nextSteps.push('Claim will be reviewed within ' + estimatedDays + ' business days');
+
+    return new Response(
+      JSON.stringify({
+        success: true,
+        claim_id: claim.id,
+        reference_number: referenceNumber,
+        status: providerResponse ? 'under_review' : 'submitted',
+        estimated_processing_days: estimatedDays,
+        next_steps: nextSteps,
+        provider_reference: providerResponse?.claim_id
+      }),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
+
+  } catch (error) {
+    console.error('[process-insurance-claim] Error:', error);
+    return new Response(
+      JSON.stringify({ success: false, error: error.message }),
+      { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
+  }
+});
+```
+
+### 11. insurance-claim-webhook
+
+**Purpose**: Receives status updates from insurance provider and updates claim status.
+
+**Endpoint**: `POST /functions/v1/insurance-claim-webhook`
+
+**File**: `supabase/functions/insurance-claim-webhook/index.ts`
+
+```typescript
+// supabase/functions/insurance-claim-webhook/index.ts
+
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-webhook-signature',
+};
+
+interface InsuranceWebhookPayload {
+  reference_id: string;
+  provider_claim_id: string;
+  event_type: 'status_update' | 'approved' | 'rejected' | 'payment_processed' | 'documents_required';
+  status: string;
+  approved_amount?: number;
+  rejection_reason?: string;
+  payment_date?: string;
+  payment_reference?: string;
+  required_documents?: string[];
+  notes?: string;
+}
+
+serve(async (req: Request) => {
+  if (req.method === 'OPTIONS') {
+    return new Response(null, { headers: corsHeaders });
+  }
+
+  try {
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    const supabase = createClient(supabaseUrl, supabaseKey);
+
+    const payload: InsuranceWebhookPayload = await req.json();
+
+    console.log('[insurance-claim-webhook] Received:', {
+      reference_id: payload.reference_id,
+      event_type: payload.event_type,
+      status: payload.status
+    });
+
+    // Find claim by reference number
+    const { data: claim, error: findError } = await supabase
+      .from('insurance_claims')
+      .select('*, employees(name, email)')
+      .eq('reference_number', payload.reference_id)
+      .single();
+
+    if (findError || !claim) {
+      throw new Error('Insurance claim not found: ' + payload.reference_id);
+    }
+
+    // Update claim based on event type
+    const updateData: Record<string, unknown> = {
+      status: payload.status,
+      last_updated_at: new Date().toISOString()
+    };
+
+    if (payload.approved_amount !== undefined) {
+      updateData.approved_amount = payload.approved_amount;
+    }
+
+    if (payload.rejection_reason) {
+      updateData.rejection_reason = payload.rejection_reason;
+    }
+
+    if (payload.payment_date) {
+      updateData.payment_date = payload.payment_date;
+      updateData.payment_reference = payload.payment_reference;
+    }
+
+    if (payload.notes) {
+      updateData.provider_notes = payload.notes;
+    }
+
+    const { error: updateError } = await supabase
+      .from('insurance_claims')
+      .update(updateData)
+      .eq('id', claim.id);
+
+    if (updateError) throw updateError;
+
+    // Send notification based on event type
+    let notificationTitle = 'Insurance Claim Update';
+    let notificationType = 'info';
+    let notificationMessage = '';
+
+    switch (payload.event_type) {
+      case 'approved':
+        notificationTitle = 'Insurance Claim Approved';
+        notificationType = 'success';
+        notificationMessage = `Your ${claim.claim_type} claim has been approved for ₹${payload.approved_amount?.toLocaleString()}`;
+        break;
+      case 'rejected':
+        notificationTitle = 'Insurance Claim Rejected';
+        notificationType = 'error';
+        notificationMessage = `Your ${claim.claim_type} claim was rejected. Reason: ${payload.rejection_reason}`;
+        break;
+      case 'payment_processed':
+        notificationTitle = 'Insurance Payment Processed';
+        notificationType = 'success';
+        notificationMessage = `Payment of ₹${payload.approved_amount?.toLocaleString()} has been processed for your ${claim.claim_type} claim`;
+        break;
+      case 'documents_required':
+        notificationTitle = 'Documents Required';
+        notificationType = 'warning';
+        notificationMessage = `Additional documents required for your ${claim.claim_type} claim: ${payload.required_documents?.join(', ')}`;
+        break;
+      default:
+        notificationMessage = `Your ${claim.claim_type} claim status updated to: ${payload.status}`;
+    }
+
+    // Notify employee
+    await supabase.functions.invoke('send-notification', {
+      body: {
+        title: notificationTitle,
+        message: notificationMessage,
+        notification_type: notificationType,
+        category: 'billing',
+        target_admin_id: claim.employee_id,
+        action_url: `/portal/insurance/claims/${claim.id}`
+      }
+    });
+
+    // Send email for important updates
+    if (['approved', 'rejected', 'payment_processed'].includes(payload.event_type)) {
+      await supabase.functions.invoke('send-notification', {
+        body: {
+          title: notificationTitle,
+          message: notificationMessage,
+          notification_type: notificationType,
+          send_email: true,
+          email_recipient: claim.employees?.email
+        }
+      });
+    }
+
+    console.log('[insurance-claim-webhook] Updated claim:', claim.id);
+
+    return new Response(
+      JSON.stringify({ success: true, received: true }),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
+
+  } catch (error) {
+    console.error('[insurance-claim-webhook] Error:', error);
+    return new Response(
+      JSON.stringify({ success: false, error: error.message }),
+      { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
+  }
+});
+```
+
+#### Usage Examples
+
+```typescript
+// Submit health insurance claim
+await supabase.functions.invoke('process-insurance-claim', {
+  body: {
+    tenant_id: 'tenant-uuid',
+    employee_id: 'employee-uuid',
+    claim_type: 'health',
+    claim_amount: 25000,
+    claim_date: '2025-12-01',
+    description: 'Hospitalization for surgery',
+    hospital_details: {
+      name: 'Apollo Hospital',
+      address: 'Chennai',
+      admission_date: '2025-11-28',
+      discharge_date: '2025-12-01'
+    },
+    documents: [
+      { name: 'Discharge Summary', url: 'https://...', type: 'pdf' },
+      { name: 'Bills', url: 'https://...', type: 'pdf' }
+    ],
+    priority: 'normal'
+  }
+});
+
+// Urgent dental claim
+await supabase.functions.invoke('process-insurance-claim', {
+  body: {
+    tenant_id: 'tenant-uuid',
+    employee_id: 'employee-uuid',
+    claim_type: 'dental',
+    claim_amount: 8000,
+    claim_date: '2025-12-05',
+    description: 'Root canal treatment',
+    priority: 'urgent'
+  }
+});
+```
+
+---
+
+## Document Verification Functions
+
+### 12. verify-document
+
+**Purpose**: Initiates document verification (Aadhaar, PAN, Passport, Driving License, etc.) through verification providers.
+
+**Endpoint**: `POST /functions/v1/verify-document`
+
+**File**: `supabase/functions/verify-document/index.ts`
+
+#### Required Secrets
+
+| Secret | Description |
+|--------|-------------|
+| `DOCUMENT_VERIFY_API_KEY` | API key for document verification provider (IDFY, Digio, etc.) |
+| `DOCUMENT_VERIFY_URL` | Verification provider API endpoint |
+
+#### Request Payload
+
+```typescript
+interface VerifyDocumentPayload {
+  tenant_id: string;
+  employee_id?: string;           // Optional: link to employee
+  reference_type: 'employee' | 'vendor' | 'candidate' | 'other';
+  reference_id: string;
+  document_type: 'aadhaar' | 'pan' | 'passport' | 'driving_license' | 'voter_id' | 'bank_account' | 'gst' | 'company_pan';
+  document_number: string;
+  additional_data?: {
+    name?: string;                 // For name match verification
+    dob?: string;                  // For DOB verification
+    father_name?: string;
+    address?: string;
+  };
+  consent?: {
+    purpose: string;
+    timestamp: string;
+    ip_address?: string;
+  };
+}
+```
+
+#### Response
+
+```typescript
+interface VerifyDocumentResponse {
+  success: boolean;
+  verification_id: string;
+  status: 'initiated' | 'pending' | 'verified' | 'failed';
+  result?: {
+    is_valid: boolean;
+    name_match?: boolean;
+    dob_match?: boolean;
+    details?: Record<string, unknown>;
+  };
+  message?: string;
+}
+```
+
+#### Complete Implementation
+
+```typescript
+// supabase/functions/verify-document/index.ts
+
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+};
+
+interface VerifyDocumentPayload {
+  tenant_id: string;
+  employee_id?: string;
+  reference_type: 'employee' | 'vendor' | 'candidate' | 'other';
+  reference_id: string;
+  document_type: 'aadhaar' | 'pan' | 'passport' | 'driving_license' | 'voter_id' | 'bank_account' | 'gst' | 'company_pan';
+  document_number: string;
+  additional_data?: {
+    name?: string;
+    dob?: string;
+    father_name?: string;
+    address?: string;
+  };
+  consent?: {
+    purpose: string;
+    timestamp: string;
+    ip_address?: string;
+  };
+}
+
+// Mask sensitive document numbers for logging
+function maskDocumentNumber(docType: string, docNumber: string): string {
+  if (!docNumber) return '';
+  const len = docNumber.length;
+  if (len <= 4) return '****';
+  return docNumber.substring(0, 2) + '*'.repeat(len - 4) + docNumber.substring(len - 2);
+}
+
+serve(async (req: Request) => {
+  if (req.method === 'OPTIONS') {
+    return new Response(null, { headers: corsHeaders });
+  }
+
+  try {
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    const verifyApiKey = Deno.env.get('DOCUMENT_VERIFY_API_KEY');
+    const verifyProviderUrl = Deno.env.get('DOCUMENT_VERIFY_URL') || 'https://api.idfy.com/v3';
+    
+    const supabase = createClient(supabaseUrl, supabaseKey);
+    const payload: VerifyDocumentPayload = await req.json();
+
+    // Validate required fields
+    if (!payload.tenant_id || !payload.document_type || !payload.document_number || !payload.reference_id) {
+      throw new Error('Missing required fields: tenant_id, document_type, document_number, reference_id');
+    }
+
+    // Validate consent for Aadhaar (mandatory in India)
+    if (payload.document_type === 'aadhaar' && !payload.consent) {
+      throw new Error('Consent is mandatory for Aadhaar verification');
+    }
+
+    console.log('[verify-document] Starting verification:', {
+      tenant_id: payload.tenant_id,
+      document_type: payload.document_type,
+      masked_number: maskDocumentNumber(payload.document_type, payload.document_number),
+      reference_type: payload.reference_type
+    });
+
+    // Generate verification ID
+    const verificationId = `VRF-${payload.document_type.toUpperCase()}-${Date.now()}-${Math.random().toString(36).substr(2, 6)}`;
+
+    // Create verification record
+    const { data: verification, error: insertError } = await supabase
+      .from('document_verifications')
+      .insert({
+        tenant_id: payload.tenant_id,
+        employee_id: payload.employee_id,
+        verification_id: verificationId,
+        reference_type: payload.reference_type,
+        reference_id: payload.reference_id,
+        document_type: payload.document_type,
+        document_number_masked: maskDocumentNumber(payload.document_type, payload.document_number),
+        status: 'initiated',
+        consent_data: payload.consent,
+        initiated_at: new Date().toISOString()
+      })
+      .select()
+      .single();
+
+    if (insertError) throw insertError;
+
+    // Call external verification provider
+    let verificationResult = null;
+    if (verifyApiKey) {
+      try {
+        // Build verification request based on document type
+        const verifyRequest: Record<string, unknown> = {
+          task_id: verificationId,
+          group_id: payload.tenant_id,
+        };
+
+        // Configure based on document type
+        switch (payload.document_type) {
+          case 'aadhaar':
+            verifyRequest.essentials = {
+              aadhaar_number: payload.document_number,
+              consent: payload.consent?.purpose || 'Employment verification',
+              consent_timestamp: payload.consent?.timestamp || new Date().toISOString()
+            };
+            break;
+          case 'pan':
+            verifyRequest.essentials = {
+              pan_number: payload.document_number,
+              name: payload.additional_data?.name,
+              dob: payload.additional_data?.dob
+            };
+            break;
+          case 'bank_account':
+            verifyRequest.essentials = {
+              account_number: payload.document_number,
+              ifsc: payload.additional_data?.['ifsc'],
+              name: payload.additional_data?.name
+            };
+            break;
+          default:
+            verifyRequest.essentials = {
+              document_number: payload.document_number,
+              name: payload.additional_data?.name
+            };
+        }
+
+        const verifyResponse = await fetch(`${verifyProviderUrl}/tasks/sync/verify/${payload.document_type}`, {
+          method: 'POST',
+          headers: {
+            'api-key': verifyApiKey,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(verifyRequest)
+        });
+
+        verificationResult = await verifyResponse.json();
+
+        // Update verification record with result
+        const isValid = verificationResult.result?.valid === true || 
+                       verificationResult.result?.status === 'verified';
+
+        await supabase
+          .from('document_verifications')
+          .update({
+            status: isValid ? 'verified' : 'failed',
+            is_valid: isValid,
+            verification_result: verificationResult.result,
+            provider_task_id: verificationResult.task_id,
+            completed_at: new Date().toISOString()
+          })
+          .eq('id', verification.id);
+
+        console.log('[verify-document] Verification completed:', {
+          verification_id: verificationId,
+          is_valid: isValid
+        });
+
+        return new Response(
+          JSON.stringify({
+            success: true,
+            verification_id: verificationId,
+            status: isValid ? 'verified' : 'failed',
+            result: {
+              is_valid: isValid,
+              name_match: verificationResult.result?.name_match,
+              dob_match: verificationResult.result?.dob_match,
+              details: verificationResult.result
+            }
+          }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+
+      } catch (providerError) {
+        console.error('[verify-document] Provider error:', providerError);
+        
+        // Update status to pending for manual review
+        await supabase
+          .from('document_verifications')
+          .update({
+            status: 'pending',
+            error_message: providerError.message
+          })
+          .eq('id', verification.id);
+      }
+    }
+
+    // Return pending status if no provider configured or provider failed
+    return new Response(
+      JSON.stringify({
+        success: true,
+        verification_id: verificationId,
+        status: 'pending',
+        message: 'Verification initiated. Manual review may be required.'
+      }),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
+
+  } catch (error) {
+    console.error('[verify-document] Error:', error);
+    return new Response(
+      JSON.stringify({ success: false, error: error.message }),
+      { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
+  }
+});
+```
+
+### 13. document-ocr-extract
+
+**Purpose**: Extracts data from uploaded document images using OCR and AI.
+
+**Endpoint**: `POST /functions/v1/document-ocr-extract`
+
+**File**: `supabase/functions/document-ocr-extract/index.ts`
+
+```typescript
+// supabase/functions/document-ocr-extract/index.ts
+
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+};
+
+interface OCRExtractPayload {
+  tenant_id: string;
+  document_url: string;          // URL of uploaded document image
+  document_type: 'aadhaar' | 'pan' | 'passport' | 'driving_license' | 'bank_statement' | 'payslip' | 'offer_letter' | 'other';
+  extract_fields?: string[];     // Specific fields to extract
+}
+
+serve(async (req: Request) => {
+  if (req.method === 'OPTIONS') {
+    return new Response(null, { headers: corsHeaders });
+  }
+
+  try {
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    const ocrApiKey = Deno.env.get('OCR_API_KEY'); // Can use Google Vision, AWS Textract, etc.
+    
+    const supabase = createClient(supabaseUrl, supabaseKey);
+    const payload: OCRExtractPayload = await req.json();
+
+    if (!payload.tenant_id || !payload.document_url || !payload.document_type) {
+      throw new Error('Missing required fields: tenant_id, document_url, document_type');
+    }
+
+    console.log('[document-ocr-extract] Processing:', {
+      tenant_id: payload.tenant_id,
+      document_type: payload.document_type
+    });
+
+    // Define expected fields based on document type
+    const fieldMappings: Record<string, string[]> = {
+      aadhaar: ['aadhaar_number', 'name', 'dob', 'gender', 'address'],
+      pan: ['pan_number', 'name', 'father_name', 'dob'],
+      passport: ['passport_number', 'name', 'nationality', 'dob', 'issue_date', 'expiry_date', 'place_of_birth'],
+      driving_license: ['license_number', 'name', 'dob', 'issue_date', 'validity', 'blood_group', 'vehicle_class'],
+      bank_statement: ['account_number', 'account_holder', 'bank_name', 'ifsc', 'opening_balance', 'closing_balance'],
+      payslip: ['employee_name', 'employee_id', 'month', 'gross_salary', 'deductions', 'net_salary'],
+      offer_letter: ['candidate_name', 'position', 'salary', 'joining_date', 'company_name'],
+      other: ['text_content']
+    };
+
+    const fieldsToExtract = payload.extract_fields || fieldMappings[payload.document_type] || ['text_content'];
+
+    // For demo/development, return mock extracted data
+    // In production, integrate with OCR provider (Google Vision, AWS Textract, IDFY OCR)
+    let extractedData: Record<string, unknown> = {};
+    
+    if (ocrApiKey) {
+      // Call OCR provider API
+      // Example with Google Vision API
+      try {
+        const ocrResponse = await fetch('https://vision.googleapis.com/v1/images:annotate', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${ocrApiKey}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            requests: [{
+              image: { source: { imageUri: payload.document_url } },
+              features: [
+                { type: 'TEXT_DETECTION' },
+                { type: 'DOCUMENT_TEXT_DETECTION' }
+              ]
+            }]
+          })
+        });
+
+        const ocrResult = await ocrResponse.json();
+        const fullText = ocrResult.responses?.[0]?.fullTextAnnotation?.text || '';
+        
+        // Parse extracted text based on document type
+        extractedData = parseDocumentText(fullText, payload.document_type, fieldsToExtract);
+        
+      } catch (ocrError) {
+        console.error('[document-ocr-extract] OCR error:', ocrError);
+        throw new Error('OCR extraction failed');
+      }
+    } else {
+      // Mock data for development
+      extractedData = {
+        raw_text: 'OCR provider not configured. Please set OCR_API_KEY.',
+        fields_requested: fieldsToExtract,
+        status: 'mock'
+      };
+    }
+
+    // Store extraction result
+    const { data: extraction, error: insertError } = await supabase
+      .from('document_extractions')
+      .insert({
+        tenant_id: payload.tenant_id,
+        document_url: payload.document_url,
+        document_type: payload.document_type,
+        extracted_data: extractedData,
+        confidence_score: extractedData.confidence || null,
+        created_at: new Date().toISOString()
+      })
+      .select()
+      .single();
+
+    if (insertError) {
+      console.error('[document-ocr-extract] Insert error:', insertError);
+    }
+
+    return new Response(
+      JSON.stringify({
+        success: true,
+        extraction_id: extraction?.id,
+        document_type: payload.document_type,
+        extracted_data: extractedData,
+        fields_extracted: Object.keys(extractedData)
+      }),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
+
+  } catch (error) {
+    console.error('[document-ocr-extract] Error:', error);
+    return new Response(
+      JSON.stringify({ success: false, error: error.message }),
+      { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
+  }
+});
+
+// Parse OCR text based on document type
+function parseDocumentText(
+  text: string, 
+  docType: string, 
+  fields: string[]
+): Record<string, unknown> {
+  const result: Record<string, unknown> = { raw_text: text };
+  
+  // Document-specific parsing logic
+  switch (docType) {
+    case 'pan':
+      // PAN number pattern: AAAAA0000A
+      const panMatch = text.match(/[A-Z]{5}[0-9]{4}[A-Z]/);
+      if (panMatch) result.pan_number = panMatch[0];
+      break;
+      
+    case 'aadhaar':
+      // Aadhaar pattern: 0000 0000 0000
+      const aadhaarMatch = text.match(/\d{4}\s?\d{4}\s?\d{4}/);
+      if (aadhaarMatch) result.aadhaar_number = aadhaarMatch[0].replace(/\s/g, '');
+      break;
+      
+    // Add more document-specific parsing...
+  }
+  
+  result.confidence = 0.85; // Example confidence score
+  return result;
+}
+```
+
+#### Usage Examples
+
+```typescript
+// Verify PAN card
+await supabase.functions.invoke('verify-document', {
+  body: {
+    tenant_id: 'tenant-uuid',
+    employee_id: 'employee-uuid',
+    reference_type: 'employee',
+    reference_id: 'employee-uuid',
+    document_type: 'pan',
+    document_number: 'ABCDE1234F',
+    additional_data: {
+      name: 'John Doe',
+      dob: '1990-01-15'
+    }
+  }
+});
+
+// Verify Aadhaar with consent
+await supabase.functions.invoke('verify-document', {
+  body: {
+    tenant_id: 'tenant-uuid',
+    employee_id: 'employee-uuid',
+    reference_type: 'employee',
+    reference_id: 'employee-uuid',
+    document_type: 'aadhaar',
+    document_number: '123456789012',
+    consent: {
+      purpose: 'Employment background verification',
+      timestamp: new Date().toISOString(),
+      ip_address: '192.168.1.1'
+    }
+  }
+});
+
+// Bank account verification
+await supabase.functions.invoke('verify-document', {
+  body: {
+    tenant_id: 'tenant-uuid',
+    employee_id: 'employee-uuid',
+    reference_type: 'employee',
+    reference_id: 'employee-uuid',
+    document_type: 'bank_account',
+    document_number: '12345678901234',
+    additional_data: {
+      ifsc: 'HDFC0001234',
+      name: 'John Doe'
+    }
+  }
+});
+
+// Extract data from uploaded PAN image
+await supabase.functions.invoke('document-ocr-extract', {
+  body: {
+    tenant_id: 'tenant-uuid',
+    document_url: 'https://storage.supabase.co/..../pan-card.jpg',
+    document_type: 'pan'
+  }
+});
+```
+
+---
+
 ## Error Handling
 
 All functions follow this error response pattern:
@@ -2063,6 +3049,9 @@ Common error codes:
 - `NOT_FOUND` - Resource not found
 - `RATE_LIMITED` - Too many requests
 - `INTERNAL_ERROR` - Server error
+- `PROVIDER_ERROR` - Third-party provider error
+- `CONSENT_REQUIRED` - User consent not provided
+- `DOCUMENT_INVALID` - Document validation failed
 
 ---
 
@@ -2079,6 +3068,18 @@ curl -X POST 'http://localhost:54321/functions/v1/send-notification' \
   -H 'Content-Type: application/json' \
   -H 'Authorization: Bearer YOUR_ANON_KEY' \
   -d '{"title":"Test","message":"Hello","notification_type":"info"}'
+
+# Test insurance claim
+curl -X POST 'http://localhost:54321/functions/v1/process-insurance-claim' \
+  -H 'Content-Type: application/json' \
+  -H 'Authorization: Bearer YOUR_ANON_KEY' \
+  -d '{"tenant_id":"...","employee_id":"...","claim_type":"health","claim_amount":10000}'
+
+# Test document verification
+curl -X POST 'http://localhost:54321/functions/v1/verify-document' \
+  -H 'Content-Type: application/json' \
+  -H 'Authorization: Bearer YOUR_ANON_KEY' \
+  -d '{"tenant_id":"...","document_type":"pan","document_number":"ABCDE1234F","reference_type":"employee","reference_id":"..."}'
 ```
 
 ---
@@ -2090,7 +3091,36 @@ curl -X POST 'http://localhost:54321/functions/v1/send-notification' \
 3. **Rate limit emails** - Use batch processing
 4. **Log all actions** - For audit trail
 5. **Use HTTPS only** - Enforced by Supabase
+6. **Mask sensitive data** - Never log full document numbers
+7. **Require consent** - Especially for Aadhaar verification (mandatory in India)
+8. **Secure webhooks** - Validate signatures from external providers
+9. **Encrypt stored data** - Use Supabase Vault for sensitive fields
+10. **Audit trail** - Log all verification and claim activities
+
+---
+
+## Appendix: Complete Function List
+
+| # | Function Name | Purpose | Category |
+|---|--------------|---------|----------|
+| 1 | `send-notification` | Create single notification | Notifications |
+| 2 | `send-bulk-notifications` | Send to multiple users | Notifications |
+| 3 | `send-welcome-email` | Welcome new clients | Email |
+| 4 | `send-feature-unlock-email` | Feature unlock alerts | Email |
+| 5 | `send-quote-followup` | Quote follow-up emails | Email |
+| 6 | `generate-invoice-pdf` | Generate invoice PDFs | PDF |
+| 7 | `run-payroll` | Process tenant payroll | Payroll |
+| 8 | `initiate-bgv` | Start background check | BGV |
+| 9 | `bgv-webhook` | BGV status updates | BGV |
+| 10 | `sso-initiate` | Start SSO auth flow | SSO |
+| 11 | `sso-callback` | Handle SSO callback | SSO |
+| 12 | `process-insurance-claim` | Submit insurance claim | Insurance |
+| 13 | `insurance-claim-webhook` | Claim status updates | Insurance |
+| 14 | `verify-document` | Verify identity documents | Document |
+| 15 | `document-ocr-extract` | Extract data from docs | Document |
 
 ---
 
 *End of ATLAS Edge Functions Documentation*
+
+*Last Updated: December 7, 2025 | Version 3.0.0*
