@@ -431,6 +431,14 @@ export const Header = ({ onQuoteClick }: HeaderProps) => {
               <div className="absolute inset-0 bg-gradient-to-r from-primary/0 via-primary/10 to-primary/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700" />
             </button>
 
+            {/* Pricing Link */}
+            <Link to="/pricing">
+              <Button variant="ghost" size="sm" className="gap-2 font-medium text-sm h-9">
+                <Wallet className="h-4 w-4" />
+                Pricing
+              </Button>
+            </Link>
+
             {user ? (
               <>
                 <Link to="/portal">
@@ -444,19 +452,59 @@ export const Header = ({ onQuoteClick }: HeaderProps) => {
                 </Button>
               </>
             ) : (
-              <>
-                <Link to="/portal/login">
-                  <Button variant="ghost" size="sm" className="gap-2 font-medium text-sm h-9">
-                    <User className="h-4 w-4" />
-                    Client Login
-                  </Button>
-                </Link>
-                <Link to="/tenant/login">
-                  <Button variant="ghost" size="sm" className="font-medium text-sm h-9">
-                    Tenant Login
-                  </Button>
-                </Link>
-              </>
+              /* Login Dropdown */
+              <div 
+                className="relative"
+                onMouseEnter={() => setActiveDropdown("login")}
+                onMouseLeave={() => setActiveDropdown(null)}
+              >
+                <Button variant="ghost" size="sm" className="gap-2 font-medium text-sm h-9">
+                  <User className="h-4 w-4" />
+                  Login
+                  <ChevronDown className={`h-3.5 w-3.5 transition-transform duration-200 ${activeDropdown === "login" ? "rotate-180" : ""}`} />
+                </Button>
+                <div 
+                  className={`absolute top-full right-0 pt-2 transition-all duration-200 ${activeDropdown === "login" ? "opacity-100 translate-y-0 pointer-events-auto" : "opacity-0 -translate-y-2 pointer-events-none"}`}
+                >
+                  <div className="w-72 bg-card border border-border/60 rounded-xl shadow-2xl backdrop-blur-xl overflow-hidden">
+                    <div className="p-3 bg-muted/30 border-b border-border/40">
+                      <h3 className="font-heading font-semibold text-foreground text-sm">Client & Enterprise Login</h3>
+                      <p className="text-xs text-muted-foreground">Choose your portal access</p>
+                    </div>
+                    <div className="p-2 space-y-1">
+                      <Link
+                        to="/portal/login"
+                        className="flex items-center gap-3 px-3 py-3 text-foreground/70 hover:text-foreground hover:bg-muted/60 rounded-lg transition-all duration-200"
+                      >
+                        <div className="w-10 h-10 rounded-lg bg-blue-500/10 flex items-center justify-center">
+                          <Users className="w-5 h-5 text-blue-500" />
+                        </div>
+                        <div className="flex-1">
+                          <span className="text-sm font-medium block">Employee Portal</span>
+                          <span className="text-xs text-muted-foreground">Access for employees & managers</span>
+                        </div>
+                      </Link>
+                      <Link
+                        to="/tenant/login"
+                        className="flex items-center gap-3 px-3 py-3 text-foreground/70 hover:text-foreground hover:bg-muted/60 rounded-lg transition-all duration-200"
+                      >
+                        <div className="w-10 h-10 rounded-lg bg-purple-500/10 flex items-center justify-center">
+                          <Building2 className="w-5 h-5 text-purple-500" />
+                        </div>
+                        <div className="flex-1">
+                          <span className="text-sm font-medium block">Organization Admin</span>
+                          <span className="text-xs text-muted-foreground">HR & Super Admin access</span>
+                        </div>
+                      </Link>
+                    </div>
+                    <div className="p-3 bg-muted/20 border-t border-border/40">
+                      <p className="text-xs text-muted-foreground text-center">
+                        New to ATLAS? <Link to="/onboarding" className="text-primary hover:underline">Start Onboarding</Link>
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
             )}
             <Link to="/get-quote">
               <Button 
@@ -533,7 +581,7 @@ export const Header = ({ onQuoteClick }: HeaderProps) => {
             <div className="p-4 space-y-3 border-t border-border/40">
               {user ? (
                 <>
-                  <Link to="/dashboard" onClick={() => setMobileMenuOpen(false)}>
+                  <Link to="/portal" onClick={() => setMobileMenuOpen(false)}>
                     <Button variant="outline" className="w-full justify-center gap-2">
                       <LayoutDashboard className="h-4 w-4" />
                       Dashboard
@@ -544,15 +592,29 @@ export const Header = ({ onQuoteClick }: HeaderProps) => {
                   </Button>
                 </>
               ) : (
-                <Link to="/auth" onClick={() => setMobileMenuOpen(false)}>
-                  <Button variant="outline" className="w-full justify-center gap-2">
-                    <User className="h-4 w-4" />
-                    Sign In
-                  </Button>
-                </Link>
+                <>
+                  <Link to="/portal/login" onClick={() => setMobileMenuOpen(false)}>
+                    <Button variant="outline" className="w-full justify-center gap-2">
+                      <Users className="h-4 w-4" />
+                      Employee Portal Login
+                    </Button>
+                  </Link>
+                  <Link to="/tenant/login" onClick={() => setMobileMenuOpen(false)}>
+                    <Button variant="outline" className="w-full justify-center gap-2">
+                      <Building2 className="h-4 w-4" />
+                      Organization Admin Login
+                    </Button>
+                  </Link>
+                </>
               )}
+              <Link to="/pricing" onClick={() => setMobileMenuOpen(false)}>
+                <Button variant="secondary" className="w-full gap-2">
+                  <Wallet className="h-4 w-4" />
+                  View Pricing
+                </Button>
+              </Link>
               <Link to="/get-quote" onClick={() => setMobileMenuOpen(false)}>
-                <Button className="w-full">Get a Quote</Button>
+                <Button className="w-full">Get Custom Quote</Button>
               </Link>
             </div>
           </div>

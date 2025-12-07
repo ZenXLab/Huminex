@@ -88,13 +88,17 @@ const Pricing = () => {
           {/* Hero Section */}
           <section className="py-16 lg:py-24 bg-gradient-to-b from-primary/5 to-background">
             <div className="container mx-auto px-4 text-center">
+              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary text-sm font-medium mb-6">
+                <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
+                Compare Plans & Features
+              </div>
               <h1 className="text-4xl md:text-5xl lg:text-6xl font-heading font-bold text-foreground mb-6">
                 Simple, Transparent Pricing
               </h1>
               <p className="text-xl text-muted-foreground max-w-3xl mx-auto mb-8">
-                Workday-level power. Startup-friendly pricing. Choose your region and scale as you grow.
+                Compare ATLAS plans side-by-side. Find the right fit for your business size and needs.
               </p>
-              <div className="flex items-center justify-center gap-4 text-sm text-muted-foreground">
+              <div className="flex flex-wrap items-center justify-center gap-4 text-sm text-muted-foreground mb-8">
                 <span className="flex items-center gap-2">
                   <div className="w-2 h-2 rounded-full bg-green-500" />
                   90-Day Free Trial
@@ -107,6 +111,17 @@ const Pricing = () => {
                   <div className="w-2 h-2 rounded-full bg-green-500" />
                   Price Lock Guarantee
                 </span>
+              </div>
+              
+              {/* Clarification Banner */}
+              <div className="max-w-2xl mx-auto p-4 rounded-xl bg-muted/50 border border-border/50">
+                <p className="text-sm text-muted-foreground">
+                  <strong className="text-foreground">Need a custom quote?</strong> Use our{" "}
+                  <a href="/get-quote" className="text-primary hover:underline font-medium">
+                    Quote Builder
+                  </a>{" "}
+                  to configure services, add-ons, and get personalized pricing for your specific requirements.
+                </p>
               </div>
             </div>
           </section>

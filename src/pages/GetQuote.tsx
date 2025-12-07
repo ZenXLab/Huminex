@@ -284,14 +284,23 @@ const GetQuote = () => {
         <div className="container mx-auto px-4">
           {/* Header */}
           <div className="text-center mb-12">
-            <Badge className="mb-4 bg-primary/10 text-primary border-primary/20">
-              <Calculator className="w-3 h-3 mr-1" />
-              ATLAS Quote Builder
-            </Badge>
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary text-sm font-medium mb-4">
+              <Calculator className="w-4 h-4" />
+              Custom Quote Builder
+            </div>
             <h1 className="text-4xl font-bold mb-4">Build Your Custom Quote</h1>
-            <p className="text-muted-foreground max-w-2xl mx-auto">
-              Compare plans, select services, and get instant pricing tailored to your business needs.
+            <p className="text-muted-foreground max-w-2xl mx-auto mb-6">
+              Configure your exact services, select add-ons, and get personalized pricing tailored to your business.
             </p>
+            <div className="max-w-xl mx-auto p-3 rounded-xl bg-muted/50 border border-border/50">
+              <p className="text-sm text-muted-foreground">
+                <strong className="text-foreground">Just browsing plans?</strong> Visit our{" "}
+                <a href="/pricing" className="text-primary hover:underline font-medium">
+                  Pricing Page
+                </a>{" "}
+                to compare standard plans and features side-by-side.
+              </p>
+            </div>
           </div>
 
           {/* Progress Steps */}
