@@ -34,26 +34,130 @@
 -- ATLAS DATABASE SCHEMA STATISTICS
 -- ============================================================================
 -- 
--- LAST UPDATED: December 7, 2025 @ 16:45 UTC
+-- LAST UPDATED: December 7, 2025 @ 17:30 UTC
 --
 -- COMPONENT COUNTS:
 --   Database Tables: 52 (35 core + 7 operational + 5 HR module + 5 shift/geofencing)
 --   Database Functions: 7
 --   Database Triggers: 2
---   Edge Functions: 15 (6 deployed + 9 documented)
+--   Edge Functions: 15 (10 deployed + 5 documented)
 --   Storage Buckets: 1
 --   Secrets Configured: 6
 --   Enums/Types: 15 (10 existing + 2 HR + 3 new shift/geofencing)
 --   RLS Policies: 75+
 --   Indexes: 50+
 --
--- NEW TABLES ADDED (December 7, 2025 @ 16:45 UTC):
---   Operational: payroll_runs, payslips, bgv_requests, sso_states
---   Claims: insurance_claims, document_verifications, document_extractions
---   HR: employees, attendance_records, leave_requests, leave_balances, leave_types
---   Shifts: shifts, shift_assignments, shift_swap_requests
---   Overtime: overtime_records
---   Geofencing: geofence_zones, geofence_attendance_logs
+-- ============================================================================
+-- TABLE SUMMARY (52 Tables) - Quick Reference
+-- ============================================================================
+--
+-- | # | Table Name                  | Category          | Purpose/Description                                    |
+-- |---|-----------------------------|--------------------|--------------------------------------------------------|
+-- | 1 | profiles                    | Core               | User profile data (name, email, phone, company)        |
+-- | 2 | user_roles                  | Core               | User role assignments (admin, user) for RBAC           |
+-- | 3 | client_tenants              | Core               | Organization/company tenant records                    |
+-- | 4 | client_tenant_users         | Core               | Maps users to their tenant memberships                 |
+-- | 5 | quotes                      | Sales & CRM        | Service quotes with pricing, status, contact info      |
+-- | 6 | invoices                    | Sales & CRM        | Client invoices with amounts, due dates, status        |
+-- | 7 | leads                       | Sales & CRM        | Sales leads with scores, sources, conversion tracking  |
+-- | 8 | inquiries                   | Sales & CRM        | Contact form submissions and service inquiries         |
+-- | 9 | onboarding_sessions         | Onboarding         | Client onboarding wizard progress and data             |
+-- |10 | client_onboarding           | Onboarding         | Simple onboarding requests (pre-approval stage)        |
+-- |11 | projects                    | Project Mgmt       | Client projects with status, budget, timeline          |
+-- |12 | project_milestones          | Project Mgmt       | Project milestones with due dates and completion       |
+-- |13 | support_tickets             | Support            | Support tickets with priority, SLA, assignment         |
+-- |14 | ticket_messages             | Support            | Messages/replies within support tickets                |
+-- |15 | meetings                    | Communication      | Scheduled meetings with clients and team               |
+-- |16 | client_files                | File Management    | Client uploaded files with versioning                  |
+-- |17 | client_feedback             | File Management    | Client feedback ratings and comments                   |
+-- |18 | client_msp_servers          | MSP Monitoring     | Monitored servers for managed service clients          |
+-- |19 | client_msp_metrics          | MSP Monitoring     | Server performance metrics (CPU, memory, disk)         |
+-- |20 | client_msp_alerts           | MSP Monitoring     | Server alerts and incident notifications               |
+-- |21 | service_pricing             | Pricing            | Service pricing tiers and features                     |
+-- |22 | service_addons              | Pricing            | Optional add-on services with pricing                  |
+-- |23 | pricing_modifiers           | Pricing            | Industry/size pricing multipliers                      |
+-- |24 | coupon_codes                | Pricing            | Discount coupons with usage limits                     |
+-- |25 | admin_notifications         | Admin              | Admin-targeted notifications                           |
+-- |26 | admin_settings              | Admin              | Platform-wide admin configuration                      |
+-- |27 | portal_settings             | Admin              | Client portal configuration settings                   |
+-- |28 | audit_logs                  | Logging            | System audit trail for compliance                      |
+-- |29 | system_logs                 | Logging            | Application logs for debugging                         |
+-- |30 | clickstream_events          | Logging            | User interaction tracking for analytics                |
+-- |31 | api_usage                   | Logging            | API endpoint usage tracking                            |
+-- |32 | team_members                | Team               | Internal team member profiles                          |
+-- |33 | compliance_items            | Compliance         | Compliance checklist items and status                  |
+-- |34 | integrations                | Integrations       | Third-party integration configurations                 |
+-- |35 | client_notices              | Communication      | Announcements and notices for clients                  |
+-- |36 | global_features             | Features           | Platform-wide feature definitions                      |
+-- |37 | tenant_features             | Features           | Tenant-specific feature flags                          |
+-- |38 | role_feature_defaults       | Features           | Default features by role                               |
+-- |39 | employee_feature_access     | Features           | Individual employee feature permissions                |
+-- |40 | employee_notifications      | Notifications      | Employee notification records                          |
+-- |41 | notification_preferences    | Notifications      | User notification channel preferences                  |
+-- |42 | feature_unlock_log          | Notifications      | Log of feature unlock events                           |
+-- |43 | payroll_runs                | Payroll            | Monthly/weekly payroll processing runs                 |
+-- |44 | payslips                    | Payroll            | Individual employee payslips                           |
+-- |45 | bgv_requests                | BGV                | Background verification requests                       |
+-- |46 | sso_states                  | SSO                | OAuth state tokens for SSO flows                       |
+-- |47 | insurance_claims            | Insurance          | Employee insurance claim submissions                   |
+-- |48 | document_verifications      | Documents          | Document verification requests and results             |
+-- |49 | document_extractions        | Documents          | OCR/data extraction from documents                     |
+-- |50 | employees                   | HR                 | Employee master records with employment details        |
+-- |51 | attendance_records          | HR                 | Daily attendance check-in/check-out records            |
+-- |52 | leave_types                 | HR                 | Leave type definitions (annual, sick, etc.)            |
+-- |53 | leave_balances              | HR                 | Employee leave balance tracking                        |
+-- |54 | leave_requests              | HR                 | Leave application requests and approvals               |
+-- |55 | shifts                      | Shift Mgmt         | Shift definitions with timing and settings             |
+-- |56 | shift_assignments           | Shift Mgmt         | Employee shift assignments                             |
+-- |57 | shift_swap_requests         | Shift Mgmt         | Shift swap requests between employees                  |
+-- |58 | overtime_records            | Overtime           | Overtime hours tracking with approval status           |
+-- |59 | geofence_zones              | Geofencing         | Office location geofence boundaries                    |
+-- |60 | geofence_attendance_logs    | Geofencing         | GPS-validated attendance entries                       |
+--
+-- ============================================================================
+-- DATABASE FUNCTIONS SUMMARY (7 Functions)
+-- ============================================================================
+--
+-- | # | Function Name              | Purpose                                              |
+-- |---|----------------------------|------------------------------------------------------|
+-- | 1 | generate_quote_number()    | Auto-generate quote numbers (ATL-YYYY-XXXX format)   |
+-- | 2 | generate_invoice_number()  | Auto-generate invoice numbers (INV-YYYY-XXXX format) |
+-- | 3 | generate_client_id()       | Auto-generate client IDs (ATLS-YYYYMMDD-XXXX format) |
+-- | 4 | generate_ticket_number()   | Auto-generate ticket numbers (TKT-XXXXX format)      |
+-- | 5 | handle_new_user()          | Trigger function to create profile on user signup    |
+-- | 6 | has_role()                 | Security definer to check user roles (RBAC)          |
+-- | 7 | is_feature_enabled_for_user() | Check if feature is enabled for specific user     |
+--
+-- ============================================================================
+-- DATABASE TRIGGERS SUMMARY (2 Triggers)
+-- ============================================================================
+--
+-- | # | Trigger Name               | Table      | Purpose                                |
+-- |---|----------------------------|------------|----------------------------------------|
+-- | 1 | on_auth_user_created       | auth.users | Creates profile when user signs up     |
+-- | 2 | on_employee_feature_enabled| employee_feature_access | Notifies when features unlocked |
+--
+-- ============================================================================
+-- ENUMS/TYPES SUMMARY (15 Types)
+-- ============================================================================
+--
+-- | # | Type Name                  | Values                                               |
+-- |---|----------------------------|------------------------------------------------------|
+-- | 1 | app_role                   | admin, user                                          |
+-- | 2 | quote_status               | draft, pending, approved, rejected, converted        |
+-- | 3 | invoice_status             | draft, sent, paid, overdue, cancelled                |
+-- | 4 | feature_category           | core, payroll, talent, operations, compliance, intelligence, integrations |
+-- | 5 | feature_tier               | starter, professional, business, enterprise          |
+-- | 6 | tenant_role                | super_admin, admin, hr_manager, manager, employee    |
+-- | 7 | notification_type          | feature_unlock, system, alert, reminder, message     |
+-- | 8 | notification_channel       | in_app, email, sms, push                             |
+-- | 9 | notification_priority      | low, normal, high, urgent                            |
+-- |10 | employment_status          | active, probation, notice, terminated, resigned      |
+-- |11 | attendance_status          | present, absent, half_day, late, on_leave, holiday   |
+-- |12 | shift_status               | draft, published, active, completed, cancelled       |
+-- |13 | shift_assignment_status    | scheduled, confirmed, completed, missed, swapped     |
+-- |14 | shift_swap_status          | pending, approved, rejected, cancelled               |
+-- |15 | overtime_type              | regular, weekend, holiday, night_shift               |
 --
 -- ============================================================================
 
