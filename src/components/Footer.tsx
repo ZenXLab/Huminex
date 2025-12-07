@@ -45,16 +45,18 @@ export const Footer = () => {
           {/* Brand Column */}
           <div className="lg:col-span-2">
             <Link to="/" className="inline-block group mb-4">
-              <img 
-                src={cropxonLogo} 
-                alt="CropXon Innovations Pvt. Ltd." 
-                className="h-12 w-auto transition-transform duration-300 group-hover:scale-105" 
-              />
+              <div className="flex items-center gap-3">
+                <img 
+                  src={cropxonLogo} 
+                  alt="CropXon Innovations Pvt. Ltd." 
+                  className="h-12 w-auto transition-transform duration-300 group-hover:scale-105 dark:brightness-110 dark:contrast-125" 
+                />
+              </div>
             </Link>
-            <p className="text-lg font-heading font-bold text-primary mb-1 tracking-tight">
+            <p className="text-lg font-heading font-bold text-foreground mb-1 tracking-tight">
               CropXon Innovations Pvt. Ltd.
             </p>
-            <p className="text-base font-medium text-foreground/70 mb-3">ATLAS Division</p>
+            <p className="text-base font-medium text-primary mb-3">ATLAS Division</p>
             <p className="text-muted-foreground mb-8 max-w-sm leading-relaxed text-sm">
               Consulting & Digital Transformation wing of CropXon Innovations Pvt. Ltd. 
               Building the next generation of enterprise solutions.
@@ -62,10 +64,10 @@ export const Footer = () => {
 
             {/* Legal Info */}
             <div className="space-y-1.5 text-xs text-muted-foreground">
-              <p><span className="text-foreground/60 font-medium">CIN:</span> U62010OD2025PTC051089</p>
-              <p><span className="text-foreground/60 font-medium">GSTIN:</span> 21AANCC1954F1ZW</p>
-              <p><span className="text-foreground/60 font-medium">Udyam:</span> UDYAM-OD-03-0076858</p>
-              <p><span className="text-foreground/60 font-medium">DPIIT:</span> DIPP230789 (Valid till: 15-10-2035)</p>
+              <p><span className="text-foreground font-medium">CIN:</span> U62010OD2025PTC051089</p>
+              <p><span className="text-foreground font-medium">GSTIN:</span> 21AANCC1954F1ZW</p>
+              <p><span className="text-foreground font-medium">Udyam:</span> UDYAM-OD-03-0076858</p>
+              <p><span className="text-foreground font-medium">DPIIT:</span> DIPP230789 (Valid till: 15-10-2035)</p>
             </div>
           </div>
 
@@ -155,10 +157,10 @@ export const Footer = () => {
 
         {/* Bottom Bar */}
         <div className="py-5 border-t border-border/40 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div className="flex items-center gap-2 text-xs text-muted-foreground">
-            <span>© {new Date().getFullYear()} CropXon Innovations Pvt. Ltd.</span>
-            <span className="text-border">•</span>
-            <a href="https://atlas.cropxon.com" className="text-primary hover:text-foreground transition-colors font-medium">
+          <div className="flex items-center gap-2 text-xs">
+            <span className="text-foreground font-medium">© {new Date().getFullYear()} CropXon Innovations Pvt. Ltd.</span>
+            <span className="text-muted-foreground">•</span>
+            <a href="https://atlas.cropxon.com" className="text-primary hover:text-primary/80 transition-colors font-semibold">
               atlas.cropxon.com
             </a>
           </div>

@@ -240,62 +240,74 @@ export const EnhancedTestimonialsSection = () => {
           {[...testimonials, ...testimonials].map((testimonial, index) => (
             <div
               key={index}
-              className="group flex-shrink-0 w-[380px] p-6 lg:p-8 bg-background border border-border/60 rounded-2xl relative transition-all duration-500 hover:shadow-xl hover:shadow-primary/5 hover:border-primary/30"
+              className="group flex-shrink-0 w-[400px] bg-gradient-to-br from-background via-background to-muted/30 border border-border/80 rounded-3xl relative transition-all duration-500 hover:shadow-2xl hover:shadow-primary/10 hover:border-primary/40 hover:-translate-y-1 overflow-hidden"
             >
-              {/* Quote icon */}
-              <div className="absolute -top-4 left-6">
-                <div className="p-3 bg-gradient-to-br from-primary to-accent rounded-xl shadow-lg">
-                  <Quote className="h-4 w-4 text-white" />
+              {/* Gradient overlay on hover */}
+              <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-accent/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+              
+              {/* Card Content */}
+              <div className="relative p-8">
+                {/* Header with Quote icon and Company Logo */}
+                <div className="flex items-start justify-between mb-6">
+                  <div className="p-3 bg-gradient-to-br from-primary to-accent rounded-2xl shadow-lg shadow-primary/20">
+                    <Quote className="h-5 w-5 text-white" />
+                  </div>
+                  <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-muted to-muted/50 border border-border/60 flex items-center justify-center shadow-inner">
+                    <span className="font-heading font-bold text-lg text-primary">{testimonial.logo}</span>
+                  </div>
                 </div>
-              </div>
 
-              {/* Company Logo */}
-              <div className="absolute top-6 right-6">
-                <div className="w-12 h-12 rounded-xl bg-muted/50 border border-border/50 flex items-center justify-center">
-                  <span className="font-heading font-bold text-primary">{testimonial.logo}</span>
-                </div>
-              </div>
-
-              {/* Stars */}
-              <div className="flex gap-1 mb-4 mt-4">
-                {[...Array(testimonial.rating)].map((_, i) => (
-                  <Star key={i} className="h-4 w-4 fill-amber-400 text-amber-400" />
-                ))}
-              </div>
-
-              {/* Industry Badge */}
-              <span className="inline-block px-3 py-1 bg-primary/10 text-primary text-xs font-medium rounded-full mb-4">
-                {testimonial.industry}
-              </span>
-
-              {/* Quote */}
-              <p className="text-foreground/80 mb-6 leading-relaxed text-sm lg:text-base line-clamp-4">
-                "{testimonial.quote}"
-              </p>
-
-              {/* Metrics */}
-              {testimonial.metrics && (
-                <div className="flex gap-4 mb-6 pb-6 border-b border-border/50">
-                  {testimonial.metrics.map((metric, idx) => (
-                    <div key={idx} className="flex-1 text-center p-3 bg-muted/30 rounded-lg">
-                      <div className="text-lg font-heading font-bold text-primary">{metric.value}</div>
-                      <div className="text-xs text-muted-foreground">{metric.label}</div>
-                    </div>
+                {/* Rating Stars */}
+                <div className="flex gap-1.5 mb-4">
+                  {[...Array(testimonial.rating)].map((_, i) => (
+                    <Star key={i} className="h-4 w-4 fill-amber-400 text-amber-400 drop-shadow-sm" />
                   ))}
                 </div>
-              )}
 
-              {/* Author with Avatar */}
-              <div className="flex items-center gap-3">
-                <img 
-                  src={testimonial.avatar} 
-                  alt={testimonial.author}
-                  className="w-12 h-12 rounded-full object-cover border-2 border-primary/20"
-                />
-                <div>
-                  <p className="font-heading font-semibold text-foreground">{testimonial.author}</p>
-                  <p className="text-sm text-muted-foreground">{testimonial.role}, {testimonial.company}</p>
-                  <p className="text-xs text-primary mt-0.5">{testimonial.location}</p>
+                {/* Industry & Location */}
+                <div className="flex items-center gap-2 mb-4">
+                  <span className="inline-block px-3 py-1.5 bg-primary/10 text-primary text-xs font-semibold rounded-full border border-primary/20">
+                    {testimonial.industry}
+                  </span>
+                  <span className="text-xs text-muted-foreground">• {testimonial.location}</span>
+                </div>
+
+                {/* Quote */}
+                <p className="text-foreground/90 mb-6 leading-relaxed text-[15px] font-medium line-clamp-4">
+                  "{testimonial.quote}"
+                </p>
+
+                {/* Metrics */}
+                {testimonial.metrics && (
+                  <div className="flex gap-3 mb-6">
+                    {testimonial.metrics.map((metric, idx) => (
+                      <div key={idx} className="flex-1 text-center p-4 bg-gradient-to-br from-muted/50 to-muted/30 rounded-xl border border-border/40">
+                        <div className="text-xl font-heading font-extrabold text-primary">{metric.value}</div>
+                        <div className="text-xs text-muted-foreground font-medium mt-1">{metric.label}</div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* Author */}
+                <div className="flex items-center gap-4 pt-6 border-t border-border/50">
+                  <div className="relative">
+                    <img 
+                      src={testimonial.avatar} 
+                      alt={testimonial.author}
+                      className="w-14 h-14 rounded-full object-cover border-3 border-primary/30 shadow-lg"
+                    />
+                    <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-emerald-500 rounded-full border-2 border-background flex items-center justify-center">
+                      <svg className="w-2.5 h-2.5 text-white" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                      </svg>
+                    </div>
+                  </div>
+                  <div>
+                    <p className="font-heading font-bold text-foreground text-base">{testimonial.author}</p>
+                    <p className="text-sm text-muted-foreground font-medium">{testimonial.role}</p>
+                    <p className="text-sm text-primary font-semibold">{testimonial.company}</p>
+                  </div>
                 </div>
               </div>
             </div>
