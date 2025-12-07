@@ -15,6 +15,8 @@ interface Testimonial {
   rating: number;
   metrics?: { label: string; value: string }[];
   logo: string;
+  avatar: string;
+  isIndian: boolean;
 }
 
 const testimonials: Testimonial[] = [
@@ -30,7 +32,9 @@ const testimonials: Testimonial[] = [
       { label: "Time Saved", value: "85%" },
       { label: "Employees", value: "2,500+" },
     ],
-    logo: "TS"
+    logo: "TS",
+    avatar: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150&h=150&fit=crop&crop=face",
+    isIndian: true
   },
   {
     quote: "The compliance automation alone saved us from 3 potential penalties. Proxima AI flagged issues before they became problems. Best investment we've made.",
@@ -44,7 +48,9 @@ const testimonials: Testimonial[] = [
       { label: "Compliance Score", value: "100%" },
       { label: "Cost Savings", value: "₹45L/yr" },
     ],
-    logo: "FF"
+    logo: "FF",
+    avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face",
+    isIndian: true
   },
   {
     quote: "Onboarding 200+ employees during our expansion was seamless. The BGV integration and automated workflows made what seemed impossible, simple.",
@@ -58,7 +64,9 @@ const testimonials: Testimonial[] = [
       { label: "Onboarding Time", value: "2 Days" },
       { label: "Hires/Quarter", value: "200+" },
     ],
-    logo: "CF"
+    logo: "CF",
+    avatar: "https://images.unsplash.com/photo-1580489944761-15a19d654956?w=150&h=150&fit=crop&crop=face",
+    isIndian: false
   },
   {
     quote: "Managing 15 retail locations with different shift patterns was a nightmare. ATLAS attendance and roster management changed everything.",
@@ -72,7 +80,9 @@ const testimonials: Testimonial[] = [
       { label: "Locations", value: "15" },
       { label: "Accuracy", value: "99.9%" },
     ],
-    logo: "RM"
+    logo: "RM",
+    avatar: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face",
+    isIndian: true
   },
   {
     quote: "The project billing integration with payroll was exactly what our consulting firm needed. Real-time utilization visibility transformed our margins.",
@@ -86,7 +96,9 @@ const testimonials: Testimonial[] = [
       { label: "Margin Improvement", value: "18%" },
       { label: "Billing Accuracy", value: "100%" },
     ],
-    logo: "SW"
+    logo: "SW",
+    avatar: "https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=150&h=150&fit=crop&crop=face",
+    isIndian: false
   },
   {
     quote: "From a 50-person startup to 500+ employees in 2 years, ATLAS scaled with us without any system changes. The OpZenix automation is game-changing.",
@@ -100,7 +112,9 @@ const testimonials: Testimonial[] = [
       { label: "Growth", value: "10x" },
       { label: "Automation Rate", value: "92%" },
     ],
-    logo: "HT"
+    logo: "HT",
+    avatar: "https://images.unsplash.com/photo-1594744803329-e58b31de8bf5?w=150&h=150&fit=crop&crop=face",
+    isIndian: true
   },
 ];
 
@@ -271,11 +285,18 @@ export const EnhancedTestimonialsSection = () => {
                 </div>
               )}
 
-              {/* Author */}
-              <div>
-                <p className="font-heading font-semibold text-foreground">{testimonial.author}</p>
-                <p className="text-sm text-muted-foreground">{testimonial.role}, {testimonial.company}</p>
-                <p className="text-xs text-primary mt-1">{testimonial.location}</p>
+              {/* Author with Avatar */}
+              <div className="flex items-center gap-3">
+                <img 
+                  src={testimonial.avatar} 
+                  alt={testimonial.author}
+                  className="w-12 h-12 rounded-full object-cover border-2 border-primary/20"
+                />
+                <div>
+                  <p className="font-heading font-semibold text-foreground">{testimonial.author}</p>
+                  <p className="text-sm text-muted-foreground">{testimonial.role}, {testimonial.company}</p>
+                  <p className="text-xs text-primary mt-0.5">{testimonial.location}</p>
+                </div>
               </div>
             </div>
           ))}
