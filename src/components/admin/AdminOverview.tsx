@@ -2,7 +2,7 @@ import { useState, useMemo, memo, useCallback } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { 
   FileText, Receipt, Users, TrendingUp, Clock, UserPlus, Building2, ArrowRight,
   Activity, Server, Shield, Zap, RefreshCw, CheckCircle2, AlertCircle, XCircle,
@@ -14,6 +14,9 @@ import { Link } from "react-router-dom";
 import { format } from "date-fns";
 import { ClickstreamSummaryWidget } from "./modules/clickstream/ClickstreamSummaryWidget";
 import { AdminCardSkeleton } from "./AdminCardSkeleton";
+import { DraggableWidget } from "./DraggableWidget";
+import { DashboardEditControls } from "./DashboardEditControls";
+import { useDashboardLayout, WidgetConfig } from "@/hooks/useDashboardLayout";
 import { 
   useAdminStats, 
   useRecentQuotes, 
@@ -72,7 +75,20 @@ StatCard.displayName = "StatCard";
 
 export const AdminOverview = () => {
   const [lastUpdated, setLastUpdated] = useState(new Date());
+  const [dragOverId, setDragOverId] = useState<string | null>(null);
   const queryClient = useQueryClient();
+
+  // Dashboard layout management
+  const {
+    widgets,
+    isEditMode,
+    setIsEditMode,
+    setIsDragging,
+    reorderWidgets,
+    resizeWidget,
+    toggleWidget,
+    resetLayout,
+  } = useDashboardLayout();
 
   // Use optimized hooks with React Query
   const { data: stats, isLoading: statsLoading, refetch: refetchStats } = useAdminStats();
@@ -243,15 +259,249 @@ export const AdminOverview = () => {
     );
   }
 
+  // Handle drag end
+  const handleDragEnd = useCallback(
+    (sourceId: string) => (targetId: string | null) => {
+      setIsDragging(false);
+      if (targetId && targetId !== sourceId) {
+        reorderWidgets(sourceId, targetId);
+      }
+    },
+    [reorderWidgets, setIsDragging]
+  );
+
+  // Widget renderer
+  const renderWidget = (widgetId: string) => {
+    const widget = widgets.find((w) => w.id === widgetId);
+    if (!widget) return null;
+
+    const content = (() => {
+      switch (widgetId) {
+        case "stats":
+          return (
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {statCards.map((stat) => (
+                <StatCard key={stat.title} {...stat} />
+              ))}
+            </div>
+          );
+        case "system-health":
+          return (
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between pb-2">
+                <CardTitle className="flex items-center gap-2">
+                  <Activity className="h-5 w-5 text-green-600" />
+                  System Health
+                </CardTitle>
+                <Badge variant="outline" className="text-green-600 border-green-500/30 bg-green-500/10">
+                  All Systems Operational
+                </Badge>
+              </CardHeader>
+              <CardContent>
+                <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                  {systemHealthItems.map((item) => (
+                    <div key={item.name} className="flex items-center justify-between p-3 bg-muted/30 rounded-lg">
+                      <div className="flex items-center gap-3">
+                        {getStatusIcon(item.status)}
+                        <div>
+                          <p className="text-sm font-medium text-foreground">{item.name}</p>
+                          <p className="text-xs text-muted-foreground">{item.latency}</p>
+                        </div>
+                      </div>
+                      <Badge variant="outline" className="text-xs text-green-600 border-green-500/30">
+                        Healthy
+                      </Badge>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          );
+        case "clickstream":
+          return <ClickstreamSummaryWidget />;
+        case "onboarding":
+          return (
+            <Card className="h-full">
+              <CardHeader className="flex flex-row items-center justify-between">
+                <CardTitle className="flex items-center gap-2">
+                  <UserPlus className="h-5 w-5 text-orange-600" />
+                  Pending Onboarding
+                </CardTitle>
+                <Link to="/admin/onboarding-tracker">
+                  <Button variant="ghost" size="sm" className="gap-1">
+                    View All <ArrowRight className="h-4 w-4" />
+                  </Button>
+                </Link>
+              </CardHeader>
+              <CardContent>
+                {(!pendingOnboardings || pendingOnboardings.length === 0) ? (
+                  <p className="text-muted-foreground text-center py-8">No pending onboarding requests</p>
+                ) : (
+                  <div className="space-y-3">
+                    {(pendingOnboardings || []).map((session) => (
+                      <div key={session.id} className="flex items-center justify-between p-3 bg-muted/30 rounded-lg hover:bg-muted/50 transition-colors">
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium text-foreground truncate">{session.full_name}</p>
+                          <p className="text-sm text-muted-foreground truncate">
+                            {session.company_name || session.email}
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            {session.client_id} • {format(new Date(session.created_at), 'MMM d, yyyy')}
+                          </p>
+                        </div>
+                        <Badge className={`${statusColors[session.status] || "bg-gray-500/10 text-gray-600"} border`}>
+                          {session.status.replace('_', ' ')}
+                        </Badge>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          );
+        case "tenants":
+          return (
+            <Card className="h-full">
+              <CardHeader className="flex flex-row items-center justify-between">
+                <CardTitle className="flex items-center gap-2">
+                  <Building2 className="h-5 w-5 text-cyan-600" />
+                  Recent Tenants
+                </CardTitle>
+                <Link to="/admin/tenants">
+                  <Button variant="ghost" size="sm" className="gap-1">
+                    View All <ArrowRight className="h-4 w-4" />
+                  </Button>
+                </Link>
+              </CardHeader>
+              <CardContent>
+                {(!recentTenants || recentTenants.length === 0) ? (
+                  <p className="text-muted-foreground text-center py-8">No tenants yet</p>
+                ) : (
+                  <div className="space-y-3">
+                    {(recentTenants || []).map((tenant) => (
+                      <div key={tenant.id} className="flex items-center justify-between p-3 bg-muted/30 rounded-lg hover:bg-muted/50 transition-colors">
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium text-foreground truncate">{tenant.name}</p>
+                          <p className="text-sm text-muted-foreground truncate">
+                            @{tenant.slug} • {tenant.tenant_type}
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            Updated {format(new Date(tenant.updated_at), 'MMM d, yyyy h:mm a')}
+                          </p>
+                        </div>
+                        <Badge className={`${statusColors[tenant.status] || "bg-gray-500/10 text-gray-600"} border`}>
+                          {tenant.status}
+                        </Badge>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          );
+        case "quotes":
+          return (
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between">
+                <CardTitle className="flex items-center gap-2">
+                  <FileText className="h-5 w-5 text-primary" />
+                  Recent Quotes
+                </CardTitle>
+                <Link to="/admin/quotes">
+                  <Button variant="ghost" size="sm" className="gap-1">
+                    View All <ArrowRight className="h-4 w-4" />
+                  </Button>
+                </Link>
+              </CardHeader>
+              <CardContent>
+                {(!recentQuotes || recentQuotes.length === 0) ? (
+                  <p className="text-muted-foreground text-center py-8">No quotes yet</p>
+                ) : (
+                  <div className="space-y-3">
+                    {(recentQuotes || []).map((quote) => (
+                      <div key={quote.id} className="flex items-center justify-between p-4 bg-muted/30 rounded-lg hover:bg-muted/50 transition-colors">
+                        <div>
+                          <p className="font-medium text-foreground">{quote.quote_number}</p>
+                          <p className="text-sm text-muted-foreground">
+                            {quote.contact_name} • {quote.service_type?.replace('-', ' ')}
+                          </p>
+                        </div>
+                        <div className="text-right">
+                          <p className="font-medium text-foreground">₹{Number(quote.final_price).toLocaleString()}</p>
+                          <Badge variant="outline" className="capitalize">{quote.status}</Badge>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          );
+        case "quick-actions":
+          return (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Zap className="h-5 w-5 text-yellow-600" />
+                  Quick Actions
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-10 gap-3">
+                  {quickActions.map((action, index) => (
+                    <motion.div
+                      key={action.path}
+                      initial={{ opacity: 0, scale: 0.9 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      transition={{ delay: index * 0.02 }}
+                    >
+                      <Link to={action.path}>
+                        <div className="flex flex-col items-center gap-2 p-3 rounded-xl bg-muted/30 hover:bg-muted/60 border border-transparent hover:border-primary/20 transition-all duration-200 group cursor-pointer">
+                          <div className={`p-2.5 rounded-lg ${action.bg} group-hover:scale-110 transition-transform`}>
+                            <action.icon className={`h-5 w-5 ${action.color}`} />
+                          </div>
+                          <span className="text-xs font-medium text-center text-muted-foreground group-hover:text-foreground transition-colors line-clamp-1">
+                            {action.name}
+                          </span>
+                        </div>
+                      </Link>
+                    </motion.div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          );
+        default:
+          return null;
+      }
+    })();
+
+    return (
+      <DraggableWidget
+        key={widget.id}
+        widget={widget}
+        isEditMode={isEditMode}
+        onDragStart={() => setIsDragging(true)}
+        onDragEnd={handleDragEnd(widget.id)}
+        onResize={(size) => resizeWidget(widget.id, size)}
+        onToggleVisibility={() => toggleWidget(widget.id)}
+        dragOverId={dragOverId}
+        setDragOverId={setDragOverId}
+      >
+        {content}
+      </DraggableWidget>
+    );
+  };
+
   return (
     <div className="space-y-8">
-      {/* Header with Real-time indicator */}
+      {/* Header with Real-time indicator and Customize button */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-3xl font-heading font-bold text-foreground mb-2">Admin Dashboard</h1>
           <p className="text-muted-foreground">Real-time platform monitoring & operations</p>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 flex-wrap">
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
             <span>Live</span>
@@ -261,200 +511,52 @@ export const AdminOverview = () => {
             <RefreshCw className="h-4 w-4" />
             Refresh
           </Button>
+          <DashboardEditControls
+            isEditMode={isEditMode}
+            widgets={widgets}
+            onToggleEditMode={() => setIsEditMode(!isEditMode)}
+            onResetLayout={resetLayout}
+            onToggleWidget={toggleWidget}
+          />
         </div>
       </div>
 
-      {/* Stats Grid - Using memoized component */}
-      <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        {statCards.map((stat) => (
-          <StatCard key={stat.title} {...stat} />
-        ))}
-      </div>
-
-      {/* System Health */}
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between pb-2">
-          <CardTitle className="flex items-center gap-2">
-            <Activity className="h-5 w-5 text-green-600" />
-            System Health
-          </CardTitle>
-          <Badge variant="outline" className="text-green-600 border-green-500/30 bg-green-500/10">
-            All Systems Operational
-          </Badge>
-        </CardHeader>
-        <CardContent>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            {systemHealthItems.map((item) => (
-              <div key={item.name} className="flex items-center justify-between p-3 bg-muted/30 rounded-lg">
-                <div className="flex items-center gap-3">
-                  {getStatusIcon(item.status)}
-                  <div>
-                    <p className="text-sm font-medium text-foreground">{item.name}</p>
-                    <p className="text-xs text-muted-foreground">{item.latency}</p>
-                  </div>
-                </div>
-                <Badge variant="outline" className="text-xs text-green-600 border-green-500/30">
-                  Healthy
-                </Badge>
+      {/* Edit Mode Banner */}
+      <AnimatePresence>
+        {isEditMode && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            className="overflow-hidden"
+          >
+            <div className="flex items-center gap-3 p-4 bg-primary/10 border border-primary/20 rounded-lg">
+              <div className="flex items-center gap-2">
+                <motion.div
+                  animate={{ rotate: [0, 10, -10, 0] }}
+                  transition={{ repeat: Infinity, duration: 2 }}
+                >
+                  <Zap className="h-5 w-5 text-primary" />
+                </motion.div>
+                <span className="font-medium text-primary">Edit Mode Active</span>
               </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Clickstream Summary Widget */}
-      <ClickstreamSummaryWidget />
-
-      {/* Two Column Layout for Widgets */}
-      <div className="grid lg:grid-cols-2 gap-6">
-        {/* Pending Onboarding Requests */}
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle className="flex items-center gap-2">
-              <UserPlus className="h-5 w-5 text-orange-600" />
-              Pending Onboarding
-            </CardTitle>
-            <Link to="/admin/onboarding-tracker">
-              <Button variant="ghost" size="sm" className="gap-1">
-                View All <ArrowRight className="h-4 w-4" />
-              </Button>
-            </Link>
-          </CardHeader>
-          <CardContent>
-            {(!pendingOnboardings || pendingOnboardings.length === 0) ? (
-              <p className="text-muted-foreground text-center py-8">No pending onboarding requests</p>
-            ) : (
-              <div className="space-y-3">
-                {(pendingOnboardings || []).map((session) => (
-                  <div key={session.id} className="flex items-center justify-between p-3 bg-muted/30 rounded-lg hover:bg-muted/50 transition-colors">
-                    <div className="flex-1 min-w-0">
-                      <p className="font-medium text-foreground truncate">{session.full_name}</p>
-                      <p className="text-sm text-muted-foreground truncate">
-                        {session.company_name || session.email}
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        {session.client_id} • {format(new Date(session.created_at), 'MMM d, yyyy')}
-                      </p>
-                    </div>
-                    <Badge className={`${statusColors[session.status] || "bg-gray-500/10 text-gray-600"} border`}>
-                      {session.status.replace('_', ' ')}
-                    </Badge>
-                  </div>
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Recent Tenant Activity */}
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle className="flex items-center gap-2">
-              <Building2 className="h-5 w-5 text-cyan-600" />
-              Recent Tenants
-            </CardTitle>
-            <Link to="/admin/tenants">
-              <Button variant="ghost" size="sm" className="gap-1">
-                View All <ArrowRight className="h-4 w-4" />
-              </Button>
-            </Link>
-          </CardHeader>
-          <CardContent>
-            {(!recentTenants || recentTenants.length === 0) ? (
-              <p className="text-muted-foreground text-center py-8">No tenants yet</p>
-            ) : (
-              <div className="space-y-3">
-                {(recentTenants || []).map((tenant) => (
-                  <div key={tenant.id} className="flex items-center justify-between p-3 bg-muted/30 rounded-lg hover:bg-muted/50 transition-colors">
-                    <div className="flex-1 min-w-0">
-                      <p className="font-medium text-foreground truncate">{tenant.name}</p>
-                      <p className="text-sm text-muted-foreground truncate">
-                        @{tenant.slug} • {tenant.tenant_type}
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        Updated {format(new Date(tenant.updated_at), 'MMM d, yyyy h:mm a')}
-                      </p>
-                    </div>
-                    <Badge className={`${statusColors[tenant.status] || "bg-gray-500/10 text-gray-600"} border`}>
-                      {tenant.status}
-                    </Badge>
-                  </div>
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Recent Quotes */}
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle className="flex items-center gap-2">
-            <FileText className="h-5 w-5 text-primary" />
-            Recent Quotes
-          </CardTitle>
-          <Link to="/admin/quotes">
-            <Button variant="ghost" size="sm" className="gap-1">
-              View All <ArrowRight className="h-4 w-4" />
-            </Button>
-          </Link>
-        </CardHeader>
-        <CardContent>
-          {(!recentQuotes || recentQuotes.length === 0) ? (
-            <p className="text-muted-foreground text-center py-8">No quotes yet</p>
-          ) : (
-            <div className="space-y-3">
-              {(recentQuotes || []).map((quote) => (
-                <div key={quote.id} className="flex items-center justify-between p-4 bg-muted/30 rounded-lg hover:bg-muted/50 transition-colors">
-                  <div>
-                    <p className="font-medium text-foreground">{quote.quote_number}</p>
-                    <p className="text-sm text-muted-foreground">
-                      {quote.contact_name} • {quote.service_type?.replace('-', ' ')}
-                    </p>
-                  </div>
-                  <div className="text-right">
-                    <p className="font-medium text-foreground">₹{Number(quote.final_price).toLocaleString()}</p>
-                    <Badge variant="outline" className="capitalize">{quote.status}</Badge>
-                  </div>
-                </div>
-              ))}
+              <span className="text-sm text-muted-foreground">
+                Drag widgets to reorder • Click size icons to resize • Click eye icon to hide/show
+              </span>
             </div>
-          )}
-        </CardContent>
-      </Card>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
-      {/* Quick Actions - All Admin Functionalities */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Zap className="h-5 w-5 text-yellow-600" />
-            Quick Actions
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-10 gap-3">
-            {quickActions.map((action, index) => (
-              <motion.div
-                key={action.path}
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: index * 0.02 }}
-              >
-                <Link to={action.path}>
-                  <div className="flex flex-col items-center gap-2 p-3 rounded-xl bg-muted/30 hover:bg-muted/60 border border-transparent hover:border-primary/20 transition-all duration-200 group cursor-pointer">
-                    <div className={`p-2.5 rounded-lg ${action.bg} group-hover:scale-110 transition-transform`}>
-                      <action.icon className={`h-5 w-5 ${action.color}`} />
-                    </div>
-                    <span className="text-xs font-medium text-center text-muted-foreground group-hover:text-foreground transition-colors line-clamp-1">
-                      {action.name}
-                    </span>
-                  </div>
-                </Link>
-              </motion.div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
+      {/* Draggable Dashboard Grid */}
+      <div className="grid lg:grid-cols-2 gap-6">
+        <AnimatePresence mode="popLayout">
+          {widgets
+            .filter((w) => w.visible || isEditMode)
+            .sort((a, b) => a.order - b.order)
+            .map((widget) => renderWidget(widget.id))}
+        </AnimatePresence>
+      </div>
     </div>
   );
 };
