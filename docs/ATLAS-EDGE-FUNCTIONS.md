@@ -1,12 +1,12 @@
 # ATLAS Edge Functions Documentation
 
-> **Version**: 3.3.0  
-> **Last Updated**: December 7, 2025 @ 17:30 UTC  
+> **Version**: 3.4.0  
+> **Last Updated**: December 7, 2025 @ 18:00 UTC  
 > **Author**: CropXon ATLAS Team
 
 ---
 
-## Edge Functions Summary (15 Total)
+## 📊 Edge Functions Summary (15 Total - ALL DEPLOYED)
 
 | # | Function Name | Status | Category | Purpose/Description |
 |---|---------------|--------|----------|---------------------|
@@ -20,44 +20,238 @@
 | 8 | `shift-swap-workflow` | ✅ Deployed | Shift Mgmt | Handle shift swap requests, approvals, rejections |
 | 9 | `overtime-calculator` | ✅ Deployed | Overtime | Calculate overtime hours, apply multipliers, process records |
 | 10 | `geofence-attendance` | ✅ Deployed | Geofencing | GPS-validated check-in/out with fake location detection |
-| 11 | `run-payroll` | 📝 Documented | Payroll | Process payroll runs, calculate salaries, generate payslips |
-| 12 | `process-bgv` | 📝 Documented | BGV | Submit and track background verification requests |
-| 13 | `sso-callback` | 📝 Documented | SSO | Handle SSO OAuth callbacks (Google, Microsoft, Okta) |
-| 14 | `process-insurance-claim` | 📝 Documented | Insurance | Submit and track insurance claim requests |
-| 15 | `verify-document` | 📝 Documented | Documents | OCR and verification of uploaded documents |
-
-**Legend:** ✅ Deployed = Live in Supabase | 📝 Documented = Code ready, pending deployment
+| 11 | `run-payroll` | ✅ Deployed | Payroll | Process payroll runs, calculate salaries, generate payslips |
+| 12 | `process-bgv` | ✅ Deployed | BGV | Submit and track background verification requests |
+| 13 | `sso-callback` | ✅ Deployed | SSO | Handle SSO OAuth callbacks (Google, Microsoft, Okta) |
+| 14 | `process-insurance-claim` | ✅ Deployed | Insurance | Submit and track insurance claim requests |
+| 15 | `verify-document` | ✅ Deployed | Documents | OCR and verification of uploaded documents |
 
 ---
 
-## Statistics
+## 📈 Statistics
 
 | Metric | Count |
 |--------|-------|
 | **Total Edge Functions** | 15 |
-| **Deployed** | 10 |
-| **Documented (Pending)** | 5 |
+| **Deployed** | 15 ✅ |
 | **Required Secrets** | 4 (SUPABASE_URL, SUPABASE_ANON_KEY, SUPABASE_SERVICE_ROLE_KEY, RESEND_API_KEY) |
 
 ---
 
-## Overview
+## 🗂️ Functions by Category
 
-This document contains all Edge Functions for the ATLAS platform. Edge Functions run on Supabase's edge runtime (Deno) and handle:
-- Email notifications
-- PDF generation
-- Background processing
-- Third-party integrations
-- Multi-tenant operations
-- Payroll processing
-- BGV verification
-- SSO authentication
-- Insurance claims
-- Document verification
+| Category | Functions | Count |
+|----------|-----------|-------|
+| **Notifications** | send-notification, send-bulk-notifications | 2 |
+| **Email** | send-welcome-email, send-feature-unlock-email, send-quote-followup | 3 |
+| **PDF Generation** | generate-invoice-pdf | 1 |
+| **Shift Management** | shift-scheduler, shift-swap-workflow | 2 |
+| **Attendance** | overtime-calculator, geofence-attendance | 2 |
+| **Payroll** | run-payroll | 1 |
+| **BGV** | process-bgv | 1 |
+| **SSO** | sso-callback | 1 |
+| **Insurance** | process-insurance-claim | 1 |
+| **Documents** | verify-document | 1 |
 
 ---
 
-## Table of Contents
+## 🔧 Function Details
+
+### 1. send-notification
+| Attribute | Details |
+|-----------|---------|
+| **File** | `supabase/functions/send-notification/index.ts` |
+| **Purpose** | Create in-app notifications for users |
+| **Auth** | Public (verify_jwt = false) |
+| **Tables Used** | admin_notifications, employee_notifications |
+| **Actions** | create, mark-read, delete |
+
+### 2. send-bulk-notifications
+| Attribute | Details |
+|-----------|---------|
+| **File** | `supabase/functions/send-bulk-notifications/index.ts` |
+| **Purpose** | Send notifications to multiple users at once |
+| **Auth** | Public (verify_jwt = false) |
+| **Tables Used** | admin_notifications, employee_notifications |
+| **Actions** | send-bulk |
+
+### 3. send-welcome-email
+| Attribute | Details |
+|-----------|---------|
+| **File** | `supabase/functions/send-welcome-email/index.ts` |
+| **Purpose** | Send welcome emails with login credentials |
+| **Auth** | Public (verify_jwt = false) |
+| **Secrets** | RESEND_API_KEY |
+| **Actions** | send |
+
+### 4. send-feature-unlock-email
+| Attribute | Details |
+|-----------|---------|
+| **File** | `supabase/functions/send-feature-unlock-email/index.ts` |
+| **Purpose** | Notify users when features are unlocked |
+| **Auth** | Public (verify_jwt = false) |
+| **Secrets** | RESEND_API_KEY |
+| **Actions** | send |
+
+### 5. send-quote-followup
+| Attribute | Details |
+|-----------|---------|
+| **File** | `supabase/functions/send-quote-followup/index.ts` |
+| **Purpose** | Automated follow-up for pending quotes |
+| **Auth** | Public (verify_jwt = false) |
+| **Secrets** | RESEND_API_KEY |
+| **Tables Used** | quotes |
+| **Actions** | send-followup |
+
+### 6. generate-invoice-pdf
+| Attribute | Details |
+|-----------|---------|
+| **File** | `supabase/functions/generate-invoice-pdf/index.ts` |
+| **Purpose** | Generate downloadable PDF invoices |
+| **Auth** | Public (verify_jwt = false) |
+| **Tables Used** | invoices, quotes |
+| **Actions** | generate |
+
+### 7. shift-scheduler
+| Attribute | Details |
+|-----------|---------|
+| **File** | `supabase/functions/shift-scheduler/index.ts` |
+| **Purpose** | Auto-schedule and publish shifts |
+| **Auth** | Public (verify_jwt = false) |
+| **Tables Used** | shifts, shift_assignments, employees |
+| **Actions** | create-shift, auto-assign, publish, get-schedule |
+
+### 8. shift-swap-workflow
+| Attribute | Details |
+|-----------|---------|
+| **File** | `supabase/functions/shift-swap-workflow/index.ts` |
+| **Purpose** | Handle shift swap requests and approvals |
+| **Auth** | Public (verify_jwt = false) |
+| **Tables Used** | shift_swap_requests, shift_assignments |
+| **Actions** | request, approve, reject, cancel, list |
+
+### 9. overtime-calculator
+| Attribute | Details |
+|-----------|---------|
+| **File** | `supabase/functions/overtime-calculator/index.ts` |
+| **Purpose** | Calculate overtime hours and multipliers |
+| **Auth** | Public (verify_jwt = false) |
+| **Tables Used** | overtime_records, employees, attendance_records |
+| **Actions** | calculate, approve, reject, get-summary, process-batch |
+
+### 10. geofence-attendance
+| Attribute | Details |
+|-----------|---------|
+| **File** | `supabase/functions/geofence-attendance/index.ts` |
+| **Purpose** | GPS-validated check-in/out with fake location detection |
+| **Auth** | Public (verify_jwt = false) |
+| **Tables Used** | geofence_zones, geofence_attendance_logs, attendance_records |
+| **Actions** | check-in, check-out, validate-location, get-zones |
+| **Features** | Haversine distance calculation, Mock location detection |
+
+### 11. run-payroll
+| Attribute | Details |
+|-----------|---------|
+| **File** | `supabase/functions/run-payroll/index.ts` |
+| **Purpose** | Process payroll runs and generate payslips |
+| **Auth** | Public (verify_jwt = false) |
+| **Tables Used** | payroll_runs, payslips, employees |
+| **Actions** | initiate, calculate, approve, process, get-summary |
+| **Calculations** | Basic, HRA (40%), Special Allowance (20%), PF (12%), PT, TDS |
+
+### 12. process-bgv
+| Attribute | Details |
+|-----------|---------|
+| **File** | `supabase/functions/process-bgv/index.ts` |
+| **Purpose** | Submit and track background verifications |
+| **Auth** | Public (verify_jwt = false) |
+| **Tables Used** | bgv_requests, employees |
+| **Actions** | submit, update-status, complete, get-status, list |
+| **BGV Types** | identity, address, education, employment, criminal, credit |
+
+### 13. sso-callback
+| Attribute | Details |
+|-----------|---------|
+| **File** | `supabase/functions/sso-callback/index.ts` |
+| **Purpose** | Handle SSO OAuth callbacks |
+| **Auth** | Public (verify_jwt = false) |
+| **Tables Used** | sso_states, profiles, client_tenant_users |
+| **Actions** | initiate, callback, validate-state |
+| **Providers** | Google, Microsoft, Okta |
+
+### 14. process-insurance-claim
+| Attribute | Details |
+|-----------|---------|
+| **File** | `supabase/functions/process-insurance-claim/index.ts` |
+| **Purpose** | Submit and track insurance claims |
+| **Auth** | Public (verify_jwt = false) |
+| **Tables Used** | insurance_claims, employees |
+| **Actions** | submit, update-status, approve, reject, get-claim, list |
+| **Claim Types** | medical, dental, vision, life, disability, accident |
+
+### 15. verify-document
+| Attribute | Details |
+|-----------|---------|
+| **File** | `supabase/functions/verify-document/index.ts` |
+| **Purpose** | OCR and document verification |
+| **Auth** | Public (verify_jwt = false) |
+| **Tables Used** | document_verifications, document_extractions |
+| **Actions** | submit, extract, verify, get-status, list |
+| **Document Types** | aadhaar, pan, passport, driving_license, voter_id, bank_statement, payslip |
+
+---
+
+## 📁 Directory Structure
+
+```
+supabase/
+└── functions/
+    ├── send-notification/            # In-app notifications
+    │   └── index.ts
+    ├── send-bulk-notifications/      # Bulk notifications
+    │   └── index.ts
+    ├── send-welcome-email/           # Welcome emails
+    │   └── index.ts
+    ├── send-feature-unlock-email/    # Feature unlock emails
+    │   └── index.ts
+    ├── send-quote-followup/          # Quote follow-up emails
+    │   └── index.ts
+    ├── generate-invoice-pdf/         # PDF generation
+    │   └── index.ts
+    ├── shift-scheduler/              # Shift scheduling
+    │   └── index.ts
+    ├── shift-swap-workflow/          # Shift swap handling
+    │   └── index.ts
+    ├── overtime-calculator/          # Overtime calculation
+    │   └── index.ts
+    ├── geofence-attendance/          # GPS attendance
+    │   └── index.ts
+    ├── run-payroll/                  # Payroll processing
+    │   └── index.ts
+    ├── process-bgv/                  # BGV requests
+    │   └── index.ts
+    ├── sso-callback/                 # SSO OAuth
+    │   └── index.ts
+    ├── process-insurance-claim/      # Insurance claims
+    │   └── index.ts
+    └── verify-document/              # Document OCR
+        └── index.ts
+```
+
+---
+
+## 🔑 Required Secrets
+
+| Secret | Description | Required |
+|--------|-------------|----------|
+| `SUPABASE_URL` | Auto-provided by Supabase | ✅ |
+| `SUPABASE_ANON_KEY` | Auto-provided by Supabase | ✅ |
+| `SUPABASE_SERVICE_ROLE_KEY` | Auto-provided by Supabase | ✅ |
+| `RESEND_API_KEY` | For sending emails via Resend | ✅ |
+
+---
+
+## Overview
 
 1. [Summary Statistics](#summary-statistics)
 2. [Directory Structure](#directory-structure)

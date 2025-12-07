@@ -29,3 +29,18 @@ verify_jwt = false
 
 [functions.geofence-attendance]
 verify_jwt = false
+
+[functions.run-payroll]
+verify_jwt = false
+
+[functions.process-bgv]
+verify_jwt = false
+
+[functions.sso-callback]
+verify_jwt = false
+
+[functions.process-insurance-claim]
+verify_jwt = false
+
+[functions.verify-document]
+verify_jwt = false
