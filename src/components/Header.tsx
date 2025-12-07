@@ -132,9 +132,20 @@ export const Header = ({ onQuoteClick }: HeaderProps) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
   const [mobileSubMenu, setMobileSubMenu] = useState<string | null>(null);
+  const [isScrolled, setIsScrolled] = useState(false);
   const { user, signOut } = useAuth();
   const { theme, toggleTheme } = useTheme();
   const location = useLocation();
+
+  // Scroll-based header shrink effect
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 20);
+    };
+    
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   // Close mobile menu on route change
   useEffect(() => {
@@ -234,9 +245,9 @@ export const Header = ({ onQuoteClick }: HeaderProps) => {
   };
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 bg-card/90 backdrop-blur-xl border-b border-border/40 transition-all duration-300">
+    <header className={`fixed top-0 left-0 right-0 z-50 bg-card/90 backdrop-blur-xl border-b border-border/40 transition-all duration-300 ${isScrolled ? 'shadow-lg' : ''}`}>
       <nav className="container mx-auto px-4 lg:px-8" aria-label="Main navigation">
-        <div className="flex items-center justify-between h-16 lg:h-18">
+        <div className={`flex items-center justify-between transition-all duration-300 ${isScrolled ? 'h-14' : 'h-16 lg:h-18'}`}>
           {/* Logo */}
           <Link to="/" className="flex items-center gap-2.5 group" aria-label="CropXon ATLAS Home">
             <div className="relative">
@@ -244,16 +255,16 @@ export const Header = ({ onQuoteClick }: HeaderProps) => {
               <img 
                 src={cropxonIcon} 
                 alt="CropXon ATLAS Logo" 
-                className="relative h-9 lg:h-10 w-9 lg:w-10 object-contain transition-transform duration-300 group-hover:scale-105" 
+                className={`relative object-contain transition-all duration-300 group-hover:scale-105 ${isScrolled ? 'h-7 lg:h-8 w-7 lg:w-8' : 'h-9 lg:h-10 w-9 lg:w-10'}`}
                 width={40}
                 height={40}
               />
             </div>
             <div className="flex flex-col">
-              <span className="text-foreground font-heading font-bold text-sm lg:text-base tracking-tight leading-none">
+              <span className={`text-foreground font-heading font-bold tracking-tight leading-none transition-all duration-300 ${isScrolled ? 'text-xs lg:text-sm' : 'text-sm lg:text-base'}`}>
                 CropXon
               </span>
-              <span className="text-primary font-heading font-semibold text-xs leading-none mt-0.5">
+              <span className={`text-primary font-heading font-semibold leading-none mt-0.5 transition-all duration-300 ${isScrolled ? 'text-[10px]' : 'text-xs'}`}>
                 ATLAS
               </span>
             </div>
