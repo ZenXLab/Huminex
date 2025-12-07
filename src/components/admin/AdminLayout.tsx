@@ -7,6 +7,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import cropxonIcon from "@/assets/cropxon-icon.png";
+import { AdminNotificationBell } from "./AdminNotificationBell";
 import { 
   LayoutDashboard, 
   Users, 
@@ -497,11 +498,28 @@ export const AdminLayout = ({ children }: AdminLayoutProps) => {
         </aside>
 
         {/* Main Content */}
-        <main className="flex-1 overflow-auto">
-          <div className="p-6">
-            {children}
-          </div>
-        </main>
+        <div className="flex-1 flex flex-col overflow-hidden">
+          {/* Admin Header with Notification Bell */}
+          <header className="h-14 border-b border-border bg-card/95 backdrop-blur-sm flex items-center justify-between px-6 shrink-0 sticky top-0 z-50">
+            <div className="flex items-center gap-3">
+              <h1 className="text-sm font-medium text-muted-foreground">
+                {new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+              </h1>
+            </div>
+            <div className="flex items-center gap-3">
+              <AdminNotificationBell />
+              <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
+                <span className="text-xs font-semibold text-primary">A</span>
+              </div>
+            </div>
+          </header>
+          
+          <main className="flex-1 overflow-auto">
+            <div className="p-6">
+              {children}
+            </div>
+          </main>
+        </div>
       </div>
     </TooltipProvider>
   );
