@@ -331,15 +331,74 @@ self.addEventListener('message', (event) => {
   }
 });
 
-// Background sync
+// Background sync for API requests
 self.addEventListener('sync', (event) => {
   console.log('[SW] Sync event:', event.tag);
   
   if (event.tag === 'sync-notifications') {
     event.waitUntil(syncNotifications());
   }
+  
+  if (event.tag === 'sync-api-requests') {
+    event.waitUntil(syncApiRequests());
+  }
 });
 
 async function syncNotifications() {
   console.log('[SW] Syncing notifications');
+}
+
+async function syncApiRequests() {
+  console.log('[SW] Syncing queued API requests');
+  
+  try {
+    const queue = await getQueuedRequests();
+    
+    for (const request of queue) {
+      try {
+        const response = await fetch(request.url, {
+          method: request.method,
+          headers: request.headers,
+          body: request.body,
+        });
+        
+        if (response.ok) {
+          await removeFromQueue(request.id);
+          console.log('[SW] Synced request:', request.id);
+        }
+      } catch (error) {
+        console.warn('[SW] Failed to sync request:', request.id, error);
+      }
+    }
+  } catch (error) {
+    console.error('[SW] Sync failed:', error);
+  }
+}
+
+async function getQueuedRequests() {
+  // Get queue from IndexedDB or localStorage via message
+  return new Promise((resolve) => {
+    self.clients.matchAll().then((clients) => {
+      if (clients.length > 0) {
+        const messageChannel = new MessageChannel();
+        messageChannel.port1.onmessage = (event) => {
+          resolve(event.data || []);
+        };
+        clients[0].postMessage({ type: 'GET_SYNC_QUEUE' }, [messageChannel.port2]);
+        
+        // Timeout after 2 seconds
+        setTimeout(() => resolve([]), 2000);
+      } else {
+        resolve([]);
+      }
+    });
+  });
+}
+
+async function removeFromQueue(requestId) {
+  self.clients.matchAll().then((clients) => {
+    if (clients.length > 0) {
+      clients[0].postMessage({ type: 'REMOVE_FROM_QUEUE', requestId });
+    }
+  });
 }

@@ -1,80 +1,86 @@
-import { useEffect, Suspense, lazy } from "react";
+import { useEffect, Suspense, lazy, useMemo } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useUserRole } from "@/hooks/useUserRole";
 import { AdminLayout } from "@/components/admin/AdminLayout";
-import { AdminDashboardSkeleton, AdminTableSkeleton } from "@/components/admin/AdminCardSkeleton";
-import { Loader2 } from "lucide-react";
+import { AdminLoadingFallback } from "@/components/admin/AdminLoadingFallback";
 
-// Lazy load all admin modules for code splitting
+// Pre-load critical admin modules immediately
 const AdminOverview = lazy(() => import("@/components/admin/AdminOverview").then(m => ({ default: m.AdminOverview })));
-const AdminQuotes = lazy(() => import("@/components/admin/AdminQuotes").then(m => ({ default: m.AdminQuotes })));
-const AdminInvoices = lazy(() => import("@/components/admin/AdminInvoices").then(m => ({ default: m.AdminInvoices })));
-const AdminUsers = lazy(() => import("@/components/admin/AdminUsers").then(m => ({ default: m.AdminUsers })));
-const AdminInquiries = lazy(() => import("@/components/admin/AdminInquiries").then(m => ({ default: m.AdminInquiries })));
-const AdminSettings = lazy(() => import("@/components/admin/AdminSettings").then(m => ({ default: m.AdminSettings })));
-const AdminAnalytics = lazy(() => import("@/components/admin/modules/AdminAnalytics").then(m => ({ default: m.AdminAnalytics })));
-const AdminAnalyticsDashboard = lazy(() => import("@/components/admin/modules/AdminAnalyticsDashboard").then(m => ({ default: m.AdminAnalyticsDashboard })));
-const AdminABTesting = lazy(() => import("@/components/admin/modules/AdminABTesting").then(m => ({ default: m.AdminABTesting })));
-const AdminABResults = lazy(() => import("@/components/admin/modules/AdminABResults").then(m => ({ default: m.AdminABResults })));
-const AdminPredictiveAnalytics = lazy(() => import("@/components/admin/modules/AdminPredictiveAnalytics").then(m => ({ default: m.AdminPredictiveAnalytics })));
-const AdminOnboardingApprovals = lazy(() => import("@/components/admin/modules/AdminOnboardingApprovals").then(m => ({ default: m.AdminOnboardingApprovals })));
-const AdminAuditLogs = lazy(() => import("@/components/admin/modules/AdminAuditLogs").then(m => ({ default: m.AdminAuditLogs })));
-const AdminClientNotices = lazy(() => import("@/components/admin/modules/AdminClientNotices").then(m => ({ default: m.AdminClientNotices })));
-const AdminCompliance = lazy(() => import("@/components/admin/modules/AdminCompliance").then(m => ({ default: m.AdminCompliance })));
-const AdminSystemLogs = lazy(() => import("@/components/admin/modules/AdminSystemLogs").then(m => ({ default: m.AdminSystemLogs })));
-const AdminIntegrations = lazy(() => import("@/components/admin/modules/AdminIntegrations").then(m => ({ default: m.AdminIntegrations })));
-const AdminPortalSettings = lazy(() => import("@/components/admin/modules/AdminPortalSettings").then(m => ({ default: m.AdminPortalSettings })));
-const AdminCRM = lazy(() => import("@/components/admin/modules/AdminCRM").then(m => ({ default: m.AdminCRM })));
-const AdminClickstream = lazy(() => import("@/components/admin/modules/AdminClickstream").then(m => ({ default: m.AdminClickstream })));
-const AdminMSPMonitoring = lazy(() => import("@/components/admin/modules/AdminMSPMonitoring").then(m => ({ default: m.AdminMSPMonitoring })));
-const AdminMarketing = lazy(() => import("@/components/admin/modules/AdminMarketing").then(m => ({ default: m.AdminMarketing })));
-const AdminProjects = lazy(() => import("@/components/admin/modules/AdminProjects").then(m => ({ default: m.AdminProjects })));
-const AdminTickets = lazy(() => import("@/components/admin/modules/AdminTickets").then(m => ({ default: m.AdminTickets })));
-const AdminMeetings = lazy(() => import("@/components/admin/modules/AdminMeetings").then(m => ({ default: m.AdminMeetings })));
-const AdminFiles = lazy(() => import("@/components/admin/modules/AdminFiles").then(m => ({ default: m.AdminFiles })));
-const AdminAIDashboard = lazy(() => import("@/components/admin/modules/AdminAIDashboard").then(m => ({ default: m.AdminAIDashboard })));
-const AdminTeamManagement = lazy(() => import("@/components/admin/modules/AdminTeamManagement").then(m => ({ default: m.AdminTeamManagement })));
-const AdminSuperAdmin = lazy(() => import("@/components/admin/modules/AdminSuperAdmin").then(m => ({ default: m.AdminSuperAdmin })));
-const AdminPluginsManagement = lazy(() => import("@/components/admin/modules/AdminPluginsManagement").then(m => ({ default: m.AdminPluginsManagement })));
-const AdminTenantManagement = lazy(() => import("@/components/admin/modules/AdminTenantManagement"));
-const AdminPricingManagement = lazy(() => import("@/components/admin/modules/AdminPricingManagement"));
-const AdminOnboardingTracker = lazy(() => import("@/components/admin/modules/AdminOnboardingTracker"));
-const AdminTenantBilling = lazy(() => import("@/components/admin/modules/AdminTenantBilling").then(m => ({ default: m.AdminTenantBilling })));
-const AdminRevenueAnalytics = lazy(() => import("@/components/admin/modules/AdminRevenueAnalytics").then(m => ({ default: m.AdminRevenueAnalytics })));
-const AdminSystemHealth = lazy(() => import("@/components/admin/modules/AdminSystemHealth").then(m => ({ default: m.AdminSystemHealth })));
-const AdminPipelineManagement = lazy(() => import("@/components/admin/modules/AdminPipelineManagement").then(m => ({ default: m.AdminPipelineManagement })));
-const AdminThreatDetection = lazy(() => import("@/components/admin/modules/AdminThreatDetection").then(m => ({ default: m.AdminThreatDetection })));
-const AdminCloudResources = lazy(() => import("@/components/admin/modules/AdminCloudResources").then(m => ({ default: m.AdminCloudResources })));
-const AdminAccessControl = lazy(() => import("@/components/admin/modules/AdminAccessControl").then(m => ({ default: m.AdminAccessControl })));
-const AdminEmailCampaigns = lazy(() => import("@/components/admin/modules/AdminEmailCampaigns").then(m => ({ default: m.AdminEmailCampaigns })));
-const AdminLeadScoring = lazy(() => import("@/components/admin/modules/AdminLeadScoring").then(m => ({ default: m.AdminLeadScoring })));
-const AdminAPIGateway = lazy(() => import("@/components/admin/modules/AdminAPIGateway").then(m => ({ default: m.AdminAPIGateway })));
-const AdminDatabaseStatus = lazy(() => import("@/components/admin/modules/AdminDatabaseStatus").then(m => ({ default: m.AdminDatabaseStatus })));
-const AdminClientHealth = lazy(() => import("@/components/admin/modules/AdminClientHealth").then(m => ({ default: m.AdminClientHealth })));
-const AdminConversionFunnels = lazy(() => import("@/components/admin/modules/AdminConversionFunnels").then(m => ({ default: m.AdminConversionFunnels })));
-const AdminProjectTimeline = lazy(() => import("@/components/admin/modules/AdminProjectTimeline").then(m => ({ default: m.AdminProjectTimeline })));
-const AdminVideoConference = lazy(() => import("@/components/admin/modules/AdminVideoConference").then(m => ({ default: m.AdminVideoConference })));
-const AdminRolesPermissions = lazy(() => import("@/components/admin/modules/AdminRolesPermissions").then(m => ({ default: m.AdminRolesPermissions })));
-const AdminBackupRecovery = lazy(() => import("@/components/admin/modules/AdminBackupRecovery").then(m => ({ default: m.AdminBackupRecovery })));
-const AdminAPIKeysWebhooks = lazy(() => import("@/components/admin/modules/AdminAPIKeysWebhooks").then(m => ({ default: m.AdminAPIKeysWebhooks })));
-const AdminLiveChat = lazy(() => import("@/components/admin/modules/AdminLiveChat").then(m => ({ default: m.AdminLiveChat })));
-const AdminAIUsage = lazy(() => import("@/components/admin/modules/AdminAIUsage").then(m => ({ default: m.AdminAIUsage })));
-const AdminAIModels = lazy(() => import("@/components/admin/modules/AdminAIModels").then(m => ({ default: m.AdminAIModels })));
-const AdminAutomationLogs = lazy(() => import("@/components/admin/modules/AdminAutomationLogs").then(m => ({ default: m.AdminAutomationLogs })));
-const AdminServerHealth = lazy(() => import("@/components/admin/modules/AdminServerHealth").then(m => ({ default: m.AdminServerHealth })));
-const AdminFeatureFlags = lazy(() => import("@/components/admin/modules/AdminFeatureFlags").then(m => ({ default: m.AdminFeatureFlags })));
-const AdminNotificationSystem = lazy(() => import("@/components/admin/AdminNotificationSystem").then(m => ({ default: m.AdminNotificationSystem })));
-const AdminNotificationPreferences = lazy(() => import("@/components/admin/AdminNotificationPreferences").then(m => ({ default: m.AdminNotificationPreferences })));
 
-// Loading fallback based on route type
-const getLoadingFallback = (path: string) => {
-  // Dashboard-style pages
-  if (path === "/admin" || path.includes("analytics") || path.includes("health") || path.includes("overview")) {
-    return <AdminDashboardSkeleton />;
-  }
-  // Table-heavy pages
-  return <AdminTableSkeleton rows={8} />;
+// Lazy load all other admin modules with optimized chunking
+const lazyModules = {
+  quotes: () => import("@/components/admin/AdminQuotes").then(m => ({ default: m.AdminQuotes })),
+  invoices: () => import("@/components/admin/AdminInvoices").then(m => ({ default: m.AdminInvoices })),
+  users: () => import("@/components/admin/AdminUsers").then(m => ({ default: m.AdminUsers })),
+  inquiries: () => import("@/components/admin/AdminInquiries").then(m => ({ default: m.AdminInquiries })),
+  settings: () => import("@/components/admin/AdminSettings").then(m => ({ default: m.AdminSettings })),
+  analytics: () => import("@/components/admin/modules/AdminAnalytics").then(m => ({ default: m.AdminAnalytics })),
+  analyticsDashboard: () => import("@/components/admin/modules/AdminAnalyticsDashboard").then(m => ({ default: m.AdminAnalyticsDashboard })),
+  abTesting: () => import("@/components/admin/modules/AdminABTesting").then(m => ({ default: m.AdminABTesting })),
+  abResults: () => import("@/components/admin/modules/AdminABResults").then(m => ({ default: m.AdminABResults })),
+  predictive: () => import("@/components/admin/modules/AdminPredictiveAnalytics").then(m => ({ default: m.AdminPredictiveAnalytics })),
+  onboardingApprovals: () => import("@/components/admin/modules/AdminOnboardingApprovals").then(m => ({ default: m.AdminOnboardingApprovals })),
+  auditLogs: () => import("@/components/admin/modules/AdminAuditLogs").then(m => ({ default: m.AdminAuditLogs })),
+  clientNotices: () => import("@/components/admin/modules/AdminClientNotices").then(m => ({ default: m.AdminClientNotices })),
+  compliance: () => import("@/components/admin/modules/AdminCompliance").then(m => ({ default: m.AdminCompliance })),
+  systemLogs: () => import("@/components/admin/modules/AdminSystemLogs").then(m => ({ default: m.AdminSystemLogs })),
+  integrations: () => import("@/components/admin/modules/AdminIntegrations").then(m => ({ default: m.AdminIntegrations })),
+  portalSettings: () => import("@/components/admin/modules/AdminPortalSettings").then(m => ({ default: m.AdminPortalSettings })),
+  crm: () => import("@/components/admin/modules/AdminCRM").then(m => ({ default: m.AdminCRM })),
+  clickstream: () => import("@/components/admin/modules/AdminClickstream").then(m => ({ default: m.AdminClickstream })),
+  msp: () => import("@/components/admin/modules/AdminMSPMonitoring").then(m => ({ default: m.AdminMSPMonitoring })),
+  marketing: () => import("@/components/admin/modules/AdminMarketing").then(m => ({ default: m.AdminMarketing })),
+  projects: () => import("@/components/admin/modules/AdminProjects").then(m => ({ default: m.AdminProjects })),
+  tickets: () => import("@/components/admin/modules/AdminTickets").then(m => ({ default: m.AdminTickets })),
+  meetings: () => import("@/components/admin/modules/AdminMeetings").then(m => ({ default: m.AdminMeetings })),
+  files: () => import("@/components/admin/modules/AdminFiles").then(m => ({ default: m.AdminFiles })),
+  aiDashboard: () => import("@/components/admin/modules/AdminAIDashboard").then(m => ({ default: m.AdminAIDashboard })),
+  team: () => import("@/components/admin/modules/AdminTeamManagement").then(m => ({ default: m.AdminTeamManagement })),
+  superAdmin: () => import("@/components/admin/modules/AdminSuperAdmin").then(m => ({ default: m.AdminSuperAdmin })),
+  plugins: () => import("@/components/admin/modules/AdminPluginsManagement").then(m => ({ default: m.AdminPluginsManagement })),
+  tenants: () => import("@/components/admin/modules/AdminTenantManagement"),
+  pricing: () => import("@/components/admin/modules/AdminPricingManagement"),
+  onboardingTracker: () => import("@/components/admin/modules/AdminOnboardingTracker"),
+  tenantBilling: () => import("@/components/admin/modules/AdminTenantBilling").then(m => ({ default: m.AdminTenantBilling })),
+  revenue: () => import("@/components/admin/modules/AdminRevenueAnalytics").then(m => ({ default: m.AdminRevenueAnalytics })),
+  systemHealth: () => import("@/components/admin/modules/AdminSystemHealth").then(m => ({ default: m.AdminSystemHealth })),
+  pipeline: () => import("@/components/admin/modules/AdminPipelineManagement").then(m => ({ default: m.AdminPipelineManagement })),
+  threats: () => import("@/components/admin/modules/AdminThreatDetection").then(m => ({ default: m.AdminThreatDetection })),
+  cloud: () => import("@/components/admin/modules/AdminCloudResources").then(m => ({ default: m.AdminCloudResources })),
+  accessControl: () => import("@/components/admin/modules/AdminAccessControl").then(m => ({ default: m.AdminAccessControl })),
+  emailCampaigns: () => import("@/components/admin/modules/AdminEmailCampaigns").then(m => ({ default: m.AdminEmailCampaigns })),
+  leadScoring: () => import("@/components/admin/modules/AdminLeadScoring").then(m => ({ default: m.AdminLeadScoring })),
+  apiGateway: () => import("@/components/admin/modules/AdminAPIGateway").then(m => ({ default: m.AdminAPIGateway })),
+  database: () => import("@/components/admin/modules/AdminDatabaseStatus").then(m => ({ default: m.AdminDatabaseStatus })),
+  clientHealth: () => import("@/components/admin/modules/AdminClientHealth").then(m => ({ default: m.AdminClientHealth })),
+  funnels: () => import("@/components/admin/modules/AdminConversionFunnels").then(m => ({ default: m.AdminConversionFunnels })),
+  projectTimeline: () => import("@/components/admin/modules/AdminProjectTimeline").then(m => ({ default: m.AdminProjectTimeline })),
+  videoConference: () => import("@/components/admin/modules/AdminVideoConference").then(m => ({ default: m.AdminVideoConference })),
+  roles: () => import("@/components/admin/modules/AdminRolesPermissions").then(m => ({ default: m.AdminRolesPermissions })),
+  backup: () => import("@/components/admin/modules/AdminBackupRecovery").then(m => ({ default: m.AdminBackupRecovery })),
+  apiKeys: () => import("@/components/admin/modules/AdminAPIKeysWebhooks").then(m => ({ default: m.AdminAPIKeysWebhooks })),
+  liveChat: () => import("@/components/admin/modules/AdminLiveChat").then(m => ({ default: m.AdminLiveChat })),
+  aiUsage: () => import("@/components/admin/modules/AdminAIUsage").then(m => ({ default: m.AdminAIUsage })),
+  aiModels: () => import("@/components/admin/modules/AdminAIModels").then(m => ({ default: m.AdminAIModels })),
+  automationLogs: () => import("@/components/admin/modules/AdminAutomationLogs").then(m => ({ default: m.AdminAutomationLogs })),
+  serverHealth: () => import("@/components/admin/modules/AdminServerHealth").then(m => ({ default: m.AdminServerHealth })),
+  featureFlags: () => import("@/components/admin/modules/AdminFeatureFlags").then(m => ({ default: m.AdminFeatureFlags })),
+  notifications: () => import("@/components/admin/AdminNotificationSystem").then(m => ({ default: m.AdminNotificationSystem })),
+  notificationPrefs: () => import("@/components/admin/AdminNotificationPreferences").then(m => ({ default: m.AdminNotificationPreferences })),
+};
+
+// Create lazy components from modules
+const LazyComponents = Object.fromEntries(
+  Object.entries(lazyModules).map(([key, loader]) => [key, lazy(loader as () => Promise<{ default: React.ComponentType<unknown> }>)])
+) as Record<keyof typeof lazyModules, React.LazyExoticComponent<React.ComponentType<unknown>>>;
+
+// Get module name from path for loading indicator
+const getModuleName = (path: string): string => {
+  const segments = path.split('/').filter(Boolean);
+  if (segments.length <= 1) return 'Dashboard';
+  const name = segments[1].replace(/-/g, ' ');
+  return name.charAt(0).toUpperCase() + name.slice(1);
 };
 
 const AdminPage = () => {
@@ -91,10 +97,101 @@ const AdminPage = () => {
     }
   }, [user, authLoading, isAdmin, roleLoading, navigate]);
 
+  // Memoize the content to prevent unnecessary re-renders
+  const content = useMemo(() => {
+    const path = location.pathname;
+    
+    // Command Center
+    if (path === "/admin" || path === "/admin/") return <AdminOverview />;
+    if (path === "/admin/analytics") return <LazyComponents.analyticsDashboard />;
+    if (path.startsWith("/admin/analytics/basic")) return <LazyComponents.analytics />;
+    if (path.startsWith("/admin/health")) return <LazyComponents.systemHealth />;
+    
+    // Tenant Management
+    if (path.startsWith("/admin/tenants")) return <LazyComponents.tenants />;
+    if (path.startsWith("/admin/tenant-billing")) return <LazyComponents.tenantBilling />;
+    if (path.startsWith("/admin/tenant-usage")) return <LazyComponents.revenue />;
+    if (path.startsWith("/admin/tenant-config")) return <LazyComponents.accessControl />;
+    if (path.startsWith("/admin/plugins")) return <LazyComponents.plugins />;
+    
+    // Sales & Revenue
+    if (path.startsWith("/admin/crm")) return <LazyComponents.crm />;
+    if (path.startsWith("/admin/pipeline")) return <LazyComponents.pipeline />;
+    if (path.startsWith("/admin/quotes")) return <LazyComponents.quotes />;
+    if (path.startsWith("/admin/invoices")) return <LazyComponents.invoices />;
+    if (path.startsWith("/admin/revenue")) return <LazyComponents.revenue />;
+    if (path.startsWith("/admin/pricing")) return <LazyComponents.pricing />;
+    
+    // Client Management
+    if (path.startsWith("/admin/users")) return <LazyComponents.users />;
+    if (path.startsWith("/admin/onboarding-tracker")) return <LazyComponents.onboardingTracker />;
+    if (path.startsWith("/admin/onboarding")) return <LazyComponents.onboardingApprovals />;
+    if (path.startsWith("/admin/client-health")) return <LazyComponents.clientHealth />;
+    if (path.startsWith("/admin/notices")) return <LazyComponents.clientNotices />;
+    
+    // Marketing & Growth
+    if (path.startsWith("/admin/clickstream")) return <LazyComponents.clickstream />;
+    if (path.startsWith("/admin/marketing")) return <LazyComponents.marketing />;
+    if (path.startsWith("/admin/lead-scoring")) return <LazyComponents.leadScoring />;
+    if (path.startsWith("/admin/email-campaigns")) return <LazyComponents.emailCampaigns />;
+    if (path.startsWith("/admin/funnels")) return <LazyComponents.funnels />;
+    if (path.match(/^\/admin\/ab-testing\/[^/]+$/)) return <LazyComponents.abResults />;
+    if (path === "/admin/ab-testing") return <LazyComponents.abTesting />;
+    if (path.startsWith("/admin/predictive")) return <LazyComponents.predictive />;
+    
+    // Operations & Projects
+    if (path.startsWith("/admin/projects")) return <LazyComponents.projects />;
+    if (path.startsWith("/admin/project-timeline")) return <LazyComponents.projectTimeline />;
+    if (path.startsWith("/admin/files")) return <LazyComponents.files />;
+    if (path.startsWith("/admin/team")) return <LazyComponents.team />;
+    
+    // Support & Communication
+    if (path.startsWith("/admin/tickets")) return <LazyComponents.tickets />;
+    if (path.startsWith("/admin/chat")) return <LazyComponents.liveChat />;
+    if (path.startsWith("/admin/meetings")) return <LazyComponents.meetings />;
+    if (path.startsWith("/admin/video-calls")) return <LazyComponents.videoConference />;
+    if (path.startsWith("/admin/inquiries")) return <LazyComponents.inquiries />;
+    
+    // AI & Intelligence
+    if (path.startsWith("/admin/ai")) return <LazyComponents.aiDashboard />;
+    if (path.startsWith("/admin/ai-usage")) return <LazyComponents.aiUsage />;
+    if (path.startsWith("/admin/ai-models")) return <LazyComponents.aiModels />;
+    if (path.startsWith("/admin/automation-logs")) return <LazyComponents.automationLogs />;
+    
+    // Infrastructure & MSP
+    if (path.startsWith("/admin/msp")) return <LazyComponents.msp />;
+    if (path.startsWith("/admin/servers")) return <LazyComponents.serverHealth />;
+    if (path.startsWith("/admin/cloud")) return <LazyComponents.cloud />;
+    if (path.startsWith("/admin/database")) return <LazyComponents.database />;
+    if (path.startsWith("/admin/api-gateway")) return <LazyComponents.apiGateway />;
+    
+    // Security & Compliance
+    if (path.startsWith("/admin/security")) return <LazyComponents.compliance />;
+    if (path.startsWith("/admin/access-control")) return <LazyComponents.accessControl />;
+    if (path.startsWith("/admin/compliance")) return <LazyComponents.compliance />;
+    if (path.startsWith("/admin/threats")) return <LazyComponents.threats />;
+    if (path.startsWith("/admin/audit")) return <LazyComponents.auditLogs />;
+    
+    // Platform Settings
+    if (path.startsWith("/admin/portal-settings")) return <LazyComponents.portalSettings />;
+    if (path.startsWith("/admin/roles")) return <LazyComponents.roles />;
+    if (path.startsWith("/admin/integrations")) return <LazyComponents.integrations />;
+    if (path.startsWith("/admin/api-keys")) return <LazyComponents.apiKeys />;
+    if (path.startsWith("/admin/feature-flags")) return <LazyComponents.featureFlags />;
+    if (path.startsWith("/admin/logs")) return <LazyComponents.systemLogs />;
+    if (path.startsWith("/admin/backup")) return <LazyComponents.backup />;
+    if (path.startsWith("/admin/super")) return <LazyComponents.superAdmin />;
+    if (path.startsWith("/admin/notifications/preferences")) return <LazyComponents.notificationPrefs />;
+    if (path.startsWith("/admin/notifications")) return <LazyComponents.notifications />;
+    if (path.startsWith("/admin/settings")) return <LazyComponents.settings />;
+    
+    return <AdminOverview />;
+  }, [location.pathname]);
+
   if (authLoading || roleLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <AdminLoadingFallback module="Authentication" />
       </div>
     );
   }
@@ -103,100 +200,10 @@ const AdminPage = () => {
     return null;
   }
 
-  const renderContent = () => {
-    const path = location.pathname;
-    
-    // Command Center
-    if (path === "/admin" || path === "/admin/") return <AdminOverview />;
-    if (path === "/admin/analytics") return <AdminAnalyticsDashboard />;
-    if (path.startsWith("/admin/analytics/basic")) return <AdminAnalytics />;
-    if (path.startsWith("/admin/health")) return <AdminSystemHealth />;
-    
-    // Tenant Management
-    if (path.startsWith("/admin/tenants")) return <AdminTenantManagement />;
-    if (path.startsWith("/admin/tenant-billing")) return <AdminTenantBilling />;
-    if (path.startsWith("/admin/tenant-usage")) return <AdminRevenueAnalytics />;
-    if (path.startsWith("/admin/tenant-config")) return <AdminAccessControl />;
-    if (path.startsWith("/admin/plugins")) return <AdminPluginsManagement />;
-    
-    // Sales & Revenue
-    if (path.startsWith("/admin/crm")) return <AdminCRM />;
-    if (path.startsWith("/admin/pipeline")) return <AdminPipelineManagement />;
-    if (path.startsWith("/admin/quotes")) return <AdminQuotes />;
-    if (path.startsWith("/admin/invoices")) return <AdminInvoices />;
-    if (path.startsWith("/admin/revenue")) return <AdminRevenueAnalytics />;
-    if (path.startsWith("/admin/pricing")) return <AdminPricingManagement />;
-    
-    // Client Management
-    if (path.startsWith("/admin/users")) return <AdminUsers />;
-    if (path.startsWith("/admin/onboarding-tracker")) return <AdminOnboardingTracker />;
-    if (path.startsWith("/admin/onboarding")) return <AdminOnboardingApprovals />;
-    if (path.startsWith("/admin/client-health")) return <AdminClientHealth />;
-    if (path.startsWith("/admin/notices")) return <AdminClientNotices />;
-    
-    // Marketing & Growth
-    if (path.startsWith("/admin/clickstream")) return <AdminClickstream />;
-    if (path.startsWith("/admin/marketing")) return <AdminMarketing />;
-    if (path.startsWith("/admin/lead-scoring")) return <AdminLeadScoring />;
-    if (path.startsWith("/admin/email-campaigns")) return <AdminEmailCampaigns />;
-    if (path.startsWith("/admin/funnels")) return <AdminConversionFunnels />;
-    if (path.match(/^\/admin\/ab-testing\/[^/]+$/)) return <AdminABResults />;
-    if (path === "/admin/ab-testing") return <AdminABTesting />;
-    if (path.startsWith("/admin/predictive")) return <AdminPredictiveAnalytics />;
-    
-    // Operations & Projects
-    if (path.startsWith("/admin/projects")) return <AdminProjects />;
-    if (path.startsWith("/admin/project-timeline")) return <AdminProjectTimeline />;
-    if (path.startsWith("/admin/files")) return <AdminFiles />;
-    if (path.startsWith("/admin/team")) return <AdminTeamManagement />;
-    
-    // Support & Communication
-    if (path.startsWith("/admin/tickets")) return <AdminTickets />;
-    if (path.startsWith("/admin/chat")) return <AdminLiveChat />;
-    if (path.startsWith("/admin/meetings")) return <AdminMeetings />;
-    if (path.startsWith("/admin/video-calls")) return <AdminVideoConference />;
-    if (path.startsWith("/admin/inquiries")) return <AdminInquiries />;
-    
-    // AI & Intelligence
-    if (path.startsWith("/admin/ai")) return <AdminAIDashboard />;
-    if (path.startsWith("/admin/ai-usage")) return <AdminAIUsage />;
-    if (path.startsWith("/admin/ai-models")) return <AdminAIModels />;
-    if (path.startsWith("/admin/automation-logs")) return <AdminAutomationLogs />;
-    
-    // Infrastructure & MSP
-    if (path.startsWith("/admin/msp")) return <AdminMSPMonitoring />;
-    if (path.startsWith("/admin/servers")) return <AdminServerHealth />;
-    if (path.startsWith("/admin/cloud")) return <AdminCloudResources />;
-    if (path.startsWith("/admin/database")) return <AdminDatabaseStatus />;
-    if (path.startsWith("/admin/api-gateway")) return <AdminAPIGateway />;
-    
-    // Security & Compliance
-    if (path.startsWith("/admin/security")) return <AdminCompliance />;
-    if (path.startsWith("/admin/access-control")) return <AdminAccessControl />;
-    if (path.startsWith("/admin/compliance")) return <AdminCompliance />;
-    if (path.startsWith("/admin/threats")) return <AdminThreatDetection />;
-    if (path.startsWith("/admin/audit")) return <AdminAuditLogs />;
-    
-    // Platform Settings
-    if (path.startsWith("/admin/portal-settings")) return <AdminPortalSettings />;
-    if (path.startsWith("/admin/roles")) return <AdminRolesPermissions />;
-    if (path.startsWith("/admin/integrations")) return <AdminIntegrations />;
-    if (path.startsWith("/admin/api-keys")) return <AdminAPIKeysWebhooks />;
-    if (path.startsWith("/admin/feature-flags")) return <AdminFeatureFlags />;
-    if (path.startsWith("/admin/logs")) return <AdminSystemLogs />;
-    if (path.startsWith("/admin/backup")) return <AdminBackupRecovery />;
-    if (path.startsWith("/admin/super")) return <AdminSuperAdmin />;
-    if (path.startsWith("/admin/notifications/preferences")) return <AdminNotificationPreferences />;
-    if (path.startsWith("/admin/notifications")) return <AdminNotificationSystem />;
-    if (path.startsWith("/admin/settings")) return <AdminSettings />;
-    
-    return <AdminOverview />;
-  };
-
   return (
     <AdminLayout>
-      <Suspense fallback={getLoadingFallback(location.pathname)}>
-        {renderContent()}
+      <Suspense fallback={<AdminLoadingFallback module={getModuleName(location.pathname)} />}>
+        {content}
       </Suspense>
     </AdminLayout>
   );

@@ -9,6 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import cropxonIcon from "@/assets/cropxon-icon.png";
 import { AdminNotificationBell } from "./AdminNotificationBell";
 import { prefetchAdminModule } from "@/lib/adminPrefetch";
+import { SyncIndicator } from "@/components/ui/sync-indicator";
 import { 
   LayoutDashboard, 
   Users, 
@@ -519,6 +520,7 @@ export const AdminLayout = ({ children }: AdminLayoutProps) => {
               </h1>
             </div>
             <div className="flex items-center gap-3">
+              <SyncIndicator />
               <AdminNotificationBell />
               <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
                 <span className="text-xs font-semibold text-primary">A</span>
