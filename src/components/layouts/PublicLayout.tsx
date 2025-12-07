@@ -30,7 +30,7 @@ export const PublicLayout = ({ children, showFooter = true }: PublicLayoutProps)
   return (
     <div className="min-h-screen bg-background">
       <Header />
-      <main>{children}</main>
+      <main className="pt-16 lg:pt-18">{children}</main>
       {showFooter && <Footer />}
     </div>
   );

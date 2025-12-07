@@ -103,13 +103,14 @@ const About = () => {
         <link rel="canonical" href="https://atlas.cropxon.com/about" />
       </Helmet>
 
-      <main className="min-h-screen bg-background">
+      <div className="min-h-screen bg-background">
         <Header />
 
+        <main className="pt-16 lg:pt-18">
         {/* Hero Section */}
         <section 
           ref={heroRef as React.RefObject<HTMLElement>}
-          className="relative min-h-[90vh] flex items-center justify-center overflow-hidden pt-32"
+          className="relative min-h-[80vh] flex items-center justify-center overflow-hidden pt-8"
         >
           {/* Animated Background */}
           <div className="absolute inset-0">
@@ -462,9 +463,10 @@ const About = () => {
             </div>
           </div>
         </section>
+        </main>
 
         <Footer />
-      </main>
+      </div>
     </>
   );
 };

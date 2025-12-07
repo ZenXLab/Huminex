@@ -111,13 +111,14 @@ const Contact = () => {
         <link rel="canonical" href="https://atlas.cropxon.com/contact" />
       </Helmet>
 
-      <main className="min-h-screen bg-background">
+      <div className="min-h-screen bg-background">
         <Header />
-
+        
+        <main className="pt-16 lg:pt-18">
         {/* Hero Section */}
         <section 
           ref={heroRef as React.RefObject<HTMLElement>}
-          className="relative pt-36 pb-20 lg:pt-44 lg:pb-28 overflow-hidden"
+          className="relative pt-20 pb-20 lg:pt-28 lg:pb-28 overflow-hidden"
         >
           {/* Background */}
           <div className="absolute inset-0 bg-gradient-to-b from-primary/5 via-transparent to-transparent" />
@@ -400,9 +401,10 @@ const Contact = () => {
             </div>
           </div>
         </section>
+        </main>
 
         <Footer />
-      </main>
+      </div>
     </>
   );
 };
