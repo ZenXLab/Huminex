@@ -433,7 +433,7 @@ export const Header = ({ onQuoteClick }: HeaderProps) => {
 
             {user ? (
               <>
-                <Link to="/dashboard">
+                <Link to="/portal">
                   <Button variant="ghost" size="sm" className="gap-2 font-medium text-sm h-9">
                     <LayoutDashboard className="h-4 w-4" />
                     Dashboard
@@ -444,12 +444,19 @@ export const Header = ({ onQuoteClick }: HeaderProps) => {
                 </Button>
               </>
             ) : (
-              <Link to="/auth">
-                <Button variant="ghost" size="sm" className="gap-2 font-medium text-sm h-9">
-                  <User className="h-4 w-4" />
-                  Sign In
-                </Button>
-              </Link>
+              <>
+                <Link to="/portal/login">
+                  <Button variant="ghost" size="sm" className="gap-2 font-medium text-sm h-9">
+                    <User className="h-4 w-4" />
+                    Client Login
+                  </Button>
+                </Link>
+                <Link to="/tenant/login">
+                  <Button variant="ghost" size="sm" className="font-medium text-sm h-9">
+                    Tenant Login
+                  </Button>
+                </Link>
+              </>
             )}
             <Link to="/get-quote">
               <Button 

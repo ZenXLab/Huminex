@@ -136,10 +136,6 @@ export const HeroSection = ({ onQuoteClick }: HeroSectionProps) => {
             <Button variant="hero-outline" size="xl" className="group" onClick={scrollToSolutions}>
               Explore Solutions
             </Button>
-            <Button variant="outline" size="xl" className="group" onClick={onQuoteClick}>
-              <Calculator className="h-5 w-5" />
-              Get a Quote
-            </Button>
           </div>
 
           {/* Trust indicators */}
