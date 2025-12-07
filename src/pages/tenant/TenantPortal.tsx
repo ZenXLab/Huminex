@@ -2,8 +2,11 @@ import React from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 import { TenantLayout } from "@/components/tenant/TenantLayout";
 import TenantDashboard from "./TenantDashboard";
+import TenantWorkforce from "./TenantWorkforce";
+import TenantPayroll from "./TenantPayroll";
+import TenantRecruitment from "./TenantRecruitment";
 
-// Placeholder pages
+// Placeholder for remaining pages
 const PlaceholderPage: React.FC<{ title: string }> = ({ title }) => (
   <div className="flex items-center justify-center h-[60vh]">
     <div className="text-center">
@@ -19,10 +22,10 @@ const TenantPortal: React.FC = () => {
       <Route element={<TenantLayout />}>
         <Route index element={<Navigate to="dashboard" replace />} />
         <Route path="dashboard" element={<TenantDashboard />} />
-        <Route path="workforce" element={<PlaceholderPage title="Workforce Directory" />} />
+        <Route path="workforce" element={<TenantWorkforce />} />
+        <Route path="payroll" element={<TenantPayroll />} />
+        <Route path="recruitment" element={<TenantRecruitment />} />
         <Route path="attendance" element={<PlaceholderPage title="Attendance & Leave" />} />
-        <Route path="payroll" element={<PlaceholderPage title="Payroll" />} />
-        <Route path="recruitment" element={<PlaceholderPage title="Talent Acquisition" />} />
         <Route path="compliance" element={<PlaceholderPage title="Statutory Compliance" />} />
         <Route path="finance" element={<PlaceholderPage title="Finance & Billing" />} />
         <Route path="insurance" element={<PlaceholderPage title="Insurance & Claims" />} />
