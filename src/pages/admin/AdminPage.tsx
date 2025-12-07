@@ -32,7 +32,6 @@ import { AdminPluginsManagement } from "@/components/admin/modules/AdminPluginsM
 import AdminTenantManagement from "@/components/admin/modules/AdminTenantManagement";
 import AdminPricingManagement from "@/components/admin/modules/AdminPricingManagement";
 import AdminOnboardingTracker from "@/components/admin/modules/AdminOnboardingTracker";
-import { AdminPlaceholderPage } from "@/components/admin/modules/AdminPlaceholderPage";
 import { AdminTenantBilling } from "@/components/admin/modules/AdminTenantBilling";
 import { AdminRevenueAnalytics } from "@/components/admin/modules/AdminRevenueAnalytics";
 import { AdminSystemHealth } from "@/components/admin/modules/AdminSystemHealth";
@@ -50,12 +49,14 @@ import { AdminProjectTimeline } from "@/components/admin/modules/AdminProjectTim
 import { AdminVideoConference } from "@/components/admin/modules/AdminVideoConference";
 import { AdminRolesPermissions } from "@/components/admin/modules/AdminRolesPermissions";
 import { AdminBackupRecovery } from "@/components/admin/modules/AdminBackupRecovery";
+import { AdminAPIKeysWebhooks } from "@/components/admin/modules/AdminAPIKeysWebhooks";
+import { AdminLiveChat } from "@/components/admin/modules/AdminLiveChat";
+import { AdminAIUsage } from "@/components/admin/modules/AdminAIUsage";
+import { AdminAIModels } from "@/components/admin/modules/AdminAIModels";
+import { AdminAutomationLogs } from "@/components/admin/modules/AdminAutomationLogs";
+import { AdminServerHealth } from "@/components/admin/modules/AdminServerHealth";
+import { AdminFeatureFlags } from "@/components/admin/modules/AdminFeatureFlags";
 import { Loader2 } from "lucide-react";
-import { 
-  Gauge, CreditCard, TrendingUp, Settings, Target, Mail, Workflow,
-  Phone, Video, Brain, Wallet, HardDrive, Cloud, Database, Globe,
-  Key, AlertTriangle, UserCog, Layers, RefreshCw, Calendar
-} from "lucide-react";
 
 const AdminPage = () => {
   const navigate = useNavigate();
