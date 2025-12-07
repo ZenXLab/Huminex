@@ -26,7 +26,7 @@ const defaultPrivacySettings: PrivacySettings = {
   maskPasswords: true,
   maskEmails: false,
   maskCreditCards: true,
-  excludedPages: ["/admin", "/portal", "/tenant"],
+  excludedPages: [], // Empty by default - record all pages
   excludedSelectors: [".sensitive", "[data-private]", ".credit-card"],
   recordCanvas: false,
   collectFonts: false,
