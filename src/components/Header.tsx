@@ -287,10 +287,10 @@ export const Header = ({ onQuoteClick }: HeaderProps) => {
                 <ChevronDown className={`h-3.5 w-3.5 transition-transform duration-200 ${activeDropdown === "features" ? "rotate-180" : ""}`} />
               </button>
               <div 
-                className={`absolute top-full left-0 pt-2 transition-all duration-200 ${activeDropdown === "features" ? "opacity-100 translate-y-0 pointer-events-auto" : "opacity-0 -translate-y-2 pointer-events-none"}`}
+                className={`absolute top-full left-0 pt-2 z-[200] transition-all duration-200 ${activeDropdown === "features" ? "opacity-100 translate-y-0 pointer-events-auto" : "opacity-0 -translate-y-2 pointer-events-none"}`}
                 role="menu"
               >
-                <div className="w-[600px] bg-card border border-border/60 rounded-xl shadow-2xl backdrop-blur-xl overflow-hidden">
+                <div className="w-[600px] bg-card border border-border/60 rounded-xl shadow-2xl overflow-hidden">
                   <div className="p-4 bg-muted/30 border-b border-border/40">
                     <h3 className="font-heading font-semibold text-foreground">15 Powerful Modules</h3>
                     <p className="text-xs text-muted-foreground">Everything you need to run your workforce</p>
@@ -322,10 +322,10 @@ export const Header = ({ onQuoteClick }: HeaderProps) => {
                 <ChevronDown className={`h-3.5 w-3.5 transition-transform duration-200 ${activeDropdown === "industries" ? "rotate-180" : ""}`} />
               </button>
               <div 
-                className={`absolute top-full left-0 pt-2 transition-all duration-200 ${activeDropdown === "industries" ? "opacity-100 translate-y-0 pointer-events-auto" : "opacity-0 -translate-y-2 pointer-events-none"}`}
+                className={`absolute top-full left-0 pt-2 z-[200] transition-all duration-200 ${activeDropdown === "industries" ? "opacity-100 translate-y-0 pointer-events-auto" : "opacity-0 -translate-y-2 pointer-events-none"}`}
                 role="menu"
               >
-                <div className="w-[600px] bg-card border border-border/60 rounded-xl shadow-2xl backdrop-blur-xl overflow-hidden">
+                <div className="w-[600px] bg-card border border-border/60 rounded-xl shadow-2xl overflow-hidden">
                   <div className="p-4 bg-muted/30 border-b border-border/40">
                     <h3 className="font-heading font-semibold text-foreground">Industry Solutions</h3>
                     <p className="text-xs text-muted-foreground">Tailored for your sector's unique needs</p>
@@ -357,10 +357,10 @@ export const Header = ({ onQuoteClick }: HeaderProps) => {
                 <ChevronDown className={`h-3.5 w-3.5 transition-transform duration-200 ${activeDropdown === "services" ? "rotate-180" : ""}`} />
               </button>
               <div 
-                className={`absolute top-full left-0 pt-2 transition-all duration-200 ${activeDropdown === "services" ? "opacity-100 translate-y-0 pointer-events-auto" : "opacity-0 -translate-y-2 pointer-events-none"}`}
+                className={`absolute top-full left-0 pt-2 z-[200] transition-all duration-200 ${activeDropdown === "services" ? "opacity-100 translate-y-0 pointer-events-auto" : "opacity-0 -translate-y-2 pointer-events-none"}`}
                 role="menu"
               >
-                <div className="w-72 bg-card border border-border/60 rounded-xl shadow-lg p-2 backdrop-blur-xl">
+                <div className="w-72 bg-card border border-border/60 rounded-xl shadow-lg p-2">
                   {services.map((service, index) => renderDropdownItem(service, index))}
                 </div>
               </div>
@@ -381,10 +381,10 @@ export const Header = ({ onQuoteClick }: HeaderProps) => {
                 <ChevronDown className={`h-3.5 w-3.5 transition-transform duration-200 ${activeDropdown === "resources" ? "rotate-180" : ""}`} />
               </button>
               <div 
-                className={`absolute top-full left-0 pt-2 transition-all duration-200 ${activeDropdown === "resources" ? "opacity-100 translate-y-0 pointer-events-auto" : "opacity-0 -translate-y-2 pointer-events-none"}`}
+                className={`absolute top-full left-0 pt-2 z-[200] transition-all duration-200 ${activeDropdown === "resources" ? "opacity-100 translate-y-0 pointer-events-auto" : "opacity-0 -translate-y-2 pointer-events-none"}`}
                 role="menu"
               >
-                <div className="w-64 bg-card border border-border/60 rounded-xl shadow-lg p-2 backdrop-blur-xl">
+                <div className="w-64 bg-card border border-border/60 rounded-xl shadow-lg p-2">
                   {resources.map((resource, index) => renderDropdownItem(resource, index))}
                 </div>
               </div>
@@ -405,10 +405,10 @@ export const Header = ({ onQuoteClick }: HeaderProps) => {
                 <ChevronDown className={`h-3.5 w-3.5 transition-transform duration-200 ${activeDropdown === "company" ? "rotate-180" : ""}`} />
               </button>
               <div 
-                className={`absolute top-full right-0 pt-2 transition-all duration-200 ${activeDropdown === "company" ? "opacity-100 translate-y-0 pointer-events-auto" : "opacity-0 -translate-y-2 pointer-events-none"}`}
+                className={`absolute top-full right-0 pt-2 z-[200] transition-all duration-200 ${activeDropdown === "company" ? "opacity-100 translate-y-0 pointer-events-auto" : "opacity-0 -translate-y-2 pointer-events-none"}`}
                 role="menu"
               >
-                <div className="w-64 bg-card border border-border/60 rounded-xl shadow-lg p-2 backdrop-blur-xl">
+                <div className="w-64 bg-card border border-border/60 rounded-xl shadow-lg p-2">
                   {company.map((item, index) => renderDropdownItem(item, index))}
                 </div>
               </div>

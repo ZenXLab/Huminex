@@ -11,3 +11,9 @@ verify_jwt = false
 
 [functions.send-quote-followup]
 verify_jwt = false
+
+[functions.send-notification]
+verify_jwt = false
+
+[functions.send-bulk-notifications]
+verify_jwt = false
