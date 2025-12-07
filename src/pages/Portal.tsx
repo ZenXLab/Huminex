@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate, Link, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useClientTier } from "@/hooks/useClientTier";
+import { TierUpgradePrompt, getRequiredTierForModule } from "@/components/portal/TierUpgradePrompt";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -101,19 +102,19 @@ export default function Portal() {
     );
   }
 
-  // Filter sidebar items based on client tier
-  const filteredItems = allSidebarItems.filter(item => isModuleAllowed(item.name));
-  
-  // Group filtered items by section
-  const sidebarSections = filteredItems.reduce((acc, item) => {
+  // Group all items by section (including locked ones)
+  const sidebarSections = allSidebarItems.reduce((acc, item) => {
     const section = acc.find(s => s.title === item.section);
+    const isAllowed = isModuleAllowed(item.name);
+    const itemWithAccess = { ...item, isAllowed };
+    
     if (section) {
-      section.items.push(item);
+      section.items.push(itemWithAccess);
     } else {
-      acc.push({ title: item.section, items: [item] });
+      acc.push({ title: item.section, items: [itemWithAccess] });
     }
     return acc;
-  }, [] as { title: string; items: typeof allSidebarItems }[]);
+  }, [] as { title: string; items: (typeof allSidebarItems[0] & { isAllowed: boolean })[] }[]);
 
 
   const isActive = (path: string) => {
@@ -187,6 +188,19 @@ export default function Portal() {
                     {section.items.map((item) => {
                       const Icon = item.icon;
                       const active = isActive(item.href);
+                      
+                      // Show locked module with upgrade prompt
+                      if (!item.isAllowed) {
+                        return (
+                          <TierUpgradePrompt
+                            key={item.name}
+                            moduleName={item.name}
+                            currentTier={tier}
+                            requiredTier={getRequiredTierForModule(item.name)}
+                            icon={Icon}
+                          />
+                        );
+                      }
                       
                       return (
                         <Link
