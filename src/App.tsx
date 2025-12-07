@@ -13,17 +13,16 @@ import Industries from "./pages/Industries";
 import NotFound from "./pages/NotFound";
 import GetQuote from "./pages/GetQuote";
 
-// Portal (Client) pages
+// Client Portal pages
 import Portal from "./pages/Portal";
 import PortalAuth from "./pages/portal/PortalAuth";
 import Onboarding from "./pages/Onboarding";
-import Dashboard from "./pages/Dashboard";
 
 // Admin pages
 import AdminAuth from "./pages/admin/AdminAuth";
 import AdminPage from "./pages/admin/AdminPage";
 
-// Tenant Portal
+// Tenant Super-Admin Portal
 import TenantPortal from "./pages/tenant/TenantPortal";
 
 // Service pages
@@ -53,17 +52,16 @@ const App = () => (
             <Route path="/industries" element={<Industries />} />
             <Route path="/get-quote" element={<GetQuote />} />
             
-            {/* Portal (Client) Routes */}
+            {/* Client Portal Routes */}
             <Route path="/portal/login" element={<PortalAuth />} />
             <Route path="/portal/*" element={<Portal />} />
             <Route path="/onboarding" element={<Onboarding />} />
-            <Route path="/dashboard" element={<Dashboard />} />
             
-            {/* Admin Routes */}
+            {/* Admin Dashboard Routes */}
             <Route path="/admin/login" element={<AdminAuth />} />
             <Route path="/admin/*" element={<AdminPage />} />
             
-            {/* Tenant Super-Admin Portal */}
+            {/* Tenant Super-Admin Portal Routes */}
             <Route path="/tenant/*" element={<TenantPortal />} />
             
             {/* Service Pages */}
