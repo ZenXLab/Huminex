@@ -33,6 +33,17 @@ import AdminTenantManagement from "@/components/admin/modules/AdminTenantManagem
 import AdminPricingManagement from "@/components/admin/modules/AdminPricingManagement";
 import AdminOnboardingTracker from "@/components/admin/modules/AdminOnboardingTracker";
 import { AdminPlaceholderPage } from "@/components/admin/modules/AdminPlaceholderPage";
+import { AdminTenantBilling } from "@/components/admin/modules/AdminTenantBilling";
+import { AdminRevenueAnalytics } from "@/components/admin/modules/AdminRevenueAnalytics";
+import { AdminSystemHealth } from "@/components/admin/modules/AdminSystemHealth";
+import { AdminPipelineManagement } from "@/components/admin/modules/AdminPipelineManagement";
+import { AdminThreatDetection } from "@/components/admin/modules/AdminThreatDetection";
+import { AdminCloudResources } from "@/components/admin/modules/AdminCloudResources";
+import { AdminAccessControl } from "@/components/admin/modules/AdminAccessControl";
+import { AdminEmailCampaigns } from "@/components/admin/modules/AdminEmailCampaigns";
+import { AdminLeadScoring } from "@/components/admin/modules/AdminLeadScoring";
+import { AdminAPIGateway } from "@/components/admin/modules/AdminAPIGateway";
+import { AdminDatabaseStatus } from "@/components/admin/modules/AdminDatabaseStatus";
 import { Loader2 } from "lucide-react";
 import { 
   Gauge, CreditCard, TrendingUp, Settings, Target, Mail, Workflow,
@@ -106,22 +117,8 @@ const AdminPage = () => {
     // Marketing & Growth
     if (path.startsWith("/admin/clickstream")) return <AdminClickstream />;
     if (path.startsWith("/admin/marketing")) return <AdminMarketing />;
-    if (path.startsWith("/admin/lead-scoring")) return (
-      <AdminPlaceholderPage 
-        title="Lead Scoring" 
-        description="AI-powered lead qualification and scoring"
-        icon={Target}
-        features={["Scoring models", "Lead prioritization", "Conversion prediction", "Score history"]}
-      />
-    );
-    if (path.startsWith("/admin/email-campaigns")) return (
-      <AdminPlaceholderPage 
-        title="Email Campaigns" 
-        description="Create and manage email marketing campaigns"
-        icon={Mail}
-        features={["Campaign builder", "Template library", "A/B testing", "Analytics dashboard"]}
-      />
-    );
+    if (path.startsWith("/admin/lead-scoring")) return <AdminLeadScoring />;
+    if (path.startsWith("/admin/email-campaigns")) return <AdminEmailCampaigns />;
     if (path.startsWith("/admin/funnels")) return (
       <AdminPlaceholderPage 
         title="Conversion Funnels" 
@@ -203,22 +200,8 @@ const AdminPage = () => {
       />
     );
     if (path.startsWith("/admin/cloud")) return <AdminCloudResources />;
-    if (path.startsWith("/admin/database")) return (
-      <AdminPlaceholderPage 
-        title="Database Status" 
-        description="Monitor database health and performance"
-        icon={Database}
-        features={["Query performance", "Connection pools", "Table sizes", "Index optimization"]}
-      />
-    );
-    if (path.startsWith("/admin/api-gateway")) return (
-      <AdminPlaceholderPage 
-        title="API Gateway" 
-        description="Monitor and manage API endpoints"
-        icon={Globe}
-        features={["Endpoint monitoring", "Rate limiting", "API versioning", "Request logs"]}
-      />
-    );
+    if (path.startsWith("/admin/database")) return <AdminDatabaseStatus />;
+    if (path.startsWith("/admin/api-gateway")) return <AdminAPIGateway />;
     
     // Security & Compliance
     if (path.startsWith("/admin/security")) return <AdminCompliance />;
