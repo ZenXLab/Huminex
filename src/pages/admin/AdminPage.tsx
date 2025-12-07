@@ -28,6 +28,7 @@ import { AdminFiles } from "@/components/admin/modules/AdminFiles";
 import { AdminAIDashboard } from "@/components/admin/modules/AdminAIDashboard";
 import { AdminTeamManagement } from "@/components/admin/modules/AdminTeamManagement";
 import { AdminSuperAdmin } from "@/components/admin/modules/AdminSuperAdmin";
+import { AdminPluginsManagement } from "@/components/admin/modules/AdminPluginsManagement";
 import AdminTenantManagement from "@/components/admin/modules/AdminTenantManagement";
 import AdminPricingManagement from "@/components/admin/modules/AdminPricingManagement";
 import AdminOnboardingTracker from "@/components/admin/modules/AdminOnboardingTracker";
@@ -85,6 +86,7 @@ const AdminPage = () => {
     if (path.startsWith("/admin/compliance")) return <AdminCompliance />;
     if (path.startsWith("/admin/security")) return <AdminCompliance />;
     if (path.startsWith("/admin/logs")) return <AdminSystemLogs />;
+    if (path.startsWith("/admin/plugins")) return <AdminPluginsManagement />;
     if (path.startsWith("/admin/integrations")) return <AdminIntegrations />;
     if (path.startsWith("/admin/portal-settings")) return <AdminPortalSettings />;
     if (path.startsWith("/admin/ai")) return <AdminAIDashboard />;

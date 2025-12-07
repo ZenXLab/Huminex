@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -29,7 +30,8 @@ import {
   Briefcase,
   Rocket,
   Eye,
-  Factory
+  Factory,
+  Loader2
 } from "lucide-react";
 
 const OnboardingSteps = [
@@ -64,8 +66,10 @@ const policies = [
 ];
 
 export default function Onboarding() {
+  const [searchParams] = useSearchParams();
   const [currentStep, setCurrentStep] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
+  const [isLoadingPrefill, setIsLoadingPrefill] = useState(true);
   const [selectedPolicy, setSelectedPolicy] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     fullName: "",
@@ -82,6 +86,66 @@ export default function Onboarding() {
   const { user, signUp } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
+
+  // Pre-fill logic from URL params or previous onboarding session
+  useEffect(() => {
+    const prefillFromParams = () => {
+      const email = searchParams.get("email");
+      const industry = searchParams.get("industry");
+      const servicesList = searchParams.get("services");
+      
+      if (email || industry || servicesList) {
+        setFormData(prev => ({
+          ...prev,
+          email: email || prev.email,
+          industryCategory: industry || prev.industryCategory,
+          selectedServices: servicesList ? servicesList.split(",") : prev.selectedServices,
+        }));
+      }
+    };
+
+    const prefillFromDatabase = async () => {
+      try {
+        // Check for existing onboarding session by email from URL
+        const email = searchParams.get("email");
+        if (email) {
+          const { data: existingSession } = await supabase
+            .from("onboarding_sessions")
+            .select("*")
+            .eq("email", email)
+            .order("created_at", { ascending: false })
+            .limit(1)
+            .single();
+
+          if (existingSession) {
+            setFormData(prev => ({
+              ...prev,
+              fullName: existingSession.full_name || prev.fullName,
+              email: existingSession.email || prev.email,
+              company: existingSession.company_name || prev.company,
+              phone: existingSession.phone || prev.phone,
+              industryCategory: existingSession.industry_type || prev.industryCategory,
+              industryType: existingSession.industry_subtype || prev.industryType,
+              selectedServices: (existingSession.selected_services as string[]) || prev.selectedServices,
+            }));
+            
+            toast({
+              title: "Welcome Back!",
+              description: "We've restored your previous selections.",
+            });
+          }
+        }
+      } catch (error) {
+        // No existing session found, continue with fresh form
+        console.log("No previous session found");
+      } finally {
+        setIsLoadingPrefill(false);
+      }
+    };
+
+    prefillFromParams();
+    prefillFromDatabase();
+  }, [searchParams, toast]);
 
   useEffect(() => {
     if (user) {

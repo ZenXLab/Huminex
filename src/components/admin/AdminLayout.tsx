@@ -126,6 +126,7 @@ const navSections = [
     title: "System",
     icon: Settings,
     items: [
+      { name: "Plugins & Add-ons", href: "/admin/plugins", icon: Plug },
       { name: "System Logs", href: "/admin/logs", icon: Activity },
       { name: "Integrations", href: "/admin/integrations", icon: Plug },
       { name: "Portal Settings", href: "/admin/portal-settings", icon: Settings },
