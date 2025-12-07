@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { MousePointer, Eye, Link, BarChart3, Clock, Users, RefreshCw, Radio, FlaskConical, TrendingUp, Trash2, AlertTriangle } from "lucide-react";
+import { MousePointer, Eye, Link, BarChart3, Clock, Users, RefreshCw, Radio, FlaskConical, TrendingUp, Trash2, AlertTriangle, Download, FileSpreadsheet } from "lucide-react";
 import { format } from "date-fns";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
@@ -15,6 +15,7 @@ import { ConversionFunnel } from "./clickstream/ConversionFunnel";
 import { ClickHeatmap } from "./clickstream/ClickHeatmap";
 import { SessionReplay } from "./clickstream/SessionReplay";
 import { GeoAnalytics } from "./clickstream/GeoAnalytics";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 
 export const AdminClickstream = () => {
   const [eventFilter, setEventFilter] = useState<string>("all");
@@ -164,6 +165,72 @@ export const AdminClickstream = () => {
     }
   };
 
+  // Export to CSV
+  const exportToCSV = useCallback(() => {
+    if (!events || events.length === 0) {
+      toast.error("No data to export");
+      return;
+    }
+
+    const headers = ["Event Type", "Page URL", "Element ID", "Element Text", "Session ID", "User ID", "Created At"];
+    const csvRows = [
+      headers.join(","),
+      ...events.map(e => [
+        e.event_type,
+        `"${e.page_url || ''}"`,
+        `"${e.element_id || ''}"`,
+        `"${(e.element_text || '').replace(/"/g, '""')}"`,
+        e.session_id,
+        e.user_id || '',
+        format(new Date(e.created_at), "yyyy-MM-dd HH:mm:ss")
+      ].join(","))
+    ];
+
+    const csvContent = csvRows.join("\n");
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `clickstream_export_${format(new Date(), "yyyy-MM-dd_HH-mm")}.csv`;
+    link.click();
+    URL.revokeObjectURL(url);
+    toast.success(`Exported ${events.length} events to CSV`);
+  }, [events]);
+
+  // Export to Excel (TSV format that Excel opens)
+  const exportToExcel = useCallback(() => {
+    if (!events || events.length === 0) {
+      toast.error("No data to export");
+      return;
+    }
+
+    const headers = ["Event Type", "Page URL", "Element ID", "Element Text", "Element Class", "Session ID", "User ID", "Metadata", "Created At"];
+    const tsvRows = [
+      headers.join("\t"),
+      ...events.map(e => [
+        e.event_type,
+        e.page_url || '',
+        e.element_id || '',
+        (e.element_text || '').replace(/\t/g, ' ').replace(/\n/g, ' '),
+        (e.element_class || '').replace(/\t/g, ' ').substring(0, 100),
+        e.session_id,
+        e.user_id || '',
+        JSON.stringify(e.metadata || {}),
+        format(new Date(e.created_at), "yyyy-MM-dd HH:mm:ss")
+      ].join("\t"))
+    ];
+
+    const tsvContent = tsvRows.join("\n");
+    const blob = new Blob([tsvContent], { type: "application/vnd.ms-excel;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `clickstream_export_${format(new Date(), "yyyy-MM-dd_HH-mm")}.xls`;
+    link.click();
+    URL.revokeObjectURL(url);
+    toast.success(`Exported ${events.length} events to Excel`);
+  }, [events]);
+
   const stats = {
     totalEvents: events?.length || 0,
     uniqueSessions: new Set(events?.map(e => e.session_id)).size,
@@ -295,6 +362,27 @@ export const AdminClickstream = () => {
               </AlertDialogFooter>
             </AlertDialogContent>
           </AlertDialog>
+          
+          {/* Export Dropdown */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="sm" className="gap-2">
+                <Download className="h-4 w-4" />
+                Export
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={exportToCSV} className="gap-2">
+                <Download className="h-4 w-4" />
+                Export as CSV
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={exportToExcel} className="gap-2">
+                <FileSpreadsheet className="h-4 w-4" />
+                Export as Excel
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+
           <Button
             variant="outline"
             size="sm"
