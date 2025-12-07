@@ -9,6 +9,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { MousePointer, Eye, Link, BarChart3, Clock, Users, RefreshCw, Radio, FlaskConical, TrendingUp } from "lucide-react";
 import { format } from "date-fns";
 import { toast } from "sonner";
+import { ConversionFunnel } from "./clickstream/ConversionFunnel";
+import { ClickHeatmap } from "./clickstream/ClickHeatmap";
 
 export const AdminClickstream = () => {
   const [eventFilter, setEventFilter] = useState<string>("all");
@@ -292,6 +294,12 @@ export const AdminClickstream = () => {
             <p className="text-xs text-muted-foreground mt-1">Pages visited</p>
           </CardContent>
         </Card>
+      </div>
+
+      {/* Conversion Funnel & Heatmap */}
+      <div className="grid gap-6 lg:grid-cols-2">
+        <ConversionFunnel events={events || []} />
+        <ClickHeatmap events={events || []} />
       </div>
 
       {/* A/B Testing Integration */}
