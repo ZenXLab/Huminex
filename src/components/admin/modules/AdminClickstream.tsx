@@ -6,17 +6,23 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { MousePointer, Eye, Link, BarChart3, Clock, Users, RefreshCw, Radio, FlaskConical, TrendingUp } from "lucide-react";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { MousePointer, Eye, Link, BarChart3, Clock, Users, RefreshCw, Radio, FlaskConical, TrendingUp, Trash2, AlertTriangle } from "lucide-react";
 import { format } from "date-fns";
 import { toast } from "sonner";
+import { motion } from "framer-motion";
 import { ConversionFunnel } from "./clickstream/ConversionFunnel";
 import { ClickHeatmap } from "./clickstream/ClickHeatmap";
+import { SessionReplay } from "./clickstream/SessionReplay";
+import { GeoAnalytics } from "./clickstream/GeoAnalytics";
 
 export const AdminClickstream = () => {
   const [eventFilter, setEventFilter] = useState<string>("all");
   const [timeRange, setTimeRange] = useState<string>("24h");
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [liveEventsCount, setLiveEventsCount] = useState(0);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [lastUpdate, setLastUpdate] = useState<Date>(new Date());
   const queryClient = useQueryClient();
 
   const { data: events, isLoading, refetch } = useQuery({
@@ -26,7 +32,7 @@ export const AdminClickstream = () => {
         .from("clickstream_events")
         .select("*")
         .order("created_at", { ascending: false })
-        .limit(200);
+        .limit(500);
 
       if (eventFilter !== "all") {
         query = query.eq("event_type", eventFilter);
@@ -46,9 +52,14 @@ export const AdminClickstream = () => {
       }
 
       const { data, error } = await query;
-      if (error) throw error;
-      return data;
+      if (error) {
+        console.error("Clickstream fetch error:", error);
+        throw error;
+      }
+      setLastUpdate(new Date());
+      return data || [];
     },
+    refetchInterval: 5000, // Auto-refresh every 5 seconds
   });
 
   // Fetch A/B test experiments for conversion tracking
@@ -72,7 +83,7 @@ export const AdminClickstream = () => {
   // Real-time subscription for clickstream events
   useEffect(() => {
     const channel = supabase
-      .channel('clickstream-realtime')
+      .channel('clickstream-realtime-v2')
       .on(
         'postgres_changes',
         {
@@ -81,12 +92,15 @@ export const AdminClickstream = () => {
           table: 'clickstream_events'
         },
         (payload) => {
+          console.log("New clickstream event:", payload);
           setLiveEventsCount(prev => prev + 1);
-          // Invalidate query to refresh data
+          setLastUpdate(new Date());
           queryClient.invalidateQueries({ queryKey: ["clickstream-events"] });
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        console.log("Clickstream subscription status:", status);
+      });
 
     return () => {
       supabase.removeChannel(channel);
@@ -96,7 +110,7 @@ export const AdminClickstream = () => {
   // Real-time subscription for A/B test assignments
   useEffect(() => {
     const channel = supabase
-      .channel('ab-assignments-realtime')
+      .channel('ab-assignments-realtime-v2')
       .on(
         'postgres_changes',
         {
@@ -126,6 +140,27 @@ export const AdminClickstream = () => {
       toast.error("Failed to refresh data");
     } finally {
       setIsRefreshing(false);
+    }
+  };
+
+  const handleDeleteAllData = async () => {
+    setIsDeleting(true);
+    try {
+      const { error } = await supabase
+        .from("clickstream_events")
+        .delete()
+        .neq("id", "00000000-0000-0000-0000-000000000000"); // Delete all
+
+      if (error) throw error;
+
+      await refetch();
+      setLiveEventsCount(0);
+      toast.success("All clickstream data has been deleted");
+    } catch (error) {
+      console.error("Delete error:", error);
+      toast.error("Failed to delete data");
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -192,25 +227,74 @@ export const AdminClickstream = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between flex-wrap gap-4">
         <div className="flex items-center gap-3">
           <div>
             <h1 className="text-3xl font-bold">Clickstream Analytics</h1>
             <p className="text-muted-foreground">Track user interactions and behavior</p>
           </div>
           <div className="flex items-center gap-2">
-            <Badge variant="outline" className="bg-emerald-500/10 text-emerald-600 border-emerald-500/30 animate-pulse">
-              <Radio className="h-3 w-3 mr-1" />
-              Live
-            </Badge>
-            {liveEventsCount > 0 && (
-              <Badge variant="secondary" className="bg-primary/10 text-primary">
-                +{liveEventsCount} new
+            <motion.div
+              animate={{ scale: [1, 1.05, 1] }}
+              transition={{ duration: 2, repeat: Infinity }}
+            >
+              <Badge variant="outline" className="bg-emerald-500/10 text-emerald-600 border-emerald-500/30">
+                <Radio className="h-3 w-3 mr-1 animate-pulse" />
+                Live
               </Badge>
+            </motion.div>
+            {liveEventsCount > 0 && (
+              <motion.div
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                transition={{ type: "spring" }}
+              >
+                <Badge variant="secondary" className="bg-primary/10 text-primary">
+                  +{liveEventsCount} new
+                </Badge>
+              </motion.div>
             )}
+            <Badge variant="outline" className="text-[10px] text-muted-foreground">
+              Updated: {format(lastUpdate, "HH:mm:ss")}
+            </Badge>
           </div>
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-2 flex-wrap">
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button variant="destructive" size="sm" className="gap-2">
+                <Trash2 className="h-4 w-4" />
+                Delete All Data
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle className="flex items-center gap-2">
+                  <AlertTriangle className="h-5 w-5 text-destructive" />
+                  Delete All Clickstream Data?
+                </AlertDialogTitle>
+                <AlertDialogDescription className="space-y-2">
+                  <p>This action cannot be undone. This will permanently delete:</p>
+                  <ul className="list-disc list-inside space-y-1 text-sm">
+                    <li><strong>{stats.totalEvents}</strong> total events</li>
+                    <li><strong>{stats.uniqueSessions}</strong> unique sessions</li>
+                    <li>All historical clickstream data</li>
+                  </ul>
+                  <p className="text-destructive font-medium">Are you absolutely sure?</p>
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction
+                  onClick={handleDeleteAllData}
+                  disabled={isDeleting}
+                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                >
+                  {isDeleting ? "Deleting..." : "Yes, Delete All"}
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
           <Button
             variant="outline"
             size="sm"
@@ -248,58 +332,64 @@ export const AdminClickstream = () => {
         </div>
       </div>
 
+      {/* Stats Cards with Animation */}
       <div className="grid gap-4 md:grid-cols-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Total Events</CardTitle>
-            <BarChart3 className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.totalEvents}</div>
-            <p className="text-xs text-muted-foreground mt-1">
-              <Badge variant="outline" className="text-[10px] px-1">
-                <Radio className="h-2 w-2 mr-1" />
-                Realtime
-              </Badge>
-            </p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Unique Sessions</CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.uniqueSessions}</div>
-            <p className="text-xs text-muted-foreground mt-1">Active visitors</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Clicks</CardTitle>
-            <MousePointer className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.clicks}</div>
-            <p className="text-xs text-muted-foreground mt-1">User interactions</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Page Views</CardTitle>
-            <Eye className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.pageViews}</div>
-            <p className="text-xs text-muted-foreground mt-1">Pages visited</p>
-          </CardContent>
-        </Card>
+        {[
+          { title: "Total Events", value: stats.totalEvents, icon: BarChart3, color: "text-primary" },
+          { title: "Unique Sessions", value: stats.uniqueSessions, icon: Users, color: "text-emerald-600" },
+          { title: "Clicks", value: stats.clicks, icon: MousePointer, color: "text-blue-600" },
+          { title: "Page Views", value: stats.pageViews, icon: Eye, color: "text-purple-600" },
+        ].map((stat, idx) => (
+          <motion.div
+            key={stat.title}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: idx * 0.1 }}
+          >
+            <Card className="relative overflow-hidden">
+              <CardHeader className="flex flex-row items-center justify-between pb-2">
+                <CardTitle className="text-sm font-medium">{stat.title}</CardTitle>
+                <stat.icon className={`h-4 w-4 ${stat.color}`} />
+              </CardHeader>
+              <CardContent>
+                <motion.div 
+                  className="text-2xl font-bold"
+                  key={stat.value}
+                  initial={{ scale: 1.2 }}
+                  animate={{ scale: 1 }}
+                  transition={{ type: "spring" }}
+                >
+                  {stat.value}
+                </motion.div>
+                <div className="flex items-center gap-2 mt-1">
+                  <Badge variant="outline" className="text-[10px] px-1 bg-emerald-500/10 text-emerald-600 border-emerald-500/30">
+                    <Radio className="h-2 w-2 mr-1 animate-pulse" />
+                    Live
+                  </Badge>
+                </div>
+              </CardContent>
+              {/* Animated gradient line */}
+              <motion.div 
+                className={`absolute bottom-0 left-0 h-1 bg-gradient-to-r from-primary to-purple-600`}
+                initial={{ width: 0 }}
+                animate={{ width: "100%" }}
+                transition={{ delay: idx * 0.1 + 0.3, duration: 0.5 }}
+              />
+            </Card>
+          </motion.div>
+        ))}
       </div>
 
       {/* Conversion Funnel & Heatmap */}
       <div className="grid gap-6 lg:grid-cols-2">
         <ConversionFunnel events={events || []} />
         <ClickHeatmap events={events || []} />
+      </div>
+
+      {/* Session Replay & Geographic Analytics */}
+      <div className="grid gap-6 lg:grid-cols-2">
+        <SessionReplay events={events || []} />
+        <GeoAnalytics events={events || []} />
       </div>
 
       {/* A/B Testing Integration */}
@@ -376,8 +466,8 @@ export const AdminClickstream = () => {
             <CardTitle className="flex items-center gap-2">
               <Link className="h-5 w-5" />
               Top Pages
-              <Badge variant="outline" className="ml-auto text-[10px]">
-                <Radio className="h-2 w-2 mr-1" />
+              <Badge variant="outline" className="ml-auto text-[10px] bg-emerald-500/10 text-emerald-600 border-emerald-500/30">
+                <Radio className="h-2 w-2 mr-1 animate-pulse" />
                 Live
               </Badge>
             </CardTitle>
@@ -389,13 +479,19 @@ export const AdminClickstream = () => {
             ) : (
               <div className="space-y-3">
                 {sortedPages.map(([page, count], i) => (
-                  <div key={page} className="flex items-center justify-between">
+                  <motion.div 
+                    key={page} 
+                    className="flex items-center justify-between"
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: i * 0.1 }}
+                  >
                     <div className="flex items-center gap-2">
                       <span className="text-muted-foreground w-4">{i + 1}.</span>
                       <span className="font-medium truncate max-w-64">{page}</span>
                     </div>
                     <Badge variant="secondary">{count}</Badge>
-                  </div>
+                  </motion.div>
                 ))}
               </div>
             )}
@@ -407,8 +503,8 @@ export const AdminClickstream = () => {
             <CardTitle className="flex items-center gap-2">
               <MousePointer className="h-5 w-5" />
               Top Clicked Elements
-              <Badge variant="outline" className="ml-auto text-[10px]">
-                <Radio className="h-2 w-2 mr-1" />
+              <Badge variant="outline" className="ml-auto text-[10px] bg-emerald-500/10 text-emerald-600 border-emerald-500/30">
+                <Radio className="h-2 w-2 mr-1 animate-pulse" />
                 Live
               </Badge>
             </CardTitle>
@@ -420,13 +516,19 @@ export const AdminClickstream = () => {
             ) : (
               <div className="space-y-3">
                 {sortedElements.map(([element, count], i) => (
-                  <div key={element} className="flex items-center justify-between">
+                  <motion.div 
+                    key={element} 
+                    className="flex items-center justify-between"
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: i * 0.1 }}
+                  >
                     <div className="flex items-center gap-2">
                       <span className="text-muted-foreground w-4">{i + 1}.</span>
                       <span className="font-medium truncate max-w-64">{element}</span>
                     </div>
                     <Badge variant="secondary">{count}</Badge>
-                  </div>
+                  </motion.div>
                 ))}
               </div>
             )}
@@ -464,18 +566,26 @@ export const AdminClickstream = () => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {events?.slice(0, 50).map((event) => (
-                  <TableRow key={event.id}>
+                {events?.slice(0, 50).map((event, idx) => (
+                  <motion.tr
+                    key={event.id}
+                    initial={idx < 5 ? { opacity: 0, backgroundColor: "hsl(var(--primary) / 0.1)" } : {}}
+                    animate={{ opacity: 1, backgroundColor: "transparent" }}
+                    transition={{ delay: idx * 0.05 }}
+                    className="border-b"
+                  >
                     <TableCell>
-                      <Badge className={getEventBadge(event.event_type)}>{event.event_type}</Badge>
+                      <Badge className={getEventBadge(event.event_type)}>
+                        {event.event_type}
+                      </Badge>
                     </TableCell>
-                    <TableCell className="max-w-48 truncate">{event.page_url || "-"}</TableCell>
+                    <TableCell className="max-w-32 truncate">{event.page_url}</TableCell>
                     <TableCell className="max-w-32 truncate">{event.element_text || "-"}</TableCell>
-                    <TableCell className="font-mono text-xs">{event.session_id.slice(0, 8)}...</TableCell>
-                    <TableCell className="text-muted-foreground">
+                    <TableCell className="font-mono text-xs">{event.session_id?.slice(0, 12)}...</TableCell>
+                    <TableCell className="text-muted-foreground text-sm">
                       {format(new Date(event.created_at), "HH:mm:ss")}
                     </TableCell>
-                  </TableRow>
+                  </motion.tr>
                 ))}
               </TableBody>
             </Table>
