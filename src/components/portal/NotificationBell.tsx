@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Bell, X, Check, Sparkles, AlertTriangle, Info, CheckCircle2 } from "lucide-react";
+import { Bell, X, Check, Sparkles, AlertTriangle, Info, CheckCircle2, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Popover,
@@ -9,74 +9,8 @@ import {
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
-
-interface Notification {
-  id: string;
-  type: "feature_unlock" | "system_update" | "action_required" | "info";
-  title: string;
-  message: string;
-  actionUrl?: string;
-  actionLabel?: string;
-  isRead: boolean;
-  createdAt: Date;
-  isNew?: boolean;
-}
-
-// Mock notifications for demo
-const mockNotifications: Notification[] = [
-  {
-    id: "1",
-    type: "feature_unlock",
-    title: "New Feature Unlocked!",
-    message: "AI Dashboard is now available in your portal. Explore AI-powered insights!",
-    actionUrl: "/portal/ai",
-    actionLabel: "Explore Now",
-    isRead: false,
-    createdAt: new Date(Date.now() - 1000 * 60 * 5),
-    isNew: true,
-  },
-  {
-    id: "2",
-    type: "feature_unlock",
-    title: "MSP Monitoring Activated",
-    message: "Your admin has enabled MSP Monitoring. Track server health in real-time.",
-    actionUrl: "/portal/msp",
-    actionLabel: "View Dashboard",
-    isRead: false,
-    createdAt: new Date(Date.now() - 1000 * 60 * 30),
-    isNew: true,
-  },
-  {
-    id: "3",
-    type: "action_required",
-    title: "Invoice Payment Due",
-    message: "Invoice INV-2024-0042 is due in 3 days. Please review and process payment.",
-    actionUrl: "/portal/invoices",
-    actionLabel: "View Invoice",
-    isRead: false,
-    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 2),
-  },
-  {
-    id: "4",
-    type: "system_update",
-    title: "System Maintenance",
-    message: "Scheduled maintenance on Dec 10, 2024 from 2:00 AM - 4:00 AM IST.",
-    isRead: true,
-    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24),
-  },
-  {
-    id: "5",
-    type: "info",
-    title: "Welcome to ATLAS Portal",
-    message: "Your account is ready. Explore your dashboard and get started.",
-    actionUrl: "/portal",
-    actionLabel: "Get Started",
-    isRead: true,
-    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 48),
-  },
-];
-
-const getNotificationIcon = (type: Notification["type"]) => {
+import { useNotifications, Notification } from "@/hooks/useNotifications";
+import { useNavigate } from "react-router-dom";
   switch (type) {
     case "feature_unlock":
       return <Sparkles className="w-4 h-4 text-violet-500" />;
@@ -119,24 +53,18 @@ interface NotificationBellProps {
 }
 
 export const NotificationBell = ({ userId }: NotificationBellProps) => {
-  const [notifications, setNotifications] = useState<Notification[]>(mockNotifications);
+  const navigate = useNavigate();
+  const {
+    notifications,
+    loading,
+    unreadCount,
+    markAsRead,
+    markAllAsRead,
+    deleteNotification,
+    refresh,
+  } = useNotifications({ userId });
+  
   const [open, setOpen] = useState(false);
-
-  const unreadCount = notifications.filter((n) => !n.isRead).length;
-
-  const markAsRead = (id: string) => {
-    setNotifications((prev) =>
-      prev.map((n) => (n.id === id ? { ...n, isRead: true } : n))
-    );
-  };
-
-  const markAllAsRead = () => {
-    setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
-  };
-
-  const deleteNotification = (id: string) => {
-    setNotifications((prev) => prev.filter((n) => n.id !== id));
-  };
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -165,17 +93,28 @@ export const NotificationBell = ({ userId }: NotificationBellProps) => {
               </Badge>
             )}
           </div>
-          {unreadCount > 0 && (
+          <div className="flex items-center gap-1">
             <Button
               variant="ghost"
               size="sm"
-              className="text-xs text-primary hover:text-primary/80"
-              onClick={markAllAsRead}
+              className="h-8 w-8 p-0"
+              onClick={refresh}
+              disabled={loading}
             >
-              <Check className="w-3 h-3 mr-1" />
-              Mark all read
+              <RefreshCw className={cn("w-4 h-4", loading && "animate-spin")} />
             </Button>
-          )}
+            {unreadCount > 0 && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-xs text-primary hover:text-primary/80"
+                onClick={markAllAsRead}
+              >
+                <Check className="w-3 h-3 mr-1" />
+                Mark all read
+              </Button>
+            )}
+          </div>
         </div>
 
         {/* Notifications List */}
@@ -198,7 +137,7 @@ export const NotificationBell = ({ userId }: NotificationBellProps) => {
                     markAsRead(notification.id);
                     if (notification.actionUrl) {
                       setOpen(false);
-                      window.location.href = notification.actionUrl;
+                      navigate(notification.actionUrl);
                     }
                   }}
                 >

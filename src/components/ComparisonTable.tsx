@@ -1,8 +1,10 @@
 import { useScrollAnimation } from "@/hooks/useScrollAnimation";
-import { Check, X, Minus, Crown, Sparkles, ChevronDown, ChevronUp } from "lucide-react";
+import { Check, X, Minus, Crown, Sparkles, ChevronDown, ChevronUp, Calculator } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useState } from "react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { PricingComparisonModal } from "./PricingComparisonModal";
+import { Button } from "@/components/ui/button";
 
 interface ComparisonFeature {
   category: string;
@@ -116,13 +118,32 @@ const FeatureIcon = ({ value, isAtlas = false }: { value: boolean | "partial" | 
       </div>
     );
   }
-  // Red X for competitors, muted for ATLAS (if ever needed)
   return <X className={`w-5 h-5 ${isAtlas ? 'text-muted-foreground/40' : 'text-red-500'}`} />;
 };
 
 export const ComparisonTable = () => {
   const { ref, isVisible } = useScrollAnimation({ threshold: 0.1 });
-  const [isOpen, setIsOpen] = useState(false);
+  const [isMainOpen, setIsMainOpen] = useState(false);
+  const [openCategories, setOpenCategories] = useState<Record<string, boolean>>({});
+
+  const toggleCategory = (category: string) => {
+    setOpenCategories(prev => ({
+      ...prev,
+      [category]: !prev[category]
+    }));
+  };
+
+  const expandAllCategories = () => {
+    const allOpen: Record<string, boolean> = {};
+    comparisonData.forEach(cat => {
+      allOpen[cat.category] = true;
+    });
+    setOpenCategories(allOpen);
+  };
+
+  const collapseAllCategories = () => {
+    setOpenCategories({});
+  };
 
   return (
     <section 
@@ -168,14 +189,14 @@ export const ComparisonTable = () => {
           </div>
         </div>
 
-        {/* Collapsible Table */}
-        <Collapsible open={isOpen} onOpenChange={setIsOpen}>
+        {/* Main Collapsible Container */}
+        <Collapsible open={isMainOpen} onOpenChange={setIsMainOpen}>
           <CollapsibleTrigger asChild>
             <button className={`w-full flex items-center justify-center gap-2 py-4 px-6 bg-card border border-border/60 rounded-2xl mb-4 hover:bg-muted/50 transition-all duration-300 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
               <span className="font-semibold text-foreground">
-                {isOpen ? 'Hide Comparison Table' : 'Show Full Comparison Table'}
+                {isMainOpen ? 'Hide Feature Comparison' : 'Show Feature Comparison'}
               </span>
-              {isOpen ? (
+              {isMainOpen ? (
                 <ChevronUp className="w-5 h-5 text-primary" />
               ) : (
                 <ChevronDown className="w-5 h-5 text-primary" />
@@ -184,7 +205,17 @@ export const ComparisonTable = () => {
           </CollapsibleTrigger>
           
           <CollapsibleContent className="overflow-hidden data-[state=open]:animate-accordion-down data-[state=closed]:animate-accordion-up">
-            <div className={`overflow-x-auto transition-all duration-700 delay-300`}>
+            {/* Expand/Collapse All Controls */}
+            <div className="flex items-center justify-end gap-2 mb-4">
+              <Button variant="ghost" size="sm" onClick={expandAllCategories} className="text-xs">
+                Expand All
+              </Button>
+              <Button variant="ghost" size="sm" onClick={collapseAllCategories} className="text-xs">
+                Collapse All
+              </Button>
+            </div>
+
+            <div className="overflow-x-auto">
               <div className="min-w-[900px] bg-card border border-border/60 rounded-2xl overflow-hidden shadow-lg">
                 {/* Header Row */}
                 <div className="grid grid-cols-7 bg-muted/50 border-b border-border/60">
@@ -207,49 +238,77 @@ export const ComparisonTable = () => {
                   ))}
                 </div>
 
-                {/* Feature Rows */}
+                {/* Feature Categories - Each Collapsible */}
                 {comparisonData.map((category, catIndex) => (
-                  <div key={catIndex}>
-                    {/* Category Header */}
-                    <div className="grid grid-cols-7 bg-muted/30 border-b border-border/40">
-                      <div className="col-span-7 p-3 px-4">
-                        <span className="text-sm font-semibold text-primary uppercase tracking-wider">
-                          {category.category}
-                        </span>
-                      </div>
-                    </div>
-
-                    {/* Features */}
-                    {category.features.map((feature, featureIndex) => (
-                      <div 
-                        key={featureIndex} 
-                        className="grid grid-cols-7 border-b border-border/30 hover:bg-muted/20 transition-colors"
-                      >
-                        <div className="p-4 text-sm text-foreground">
-                          {feature.name}
+                  <Collapsible 
+                    key={catIndex} 
+                    open={openCategories[category.category] || false}
+                    onOpenChange={() => toggleCategory(category.category)}
+                  >
+                    {/* Category Header - Clickable */}
+                    <CollapsibleTrigger asChild>
+                      <div className="grid grid-cols-7 bg-muted/30 border-b border-border/40 cursor-pointer hover:bg-muted/50 transition-colors">
+                        <div className="col-span-7 p-3 px-4 flex items-center justify-between">
+                          <span className="text-sm font-semibold text-primary uppercase tracking-wider flex items-center gap-2">
+                            {category.category}
+                            <Badge variant="secondary" className="text-[10px]">
+                              {category.features.length} features
+                            </Badge>
+                          </span>
+                          {openCategories[category.category] ? (
+                            <ChevronUp className="w-4 h-4 text-muted-foreground" />
+                          ) : (
+                            <ChevronDown className="w-4 h-4 text-muted-foreground" />
+                          )}
                         </div>
-                        {competitors.map((comp) => (
-                          <div 
-                            key={comp.key} 
-                            className={`p-4 flex justify-center items-center ${comp.highlight ? 'bg-primary/5' : ''}`}
-                          >
-                            <FeatureIcon 
-                              value={feature[comp.key as keyof typeof feature] as boolean | "partial" | "premium"} 
-                              isAtlas={comp.highlight}
-                            />
-                          </div>
-                        ))}
                       </div>
-                    ))}
-                  </div>
+                    </CollapsibleTrigger>
+
+                    <CollapsibleContent>
+                      {/* Features */}
+                      {category.features.map((feature, featureIndex) => (
+                        <div 
+                          key={featureIndex} 
+                          className="grid grid-cols-7 border-b border-border/30 hover:bg-muted/20 transition-colors"
+                        >
+                          <div className="p-4 text-sm text-foreground">
+                            {feature.name}
+                          </div>
+                          {competitors.map((comp) => (
+                            <div 
+                              key={comp.key} 
+                              className={`p-4 flex justify-center items-center ${comp.highlight ? 'bg-primary/5' : ''}`}
+                            >
+                              <FeatureIcon 
+                                value={feature[comp.key as keyof typeof feature] as boolean | "partial" | "premium"} 
+                                isAtlas={comp.highlight}
+                              />
+                            </div>
+                          ))}
+                        </div>
+                      ))}
+                    </CollapsibleContent>
+                  </Collapsible>
                 ))}
               </div>
             </div>
           </CollapsibleContent>
         </Collapsible>
 
+        {/* Pricing Comparison CTA */}
+        <div className={`text-center mt-8 transition-all duration-700 delay-400 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
+          <PricingComparisonModal 
+            trigger={
+              <Button size="lg" variant="outline" className="gap-2 border-primary/30 hover:bg-primary/5">
+                <Calculator className="w-5 h-5 text-primary" />
+                Calculate Your Savings
+              </Button>
+            }
+          />
+        </div>
+
         {/* Bottom CTA */}
-        <div className={`text-center mt-12 transition-all duration-700 delay-500 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
+        <div className={`text-center mt-8 transition-all duration-700 delay-500 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
           <p className="text-muted-foreground mb-4">
             Ready to experience the ATLAS difference?
           </p>
