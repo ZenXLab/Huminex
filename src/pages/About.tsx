@@ -109,7 +109,7 @@ const About = () => {
         {/* Hero Section */}
         <section 
           ref={heroRef as React.RefObject<HTMLElement>}
-          className="relative min-h-[90vh] flex items-center justify-center overflow-hidden pt-20"
+          className="relative min-h-[90vh] flex items-center justify-center overflow-hidden pt-32"
         >
           {/* Animated Background */}
           <div className="absolute inset-0">
