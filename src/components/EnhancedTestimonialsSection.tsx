@@ -1,7 +1,9 @@
 import { useScrollAnimation } from "@/hooks/useScrollAnimation";
-import { Quote, Star, CheckCircle2, Building2, ArrowRight } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Quote, Star, Building2, ArrowRight, Sparkles } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
+import { useState, useRef, useEffect } from "react";
 
 interface Testimonial {
   quote: string;
@@ -117,6 +119,40 @@ const companyLogos = [
 export const EnhancedTestimonialsSection = () => {
   const { ref, isVisible } = useScrollAnimation({ threshold: 0.1 });
   const { ref: logosRef, isVisible: logosVisible } = useScrollAnimation({ threshold: 0.2 });
+  const navigate = useNavigate();
+  const { user } = useAuth();
+  const [isPaused, setIsPaused] = useState(false);
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  const handleStartFreeTrial = () => {
+    if (user) {
+      navigate("/portal");
+    } else {
+      navigate("/onboarding");
+    }
+  };
+
+  // Auto-scroll animation
+  useEffect(() => {
+    const scrollContainer = scrollRef.current;
+    if (!scrollContainer || isPaused) return;
+
+    let animationId: number;
+    let scrollPosition = 0;
+    const scrollSpeed = 0.5;
+
+    const animate = () => {
+      scrollPosition += scrollSpeed;
+      if (scrollPosition >= scrollContainer.scrollWidth / 2) {
+        scrollPosition = 0;
+      }
+      scrollContainer.scrollLeft = scrollPosition;
+      animationId = requestAnimationFrame(animate);
+    };
+
+    animationId = requestAnimationFrame(animate);
+    return () => cancelAnimationFrame(animationId);
+  }, [isPaused]);
 
   return (
     <section className="py-20 lg:py-28 bg-card relative overflow-hidden">
@@ -179,13 +215,18 @@ export const EnhancedTestimonialsSection = () => {
           </p>
         </div>
 
-        {/* Testimonials Grid */}
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
-          {testimonials.map((testimonial, index) => (
+        {/* Horizontal Scrolling Testimonials */}
+        <div 
+          ref={scrollRef}
+          className="flex gap-6 overflow-x-hidden pb-4"
+          onMouseEnter={() => setIsPaused(true)}
+          onMouseLeave={() => setIsPaused(false)}
+        >
+          {/* Duplicate testimonials for infinite scroll effect */}
+          {[...testimonials, ...testimonials].map((testimonial, index) => (
             <div
               key={index}
-              className={`group p-6 lg:p-8 bg-background border border-border/60 rounded-2xl relative transition-all duration-500 hover:shadow-xl hover:shadow-primary/5 hover:border-primary/30 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}
-              style={{ transitionDelay: `${index * 100}ms` }}
+              className="group flex-shrink-0 w-[380px] p-6 lg:p-8 bg-background border border-border/60 rounded-2xl relative transition-all duration-500 hover:shadow-xl hover:shadow-primary/5 hover:border-primary/30"
             >
               {/* Quote icon */}
               <div className="absolute -top-4 left-6">
@@ -214,7 +255,7 @@ export const EnhancedTestimonialsSection = () => {
               </span>
 
               {/* Quote */}
-              <p className="text-foreground/80 mb-6 leading-relaxed text-sm lg:text-base">
+              <p className="text-foreground/80 mb-6 leading-relaxed text-sm lg:text-base line-clamp-4">
                 "{testimonial.quote}"
               </p>
 
@@ -246,17 +287,14 @@ export const EnhancedTestimonialsSection = () => {
             Join 200+ enterprises already transforming with ATLAS
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <Link to="/get-quote">
-              <Button size="lg" className="group shadow-lg shadow-primary/20">
-                Start Your Transformation
-                <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
-              </Button>
-            </Link>
-            <Link to="/industries">
-              <Button variant="outline" size="lg">
-                View Case Studies
-              </Button>
-            </Link>
+            <Button size="lg" className="group shadow-lg shadow-primary/20" onClick={handleStartFreeTrial}>
+              <Sparkles className="w-4 h-4 mr-2" />
+              Start Your Free Trial
+              <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
+            </Button>
+            <Button variant="outline" size="lg" onClick={() => navigate("/industries")}>
+              View Case Studies
+            </Button>
           </div>
         </div>
       </div>

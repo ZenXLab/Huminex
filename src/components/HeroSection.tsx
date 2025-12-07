@@ -1,6 +1,9 @@
 import { Button } from "@/components/ui/button";
 import { NetworkBackground } from "./NetworkBackground";
-import { ArrowRight, Calculator } from "lucide-react";
+import { ArrowRight, Calculator, Sparkles } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/hooks/useAuth";
+import { useState, useEffect } from "react";
 import cropxonIcon from "@/assets/cropxon-icon.png";
 
 interface HeroSectionProps {
@@ -8,8 +11,37 @@ interface HeroSectionProps {
 }
 
 export const HeroSection = ({ onQuoteClick }: HeroSectionProps) => {
+  const navigate = useNavigate();
+  const { user } = useAuth();
+  const [displayedText, setDisplayedText] = useState("");
+  const fullText = "Workforce Operating System";
+  
+  // Typing animation effect
+  useEffect(() => {
+    let index = 0;
+    const timer = setInterval(() => {
+      if (index <= fullText.length) {
+        setDisplayedText(fullText.slice(0, index));
+        index++;
+      } else {
+        clearInterval(timer);
+      }
+    }, 60);
+    return () => clearInterval(timer);
+  }, []);
+
   const scrollToSolutions = () => {
     document.getElementById("pillars")?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  const handleStartFreeTrial = () => {
+    if (user) {
+      // If logged in, redirect to portal
+      navigate("/portal");
+    } else {
+      // If not logged in, redirect to onboarding
+      navigate("/onboarding");
+    }
   };
 
   return (
@@ -66,10 +98,13 @@ export const HeroSection = ({ onQuoteClick }: HeroSectionProps) => {
                 </h2>
               </div>
               
-              {/* Subtitle */}
-              <p className="mt-4 text-base sm:text-lg md:text-xl text-muted-foreground font-medium tracking-[0.25em] uppercase">
-                Workforce Operating System
-              </p>
+              {/* Subtitle with Typing Animation */}
+              <div className="mt-4 h-8 flex items-center justify-center">
+                <p className="text-base sm:text-lg md:text-xl text-muted-foreground font-medium tracking-[0.25em] uppercase">
+                  {displayedText}
+                  <span className="inline-block w-0.5 h-5 bg-primary ml-1 animate-pulse" />
+                </p>
+              </div>
             </div>
           </div>
 
@@ -93,11 +128,15 @@ export const HeroSection = ({ onQuoteClick }: HeroSectionProps) => {
 
           {/* CTA Buttons */}
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 animate-fade-in-up animation-delay-600">
-            <Button variant="hero" size="xl" className="group" onClick={scrollToSolutions}>
-              Explore Solutions
+            <Button variant="hero" size="xl" className="group" onClick={handleStartFreeTrial}>
+              <Sparkles className="h-5 w-5" />
+              Start Your Free Trial
               <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
             </Button>
-            <Button variant="hero-outline" size="xl" className="group" onClick={onQuoteClick}>
+            <Button variant="hero-outline" size="xl" className="group" onClick={scrollToSolutions}>
+              Explore Solutions
+            </Button>
+            <Button variant="outline" size="xl" className="group" onClick={onQuoteClick}>
               <Calculator className="h-5 w-5" />
               Get a Quote
             </Button>
