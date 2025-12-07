@@ -3037,7 +3037,7 @@ CREATE INDEX idx_tasks_assignee ON atlas_projects.proj_tasks(assignee_id);
 -- schemas = ["public", "atlas_core", "atlas_hr", "atlas_payroll", "atlas_attendance", "atlas_recruitment", "atlas_compliance", "atlas_finance", "atlas_projects", "atlas_assets", "atlas_automation", "atlas_insurance", "atlas_bgv", "atlas_performance"]
 
 -- ============================================================================
--- END OF MIGRATION
+-- END OF CORE MIGRATION
 -- ============================================================================
 
 -- Summary:
@@ -3055,3 +3055,80 @@ CREATE INDEX idx_tasks_assignee ON atlas_projects.proj_tasks(assignee_id);
 -- 2. Create Edge Functions with tenant context
 -- 3. Set up Storage buckets with RLS
 -- 4. Configure Auth settings
+-- 5. Run the Feature Permissions Schema (see: docs/atlas-feature-permissions-schema.sql)
+
+-- ============================================================================
+-- ADDITIONAL SCHEMA: FEATURE PERMISSIONS & NOTIFICATIONS
+-- See: docs/atlas-feature-permissions-schema.sql for the complete implementation
+-- ============================================================================
+-- 
+-- The Feature Permissions Schema includes:
+-- 
+-- 1. GLOBAL FEATURE REGISTRY (public.global_features)
+--    - Master list of all features available in ATLAS
+--    - Managed by ATLAS Global Admin
+--    - Supports feature categories, tiers, and addon pricing
+--
+-- 2. TENANT FEATURE FLAGS (public.tenant_features)
+--    - Features unlocked per tenant based on subscription
+--    - Supports trial features with expiration
+--    - Managed by ATLAS Global Admin
+--
+-- 3. ROLE-BASED PERMISSIONS (public.role_feature_defaults)
+--    - Default feature access per role within tenant
+--    - Supports granular CRUD permissions
+--    - Managed by Tenant Super-Admin
+--
+-- 4. EMPLOYEE MODULE ACCESS (public.employee_feature_access)
+--    - Individual employee feature overrides
+--    - Shows "NEW" badge for recently unlocked features
+--    - Managed by Tenant Super-Admin
+--
+-- 5. NOTIFICATIONS SYSTEM (public.employee_notifications)
+--    - In-app and email notifications
+--    - Feature unlock alerts
+--    - System updates and action required notifications
+--
+-- 6. NOTIFICATION PREFERENCES (public.notification_preferences)
+--    - User preferences for notification delivery
+--    - Email digest settings
+--    - Quiet hours configuration
+--
+-- 7. FEATURE UNLOCK AUDIT LOG (public.feature_unlock_log)
+--    - Complete audit trail of all feature changes
+--    - Tracks who enabled/disabled features and when
+--
+-- FEATURE UNLOCK FLOW:
+-- ┌─────────────────────────────────────────────────────────────────────────┐
+-- │                         FEATURE UNLOCK FLOW                              │
+-- ├─────────────────────────────────────────────────────────────────────────┤
+-- │                                                                          │
+-- │  1. ATLAS Global Admin                                                   │
+-- │     └─► Defines features in global_features table                       │
+-- │     └─► Sets minimum tier requirements                                   │
+-- │     └─► Enables features for tenants (tenant_features)                  │
+-- │                                                                          │
+-- │  2. Tenant Super-Admin                                                   │
+-- │     └─► Views available features for their tenant                        │
+-- │     └─► Configures role-based defaults (role_feature_defaults)          │
+-- │     └─► Unlocks features for specific employees (employee_feature_access)│
+-- │                                                                          │
+-- │  3. Employee                                                             │
+-- │     └─► Receives notification when feature is unlocked                   │
+-- │     └─► Sees "NEW" badge on newly available modules                     │
+-- │     └─► Can only access features enabled for their role/user            │
+-- │                                                                          │
+-- └─────────────────────────────────────────────────────────────────────────┘
+--
+-- RLS POLICIES SUMMARY:
+-- - global_features: ATLAS admins manage, all users can view active
+-- - tenant_features: ATLAS admins manage, tenant users view their own
+-- - role_feature_defaults: Tenant admins manage, users can view
+-- - employee_feature_access: Tenant admins manage, employees view their own
+-- - employee_notifications: Users manage their own notifications
+--
+-- HELPER FUNCTIONS:
+-- - is_feature_enabled_for_user(user_id, feature_key) → boolean
+-- - notify_feature_unlock() → trigger function for auto-notifications
+--
+-- ============================================================================
