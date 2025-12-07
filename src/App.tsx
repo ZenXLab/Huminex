@@ -54,42 +54,10 @@ const App = () => (
             <Route path="/get-quote" element={<GetQuote />} />
             <Route path="/auth" element={<Auth />} />
             <Route path="/onboarding" element={<Onboarding />} />
-            <Route path="/portal/*" element={<Portal />} />
             
-            {/* Service pages */}
-            <Route path="/services/digital-engineering" element={<DigitalEngineering />} />
-            <Route path="/services/ai-automation" element={<AIAutomation />} />
-            <Route path="/services/experience-design" element={<ExperienceDesign />} />
-            <Route path="/services/cloud-devops" element={<CloudDevOps />} />
-            <Route path="/services/enterprise-consulting" element={<EnterpriseConsulting />} />
-            <Route path="/services/managed-it" element={<ManagedIT />} />
-            <Route path="/services/cybersecurity" element={<Cybersecurity />} />
-            <Route path="/services/industry-solutions" element={<IndustrySolutions />} />
-            
-            {/* Admin routes */}
-            <Route path="/admin/login" element={<AdminAuth />} />
-            <Route path="/admin/*" element={<AdminPage />} />
-            
-            {/* Portal auth */}
-            <Route path="/portal/login" element={<PortalAuth />} />
-            
-            {/* Tenant routes */}
-            <Route path="/tenant/login" element={<TenantAuth />} />
-            <Route path="/tenant/*" element={<TenantPortal />} />
-            
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </BrowserRouter>
-      </TooltipProvider>
-    </HelmetProvider>
-  </QueryClientProvider>
-);
-
-export default App;
             {/* Client Portal Routes */}
             <Route path="/portal/login" element={<PortalAuth />} />
             <Route path="/portal/*" element={<Portal />} />
-            <Route path="/onboarding" element={<Onboarding />} />
             
             {/* Admin Dashboard Routes */}
             <Route path="/admin/login" element={<AdminAuth />} />
