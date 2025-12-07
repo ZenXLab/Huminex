@@ -117,7 +117,7 @@ const Contact = () => {
         {/* Hero Section */}
         <section 
           ref={heroRef as React.RefObject<HTMLElement>}
-          className="relative pt-32 pb-20 lg:pt-40 lg:pb-28 overflow-hidden"
+          className="relative pt-36 pb-20 lg:pt-44 lg:pb-28 overflow-hidden"
         >
           {/* Background */}
           <div className="absolute inset-0 bg-gradient-to-b from-primary/5 via-transparent to-transparent" />

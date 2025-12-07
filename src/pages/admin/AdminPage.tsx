@@ -44,6 +44,12 @@ import { AdminEmailCampaigns } from "@/components/admin/modules/AdminEmailCampai
 import { AdminLeadScoring } from "@/components/admin/modules/AdminLeadScoring";
 import { AdminAPIGateway } from "@/components/admin/modules/AdminAPIGateway";
 import { AdminDatabaseStatus } from "@/components/admin/modules/AdminDatabaseStatus";
+import { AdminClientHealth } from "@/components/admin/modules/AdminClientHealth";
+import { AdminConversionFunnels } from "@/components/admin/modules/AdminConversionFunnels";
+import { AdminProjectTimeline } from "@/components/admin/modules/AdminProjectTimeline";
+import { AdminVideoConference } from "@/components/admin/modules/AdminVideoConference";
+import { AdminRolesPermissions } from "@/components/admin/modules/AdminRolesPermissions";
+import { AdminBackupRecovery } from "@/components/admin/modules/AdminBackupRecovery";
 import { Loader2 } from "lucide-react";
 import { 
   Gauge, CreditCard, TrendingUp, Settings, Target, Mail, Workflow,
@@ -104,14 +110,7 @@ const AdminPage = () => {
     if (path.startsWith("/admin/users")) return <AdminUsers />;
     if (path.startsWith("/admin/onboarding-tracker")) return <AdminOnboardingTracker />;
     if (path.startsWith("/admin/onboarding")) return <AdminOnboardingApprovals />;
-    if (path.startsWith("/admin/client-health")) return (
-      <AdminPlaceholderPage 
-        title="Client Health Scores" 
-        description="Monitor client satisfaction and health metrics"
-        icon={Target}
-        features={["Health score dashboard", "Risk indicators", "Engagement tracking", "Churn prediction"]}
-      />
-    );
+    if (path.startsWith("/admin/client-health")) return <AdminClientHealth />;
     if (path.startsWith("/admin/notices")) return <AdminClientNotices />;
     
     // Marketing & Growth
@@ -119,86 +118,30 @@ const AdminPage = () => {
     if (path.startsWith("/admin/marketing")) return <AdminMarketing />;
     if (path.startsWith("/admin/lead-scoring")) return <AdminLeadScoring />;
     if (path.startsWith("/admin/email-campaigns")) return <AdminEmailCampaigns />;
-    if (path.startsWith("/admin/funnels")) return (
-      <AdminPlaceholderPage 
-        title="Conversion Funnels" 
-        description="Track and optimize conversion funnels"
-        icon={TrendingUp}
-        features={["Funnel visualization", "Drop-off analysis", "Conversion optimization", "Goal tracking"]}
-      />
-    );
+    if (path.startsWith("/admin/funnels")) return <AdminConversionFunnels />;
     
     // Operations & Projects
     if (path.startsWith("/admin/projects")) return <AdminProjects />;
-    if (path.startsWith("/admin/project-timeline")) return (
-      <AdminPlaceholderPage 
-        title="Project Timeline" 
-        description="View project timelines and milestones"
-        icon={Calendar}
-        features={["Gantt charts", "Milestone tracking", "Resource allocation", "Dependencies"]}
-      />
-    );
+    if (path.startsWith("/admin/project-timeline")) return <AdminProjectTimeline />;
     if (path.startsWith("/admin/files")) return <AdminFiles />;
     if (path.startsWith("/admin/team")) return <AdminTeamManagement />;
     
     // Support & Communication
     if (path.startsWith("/admin/tickets")) return <AdminTickets />;
-    if (path.startsWith("/admin/chat")) return (
-      <AdminPlaceholderPage 
-        title="Live Chat" 
-        description="Real-time chat support system"
-        icon={Phone}
-        features={["Chat inbox", "Canned responses", "Chat routing", "Analytics"]}
-      />
-    );
+    if (path.startsWith("/admin/chat")) return <AdminPlaceholderPage title="Live Chat" description="Real-time chat support system" icon={Phone} features={["Chat inbox", "Canned responses"]} />;
     if (path.startsWith("/admin/meetings")) return <AdminMeetings />;
-    if (path.startsWith("/admin/video-calls")) return (
-      <AdminPlaceholderPage 
-        title="Video Calls" 
-        description="Schedule and manage video conferences"
-        icon={Video}
-        features={["Video conferencing", "Screen sharing", "Recording", "Calendar integration"]}
-      />
-    );
+    if (path.startsWith("/admin/video-calls")) return <AdminVideoConference />;
     if (path.startsWith("/admin/inquiries")) return <AdminInquiries />;
     
     // AI & Intelligence
     if (path.startsWith("/admin/ai")) return <AdminAIDashboard />;
-    if (path.startsWith("/admin/ai-usage")) return (
-      <AdminPlaceholderPage 
-        title="AI Usage & Costs" 
-        description="Track AI feature usage and costs"
-        icon={Wallet}
-        features={["Usage metrics", "Cost tracking", "Budget alerts", "Model performance"]}
-      />
-    );
-    if (path.startsWith("/admin/ai-models")) return (
-      <AdminPlaceholderPage 
-        title="Model Performance" 
-        description="Monitor AI model accuracy and performance"
-        icon={Brain}
-        features={["Accuracy metrics", "Response times", "Error rates", "Model comparison"]}
-      />
-    );
-    if (path.startsWith("/admin/automation-logs")) return (
-      <AdminPlaceholderPage 
-        title="Automation Logs" 
-        description="View workflow automation execution logs"
-        icon={Workflow}
-        features={["Execution history", "Error tracking", "Performance metrics", "Retry management"]}
-      />
-    );
+    if (path.startsWith("/admin/ai-usage")) return <AdminPlaceholderPage title="AI Usage & Costs" description="Track AI feature usage and costs" icon={Wallet} features={["Usage metrics", "Cost tracking"]} />;
+    if (path.startsWith("/admin/ai-models")) return <AdminPlaceholderPage title="Model Performance" description="Monitor AI model accuracy" icon={Brain} features={["Accuracy metrics", "Response times"]} />;
+    if (path.startsWith("/admin/automation-logs")) return <AdminPlaceholderPage title="Automation Logs" description="View workflow execution logs" icon={Workflow} features={["Execution history", "Error tracking"]} />;
     
     // Infrastructure & MSP
     if (path.startsWith("/admin/msp")) return <AdminMSPMonitoring />;
-    if (path.startsWith("/admin/servers")) return (
-      <AdminPlaceholderPage 
-        title="Server Health" 
-        description="Monitor server health and performance"
-        icon={HardDrive}
-        features={["CPU/Memory monitoring", "Disk usage", "Network stats", "Process management"]}
-      />
-    );
+    if (path.startsWith("/admin/servers")) return <AdminPlaceholderPage title="Server Health" description="Monitor server health and performance" icon={HardDrive} features={["CPU/Memory monitoring", "Disk usage"]} />;
     if (path.startsWith("/admin/cloud")) return <AdminCloudResources />;
     if (path.startsWith("/admin/database")) return <AdminDatabaseStatus />;
     if (path.startsWith("/admin/api-gateway")) return <AdminAPIGateway />;
@@ -212,40 +155,12 @@ const AdminPage = () => {
     
     // Platform Settings
     if (path.startsWith("/admin/portal-settings")) return <AdminPortalSettings />;
-    if (path.startsWith("/admin/roles")) return (
-      <AdminPlaceholderPage 
-        title="User Roles & Permissions" 
-        description="Configure platform roles and permissions"
-        icon={UserCog}
-        features={["Role definitions", "Permission sets", "Role assignment", "Audit trail"]}
-      />
-    );
+    if (path.startsWith("/admin/roles")) return <AdminRolesPermissions />;
     if (path.startsWith("/admin/integrations")) return <AdminIntegrations />;
-    if (path.startsWith("/admin/api-keys")) return (
-      <AdminPlaceholderPage 
-        title="API Keys & Webhooks" 
-        description="Manage API credentials and webhooks"
-        icon={Key}
-        features={["API key management", "Webhook configuration", "Rate limits", "Access logs"]}
-      />
-    );
-    if (path.startsWith("/admin/feature-flags")) return (
-      <AdminPlaceholderPage 
-        title="Feature Flags" 
-        description="Toggle features across the platform"
-        icon={Layers}
-        features={["Feature toggles", "A/B testing", "Rollout strategies", "Environment configs"]}
-      />
-    );
+    if (path.startsWith("/admin/api-keys")) return <AdminPlaceholderPage title="API Keys & Webhooks" description="Manage API credentials and webhooks" icon={Key} features={["API key management", "Webhook configuration"]} />;
+    if (path.startsWith("/admin/feature-flags")) return <AdminPlaceholderPage title="Feature Flags" description="Toggle features across the platform" icon={Layers} features={["Feature toggles", "A/B testing"]} />;
     if (path.startsWith("/admin/logs")) return <AdminSystemLogs />;
-    if (path.startsWith("/admin/backup")) return (
-      <AdminPlaceholderPage 
-        title="Backup & Recovery" 
-        description="Manage database backups and recovery"
-        icon={RefreshCw}
-        features={["Backup scheduling", "Point-in-time recovery", "Backup verification", "Disaster recovery"]}
-      />
-    );
+    if (path.startsWith("/admin/backup")) return <AdminBackupRecovery />;
     if (path.startsWith("/admin/super")) return <AdminSuperAdmin />;
     if (path.startsWith("/admin/settings")) return <AdminSettings />;
     

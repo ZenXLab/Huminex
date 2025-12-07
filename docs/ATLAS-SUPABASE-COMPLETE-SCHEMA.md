@@ -1254,4 +1254,227 @@ CREATE INDEX idx_clickstream_session ON clickstream_events(session_id);
 
 ---
 
+## Sample Data SQL Scripts
+
+Use these scripts to populate your database with test data after migration.
+
+### 1. Create Admin User and Role
+```sql
+-- First, create an admin user via Supabase Auth (use Dashboard or API)
+-- Then assign admin role:
+INSERT INTO public.user_roles (user_id, role)
+VALUES ('YOUR_ADMIN_USER_UUID', 'admin');
+```
+
+### 2. Sample Tenants (Client Organizations)
+```sql
+-- Sample client tenants for multi-tenancy testing
+INSERT INTO public.client_tenants (slug, name, contact_email, contact_phone, status, tenant_type, address) VALUES
+('acme-corp', 'Acme Corporation', 'admin@acmecorp.com', '+91-9876543210', 'active', 'enterprise', 'Mumbai, Maharashtra'),
+('startup-hub', 'Startup Hub India', 'hello@startuphub.in', '+91-9123456789', 'active', 'startup', 'Bangalore, Karnataka'),
+('retail-mart', 'Retail Mart Ltd', 'ops@retailmart.co.in', '+91-9988776655', 'pending', 'enterprise', 'Delhi, NCR'),
+('tech-solutions', 'Tech Solutions Pvt Ltd', 'info@techsol.io', '+91-8765432109', 'active', 'individual', 'Hyderabad, Telangana'),
+('global-services', 'Global Services Inc', 'contact@globalservices.com', '+91-7654321098', 'active', 'enterprise', 'Pune, Maharashtra');
+```
+
+### 3. Sample Team Members
+```sql
+-- Sample team members for project assignment
+INSERT INTO public.team_members (name, email, role, department, availability, skills) VALUES
+('Arjun Sharma', 'arjun@cropxon.com', 'Project Manager', 'Operations', 'available', '["Project Management", "Agile", "Scrum"]'),
+('Priya Patel', 'priya@cropxon.com', 'Senior Developer', 'Engineering', 'available', '["React", "Node.js", "PostgreSQL"]'),
+('Rahul Verma', 'rahul@cropxon.com', 'DevOps Engineer', 'Infrastructure', 'busy', '["AWS", "Docker", "Kubernetes"]'),
+('Ananya Singh', 'ananya@cropxon.com', 'UI/UX Designer', 'Design', 'available', '["Figma", "Adobe XD", "User Research"]'),
+('Vikram Reddy', 'vikram@cropxon.com', 'Security Analyst', 'Security', 'available', '["Penetration Testing", "SIEM", "Compliance"]'),
+('Meera Joshi', 'meera@cropxon.com', 'Business Analyst', 'Operations', 'available', '["Requirements Analysis", "Process Mapping", "SQL"]'),
+('Karthik Nair', 'karthik@cropxon.com', 'Full Stack Developer', 'Engineering', 'busy', '["TypeScript", "Python", "GraphQL"]'),
+('Sneha Gupta', 'sneha@cropxon.com', 'Customer Success', 'Support', 'available', '["Client Relations", "Onboarding", "Training"]');
+```
+
+### 4. Sample Leads
+```sql
+-- Sample CRM leads for testing
+INSERT INTO public.leads (name, email, phone, company, source, status, score, notes) VALUES
+('Rajesh Kumar', 'rajesh@techstartup.in', '+91-9876543211', 'TechStartup India', 'website', 'new', 25, 'Interested in HR automation'),
+('Sunita Menon', 'sunita@retailchain.com', '+91-9876543212', 'Retail Chain Corp', 'referral', 'contacted', 65, 'Enterprise client, high potential'),
+('Amit Jain', 'amit@manufacturingco.in', '+91-9876543213', 'Manufacturing Co', 'linkedin', 'qualified', 85, 'Ready for demo, budget approved'),
+('Deepa Krishnan', 'deepa@hospitalgroup.org', '+91-9876543214', 'Hospital Group', 'campaign', 'new', 40, 'Healthcare vertical, compliance focus'),
+('Sanjay Deshmukh', 'sanjay@logisticsplus.in', '+91-9876543215', 'Logistics Plus', 'website', 'contacted', 55, 'Interested in payroll module'),
+('Neha Agarwal', 'neha@edtechsolutions.com', '+91-9876543216', 'EdTech Solutions', 'event', 'qualified', 75, 'Fast-growing startup, 500+ employees'),
+('Vinod Pillai', 'vinod@financeservices.in', '+91-9876543217', 'Finance Services Ltd', 'cold_call', 'new', 30, 'Initial discussion scheduled');
+```
+
+### 5. Sample Quotes
+```sql
+-- Sample pricing quotes
+INSERT INTO public.quotes (quote_number, client_type, service_type, complexity, estimated_price, final_price, status, contact_name, contact_email, contact_company, features, addons) VALUES
+('ATL-2025-0001', 'enterprise', 'HR & Payroll', 'advanced', 150000, 135000, 'pending', 'Sunita Menon', 'sunita@retailchain.com', 'Retail Chain Corp', '["Core HR", "Payroll", "Attendance", "Leave Management"]', '["BGV Integration", "SSO"]'),
+('ATL-2025-0002', 'startup', 'Workforce OS', 'standard', 75000, 75000, 'approved', 'Neha Agarwal', 'neha@edtechsolutions.com', 'EdTech Solutions', '["Core HR", "Recruitment", "Performance"]', '["AI Insights"]'),
+('ATL-2025-0003', 'individual', 'Compliance Suite', 'basic', 25000, 22500, 'converted', 'Rajesh Kumar', 'rajesh@techstartup.in', 'TechStartup India', '["PF/ESIC", "PT", "Labor Laws"]', '[]'),
+('ATL-2025-0004', 'enterprise', 'Full Platform', 'enterprise', 350000, 315000, 'pending', 'Amit Jain', 'amit@manufacturingco.in', 'Manufacturing Co', '["All Modules"]', '["Managed Services", "Priority Support", "Custom Integration"]');
+```
+
+### 6. Sample Invoices
+```sql
+-- Sample invoices (linked to quotes where applicable)
+INSERT INTO public.invoices (invoice_number, amount, tax_percent, tax_amount, total_amount, status, due_date, notes) VALUES
+('INV-2025-0001', 22500, 18.00, 4050, 26550, 'paid', '2025-02-15', 'TechStartup India - Compliance Suite'),
+('INV-2025-0002', 75000, 18.00, 13500, 88500, 'sent', '2025-02-28', 'EdTech Solutions - Workforce OS Annual'),
+('INV-2025-0003', 50000, 18.00, 9000, 59000, 'draft', '2025-03-15', 'Retail Chain Corp - Implementation Phase 1'),
+('INV-2025-0004', 35000, 18.00, 6300, 41300, 'overdue', '2025-01-31', 'Hospital Group - HR Module');
+```
+
+### 7. Sample Projects
+```sql
+-- Sample active projects
+INSERT INTO public.projects (name, description, status, phase, progress, health_score, budget, start_date, due_date) VALUES
+('Retail Chain HR Transformation', 'Complete HR automation for 5000+ employees', 'active', 'Implementation', 45, 85, 500000, '2025-01-01', '2025-06-30'),
+('EdTech Payroll Integration', 'Payroll setup with existing HRMS', 'active', 'Development', 70, 95, 150000, '2024-12-01', '2025-03-31'),
+('Hospital Compliance Audit', 'Annual compliance review and automation', 'planning', 'Discovery', 10, 100, 100000, '2025-02-01', '2025-04-30'),
+('Manufacturing ERP Integration', 'Connect ATLAS with SAP ERP', 'active', 'Design', 25, 75, 350000, '2025-01-15', '2025-09-30'),
+('Fintech Security Hardening', 'Security audit and implementation', 'completed', 'Closure', 100, 100, 200000, '2024-10-01', '2024-12-31');
+```
+
+### 8. Sample Support Tickets
+```sql
+-- Sample support tickets
+INSERT INTO public.support_tickets (ticket_number, subject, description, status, priority, sla_due_at) VALUES
+('TKT-00001', 'Unable to generate payslips', 'Getting error when trying to generate monthly payslips for February', 'open', 'high', NOW() + INTERVAL '4 hours'),
+('TKT-00002', 'SSO configuration help needed', 'Need assistance configuring Azure AD SSO', 'in_progress', 'medium', NOW() + INTERVAL '24 hours'),
+('TKT-00003', 'Feature request: Custom reports', 'Would like ability to create custom compliance reports', 'open', 'low', NOW() + INTERVAL '72 hours'),
+('TKT-00004', 'Attendance sync failing', 'Biometric device not syncing attendance data', 'resolved', 'urgent', NOW() - INTERVAL '2 hours'),
+('TKT-00005', 'Invoice PDF not downloading', 'PDF download button not working on Safari', 'open', 'medium', NOW() + INTERVAL '12 hours');
+```
+
+### 9. Sample Onboarding Sessions
+```sql
+-- Sample onboarding applications
+INSERT INTO public.onboarding_sessions (client_id, full_name, email, phone, company_name, client_type, industry_type, industry_subtype, status, current_step, selected_services, dashboard_tier) VALUES
+('ATLS-20250207-0001', 'Rohit Sharma', 'rohit@newstartup.io', '+91-9988776655', 'New Startup IO', 'startup', 'Technology & IT', 'SaaS & Software Products', 'pending_approval', 4, '["HR & Payroll", "Recruitment", "Compliance"]', 'professional'),
+('ATLS-20250207-0002', 'Kavita Rao', 'kavita@hospitalnetwork.org', '+91-8877665544', 'Hospital Network', 'enterprise', 'Healthcare & Wellness', 'Hospitals & Medical Centers', 'approved', 4, '["Full Platform"]', 'enterprise'),
+('ATLS-20250207-0003', 'Anil Kapoor', 'anil@retailworld.com', '+91-7766554433', 'Retail World', 'enterprise', 'Retail & Commerce', 'Supermarkets & Hypermarkets', 'in_progress', 2, '["Workforce Management", "Attendance"]', 'basic');
+```
+
+### 10. Sample System Logs
+```sql
+-- Sample system logs for monitoring
+INSERT INTO public.system_logs (level, source, message, metadata) VALUES
+('info', 'auth', 'User login successful', '{"user_email": "admin@cropxon.com", "ip": "192.168.1.100"}'),
+('info', 'payroll', 'Payroll run initiated', '{"tenant": "acme-corp", "month": "February 2025", "employee_count": 150}'),
+('warning', 'integration', 'SSO token refresh failed, retrying', '{"provider": "azure_ad", "tenant": "retail-mart"}'),
+('error', 'email', 'Failed to send welcome email', '{"recipient": "test@example.com", "error": "Invalid email address"}'),
+('info', 'api', 'API rate limit approaching', '{"tenant": "startup-hub", "current_rate": 450, "limit": 500}'),
+('debug', 'scheduler', 'Cron job executed successfully', '{"job": "daily_backup", "duration_ms": 3450}'),
+('info', 'onboarding', 'New client application received', '{"client_id": "ATLS-20250207-0004", "company": "New Client Ltd"}');
+```
+
+### 11. Sample Audit Logs
+```sql
+-- Sample audit logs for compliance
+INSERT INTO public.audit_logs (action, entity_type, entity_id, old_values, new_values, ip_address, user_agent) VALUES
+('create', 'quote', 'ATL-2025-0001', NULL, '{"status": "draft", "amount": 150000}', '192.168.1.100', 'Mozilla/5.0'),
+('update', 'project', 'proj-001', '{"status": "planning"}', '{"status": "active"}', '192.168.1.101', 'Chrome/120'),
+('delete', 'lead', 'lead-old-001', '{"name": "Old Lead", "status": "lost"}', NULL, '192.168.1.102', 'Safari/17'),
+('update', 'user_role', 'role-001', '{"role": "user"}', '{"role": "admin"}', '192.168.1.100', 'Firefox/121'),
+('create', 'tenant', 'tenant-new-001', NULL, '{"name": "New Tenant", "status": "active"}', '192.168.1.103', 'Edge/120');
+```
+
+### 12. Sample Pricing Data
+```sql
+-- Sample service pricing
+INSERT INTO public.service_pricing (service_name, service_category, plan_tier, base_price, description, features, is_active) VALUES
+('Core HR', 'HR & Workforce', 'basic', 2999, 'Essential HR management', '["Employee Directory", "Basic Reports", "Document Storage"]', true),
+('Core HR', 'HR & Workforce', 'professional', 5999, 'Advanced HR with automation', '["All Basic Features", "Workflow Automation", "Custom Fields", "API Access"]', true),
+('Core HR', 'HR & Workforce', 'enterprise', 9999, 'Enterprise HR suite', '["All Professional Features", "SSO", "Advanced Analytics", "Priority Support"]', true),
+('Payroll', 'Payroll & Finance', 'basic', 3999, 'Basic payroll processing', '["Salary Calculation", "Payslips", "Bank File Generation"]', true),
+('Payroll', 'Payroll & Finance', 'professional', 7999, 'Advanced payroll with compliance', '["All Basic Features", "PF/ESIC/PT", "Reimbursements", "Multi-location"]', true),
+('Compliance Suite', 'Compliance', 'professional', 4999, 'Full compliance automation', '["PF/ESIC Filing", "PT", "Labor Law Compliance", "Audit Trail"]', true);
+
+-- Sample add-ons
+INSERT INTO public.service_addons (name, price, category, description, is_active) VALUES
+('BGV Integration', 2500, 'Verification', 'Background verification integration with third-party providers', true),
+('SSO Setup', 5000, 'Security', 'Single Sign-On configuration for enterprise', true),
+('Priority Support', 9999, 'Support', '24/7 priority support with dedicated account manager', true),
+('Custom Integration', 15000, 'Integration', 'Custom API integration with existing systems', true),
+('Managed Payroll', 25000, 'Services', 'Fully managed payroll processing service', true),
+('AI Insights', 7500, 'Intelligence', 'AI-powered workforce analytics and predictions', true);
+
+-- Sample pricing modifiers
+INSERT INTO public.pricing_modifiers (modifier_type, modifier_key, multiplier, description, is_active) VALUES
+('industry', 'healthcare', 1.15, '15% premium for healthcare compliance requirements', true),
+('industry', 'finance', 1.20, '20% premium for financial sector regulations', true),
+('employee_count', '500_plus', 0.85, '15% volume discount for 500+ employees', true),
+('employee_count', '1000_plus', 0.75, '25% volume discount for 1000+ employees', true),
+('contract_length', 'annual', 0.80, '20% discount for annual commitment', true),
+('contract_length', 'multi_year', 0.70, '30% discount for multi-year contracts', true);
+
+-- Sample coupon codes
+INSERT INTO public.coupon_codes (code, discount_type, discount_value, max_uses, is_active, valid_from, valid_until) VALUES
+('WELCOME20', 'percentage', 20, 100, true, NOW(), NOW() + INTERVAL '90 days'),
+('STARTUP50', 'percentage', 50, 50, true, NOW(), NOW() + INTERVAL '60 days'),
+('FLAT5000', 'fixed', 5000, 25, true, NOW(), NOW() + INTERVAL '30 days'),
+('ENTERPRISE25', 'percentage', 25, 10, true, NOW(), NOW() + INTERVAL '180 days');
+```
+
+### 13. Sample MSP Monitoring Data
+```sql
+-- Sample MSP servers (linked to tenants)
+INSERT INTO public.client_msp_servers (tenant_id, name, hostname, ip_address, server_type, status) 
+SELECT id, 'Production Web Server', 'prod-web-01.acme.local', '10.0.1.10', 'web', 'online'
+FROM public.client_tenants WHERE slug = 'acme-corp';
+
+INSERT INTO public.client_msp_servers (tenant_id, name, hostname, ip_address, server_type, status) 
+SELECT id, 'Database Server', 'prod-db-01.acme.local', '10.0.1.20', 'database', 'online'
+FROM public.client_tenants WHERE slug = 'acme-corp';
+
+INSERT INTO public.client_msp_servers (tenant_id, name, hostname, ip_address, server_type, status) 
+SELECT id, 'Application Server', 'prod-app-01.startup.local', '10.0.2.10', 'app', 'warning'
+FROM public.client_tenants WHERE slug = 'startup-hub';
+```
+
+### 14. Sample Clickstream Events
+```sql
+-- Sample clickstream data for analytics
+INSERT INTO public.clickstream_events (session_id, event_type, page_url, element_id, element_text, metadata) VALUES
+('sess-001', 'page_view', '/pricing', NULL, NULL, '{"referrer": "google.com", "utm_source": "google_ads"}'),
+('sess-001', 'click', '/pricing', 'btn-get-quote', 'Get Custom Quote', '{"section": "pricing_table"}'),
+('sess-001', 'page_view', '/get-quote', NULL, NULL, '{}'),
+('sess-002', 'page_view', '/', NULL, NULL, '{"referrer": "linkedin.com"}'),
+('sess-002', 'scroll', '/', NULL, NULL, '{"depth": 75}'),
+('sess-002', 'click', '/', 'btn-features', 'Explore Features', '{}'),
+('sess-003', 'page_view', '/features', NULL, NULL, '{"referrer": "direct"}'),
+('sess-003', 'click', '/features', 'module-hr', 'HR & Payroll', '{}'),
+('sess-003', 'page_view', '/modules/hr-payroll', NULL, NULL, '{}');
+```
+
+### 15. Sample Meetings
+```sql
+-- Sample scheduled meetings
+INSERT INTO public.meetings (title, description, scheduled_at, duration_minutes, meeting_type, meeting_link, status) VALUES
+('Retail Chain Kickoff', 'Project kickoff meeting with Retail Chain Corp stakeholders', NOW() + INTERVAL '2 days', 60, 'client', 'https://meet.google.com/abc-defg-hij', 'scheduled'),
+('EdTech Weekly Sync', 'Weekly status update with EdTech Solutions', NOW() + INTERVAL '1 day', 30, 'client', 'https://teams.microsoft.com/l/meetup-join/xyz', 'scheduled'),
+('Internal Sprint Planning', 'Sprint 24 planning session', NOW() + INTERVAL '3 days', 120, 'internal', 'https://meet.google.com/xyz-abcd-efg', 'scheduled'),
+('Hospital Demo', 'ATLAS platform demo for Hospital Group', NOW() + INTERVAL '5 days', 45, 'demo', 'https://zoom.us/j/123456789', 'scheduled');
+```
+
+---
+
+## Complete Migration SQL Script
+
+For convenience, here's a single script to run all sample data insertions:
+
+```sql
+-- Run this after creating all tables and functions
+-- Make sure to replace 'YOUR_ADMIN_USER_UUID' with actual admin user ID
+
+BEGIN;
+
+-- Execute all sample data inserts from sections above
+-- (Copy individual sections as needed)
+
+COMMIT;
+```
+
+---
+
 **Document generated for CropXon ATLAS platform migration and self-hosting reference.**
