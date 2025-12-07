@@ -9,6 +9,7 @@ import {
 import { Link } from "react-router-dom";
 import { format } from "date-fns";
 import { ClickstreamSummaryWidget } from "./modules/clickstream/ClickstreamSummaryWidget";
+import { AdminCardSkeleton, AdminDashboardSkeleton } from "./AdminCardSkeleton";
 import { 
   useAdminStats, 
   useRecentQuotes, 
@@ -119,13 +120,29 @@ export const AdminOverview = () => {
   };
 
   if (loading) {
-    return <div className="animate-pulse space-y-6">
-      <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        {[...Array(6)].map((_, i) => (
-          <div key={i} className="h-32 bg-muted rounded-xl" />
-        ))}
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div className="space-y-2">
+            <div className="h-8 w-48 bg-muted rounded animate-pulse" />
+            <div className="h-4 w-64 bg-muted rounded animate-pulse" />
+          </div>
+        </div>
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          {[...Array(6)].map((_, i) => (
+            <AdminCardSkeleton key={i} variant="stat" />
+          ))}
+        </div>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <AdminCardSkeleton variant="list" />
+          <AdminCardSkeleton variant="list" />
+        </div>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <AdminCardSkeleton variant="table" />
+          <AdminCardSkeleton variant="list" />
+        </div>
       </div>
-    </div>;
+    );
   }
 
   return (

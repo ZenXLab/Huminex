@@ -11,6 +11,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { toast } from 'sonner';
 import { Building2, Plus, Users, Server, Edit, Trash2, RefreshCw, Search, Eye, Loader2 } from 'lucide-react';
+import { AdminCardSkeleton, AdminTableSkeleton } from '@/components/admin/AdminCardSkeleton';
+import { VirtualTable } from '@/components/admin/VirtualTable';
 
 interface Tenant {
   id: string;
@@ -302,9 +304,66 @@ const AdminTenantManagement = () => {
       <Card>
         <CardContent className="p-0">
           {loading ? (
-            <div className="flex items-center justify-center p-8">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
-            </div>
+            <AdminTableSkeleton rows={8} />
+          ) : filteredTenants.length > 50 ? (
+            // Use virtual scrolling for large datasets
+            <VirtualTable
+              data={filteredTenants}
+              columns={[
+                { 
+                  key: "name", 
+                  header: "Organization",
+                  render: (tenant) => (
+                    <div>
+                      <p className="font-medium">{tenant.name}</p>
+                      <p className="text-sm text-muted-foreground">{tenant.slug}</p>
+                    </div>
+                  )
+                },
+                { 
+                  key: "tenant_type", 
+                  header: "Type",
+                  width: 100,
+                  render: (tenant) => (
+                    <Badge className={typeColors[tenant.tenant_type] || typeColors.individual}>
+                      {tenant.tenant_type}
+                    </Badge>
+                  )
+                },
+                { 
+                  key: "status", 
+                  header: "Status",
+                  width: 100,
+                  render: (tenant) => (
+                    <Badge className={statusColors[tenant.status] || statusColors.pending}>
+                      {tenant.status}
+                    </Badge>
+                  )
+                },
+                { 
+                  key: "contact_email", 
+                  header: "Contact",
+                  render: (tenant) => (
+                    <div>
+                      <p className="text-sm">{tenant.contact_email}</p>
+                      {tenant.contact_phone && (
+                        <p className="text-sm text-muted-foreground">{tenant.contact_phone}</p>
+                      )}
+                    </div>
+                  )
+                },
+                { 
+                  key: "created_at", 
+                  header: "Created",
+                  width: 120,
+                  render: (tenant) => new Date(tenant.created_at).toLocaleDateString()
+                },
+              ]}
+              rowHeight={60}
+              getRowKey={(tenant) => tenant.id}
+              emptyMessage="No tenants found"
+              className="max-h-[600px]"
+            />
           ) : (
             <Table>
               <TableHeader>

@@ -1,10 +1,12 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo, memo } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { AdminCardSkeleton, AdminTableSkeleton } from "@/components/admin/AdminCardSkeleton";
+import { VirtualTable } from "@/components/admin/VirtualTable";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { MousePointer, Eye, BarChart3, Users, RefreshCw, Radio, Trash2, AlertTriangle, Download, ChevronDown, ChevronUp, Bell, AlertCircle, ShieldAlert } from "lucide-react";
@@ -155,19 +157,45 @@ export const AdminClickstream = () => {
     }
   };
 
-  const stats = {
+  const stats = useMemo(() => ({
     totalEvents: events?.length || 0,
     uniqueSessions: new Set(events?.map(e => e.session_id)).size,
     clicks: events?.filter(e => e.event_type === "click").length || 0,
     pageViews: events?.filter(e => e.event_type === "pageview").length || 0,
-  };
+  }), [events]);
 
-  const topPages = events?.reduce((acc, event) => {
-    if (event.page_url) acc[event.page_url] = (acc[event.page_url] || 0) + 1;
-    return acc;
-  }, {} as Record<string, number>) || {};
+  const sortedPages = useMemo(() => {
+    const topPages = events?.reduce((acc, event) => {
+      if (event.page_url) acc[event.page_url] = (acc[event.page_url] || 0) + 1;
+      return acc;
+    }, {} as Record<string, number>) || {};
+    return Object.entries(topPages).sort(([, a], [, b]) => b - a).slice(0, 5);
+  }, [events]);
 
-  const sortedPages = Object.entries(topPages).sort(([, a], [, b]) => b - a).slice(0, 5);
+  const virtualTableColumns = useMemo(() => [
+    { 
+      key: "event_type", 
+      header: "Type", 
+      width: 100,
+      render: (item: any) => (
+        <Badge className={`${getEventBadge(item.event_type)} text-xs`}>{item.event_type}</Badge>
+      )
+    },
+    { key: "element_text", header: "Element", render: (item: any) => item.element_text || "-" },
+    { key: "page_url", header: "Page", render: (item: any) => item.page_url?.slice(0, 40) || "-" },
+    { 
+      key: "session_id", 
+      header: "Session", 
+      width: 100,
+      render: (item: any) => <span className="font-mono text-xs">{item.session_id?.slice(0, 8)}...</span>
+    },
+    { 
+      key: "created_at", 
+      header: "Time", 
+      width: 120,
+      render: (item: any) => format(new Date(item.created_at), "MMM d, HH:mm")
+    },
+  ], []);
 
   const getEventBadge = (type: string) => {
     const colors: Record<string, string> = {
@@ -180,6 +208,23 @@ export const AdminClickstream = () => {
 
   // Render content based on active section
   const renderContent = () => {
+    // Show skeleton while loading
+    if (isLoading) {
+      return (
+        <div className="space-y-4 sm:space-y-6">
+          <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+            {[...Array(4)].map((_, i) => (
+              <AdminCardSkeleton key={i} variant="stat" />
+            ))}
+          </div>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+            <AdminCardSkeleton variant="list" />
+            <AdminCardSkeleton variant="list" />
+          </div>
+        </div>
+      );
+    }
+
     switch (activeSection) {
       case "overview":
         return (
@@ -345,30 +390,20 @@ export const AdminClickstream = () => {
       case "events":
         return (
           <Card>
-            <CardHeader><CardTitle className="text-sm sm:text-base">All Events</CardTitle></CardHeader>
-            <CardContent className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="text-xs">Type</TableHead>
-                    <TableHead className="text-xs hidden sm:table-cell">Element</TableHead>
-                    <TableHead className="text-xs">Page</TableHead>
-                    <TableHead className="text-xs hidden md:table-cell">Session</TableHead>
-                    <TableHead className="text-xs">Time</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {events?.slice(0, 50).map(event => (
-                    <TableRow key={event.id}>
-                      <TableCell><Badge className={`${getEventBadge(event.event_type)} text-xs`}>{event.event_type}</Badge></TableCell>
-                      <TableCell className="max-w-[100px] truncate text-xs hidden sm:table-cell">{event.element_text || "-"}</TableCell>
-                      <TableCell className="max-w-[100px] sm:max-w-[150px] truncate text-xs">{event.page_url}</TableCell>
-                      <TableCell className="font-mono text-xs hidden md:table-cell">{event.session_id.slice(0, 8)}...</TableCell>
-                      <TableCell className="text-xs">{format(new Date(event.created_at), "MMM d, HH:mm")}</TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+            <CardHeader><CardTitle className="text-sm sm:text-base">All Events ({events?.length || 0})</CardTitle></CardHeader>
+            <CardContent>
+              {isLoading ? (
+                <AdminTableSkeleton rows={10} />
+              ) : (
+                <VirtualTable
+                  data={events || []}
+                  columns={virtualTableColumns}
+                  rowHeight={48}
+                  getRowKey={(item) => item.id}
+                  emptyMessage="No events recorded yet"
+                  className="max-h-[500px]"
+                />
+              )}
             </CardContent>
           </Card>
         );

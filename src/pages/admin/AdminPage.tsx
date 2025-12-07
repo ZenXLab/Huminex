@@ -1,68 +1,81 @@
-import { useEffect } from "react";
+import { useEffect, Suspense, lazy } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useUserRole } from "@/hooks/useUserRole";
 import { AdminLayout } from "@/components/admin/AdminLayout";
-import { AdminOverview } from "@/components/admin/AdminOverview";
-import { AdminQuotes } from "@/components/admin/AdminQuotes";
-import { AdminInvoices } from "@/components/admin/AdminInvoices";
-import { AdminUsers } from "@/components/admin/AdminUsers";
-import { AdminInquiries } from "@/components/admin/AdminInquiries";
-import { AdminSettings } from "@/components/admin/AdminSettings";
-import { AdminAnalytics } from "@/components/admin/modules/AdminAnalytics";
-import { AdminAnalyticsDashboard } from "@/components/admin/modules/AdminAnalyticsDashboard";
-import { AdminABTesting } from "@/components/admin/modules/AdminABTesting";
-import { AdminABResults } from "@/components/admin/modules/AdminABResults";
-import { AdminPredictiveAnalytics } from "@/components/admin/modules/AdminPredictiveAnalytics";
-import { AdminOnboardingApprovals } from "@/components/admin/modules/AdminOnboardingApprovals";
-import { AdminAuditLogs } from "@/components/admin/modules/AdminAuditLogs";
-import { AdminClientNotices } from "@/components/admin/modules/AdminClientNotices";
-import { AdminCompliance } from "@/components/admin/modules/AdminCompliance";
-import { AdminSystemLogs } from "@/components/admin/modules/AdminSystemLogs";
-import { AdminIntegrations } from "@/components/admin/modules/AdminIntegrations";
-import { AdminPortalSettings } from "@/components/admin/modules/AdminPortalSettings";
-import { AdminCRM } from "@/components/admin/modules/AdminCRM";
-import { AdminClickstream } from "@/components/admin/modules/AdminClickstream";
-import { AdminMSPMonitoring } from "@/components/admin/modules/AdminMSPMonitoring";
-import { AdminMarketing } from "@/components/admin/modules/AdminMarketing";
-import { AdminProjects } from "@/components/admin/modules/AdminProjects";
-import { AdminTickets } from "@/components/admin/modules/AdminTickets";
-import { AdminMeetings } from "@/components/admin/modules/AdminMeetings";
-import { AdminFiles } from "@/components/admin/modules/AdminFiles";
-import { AdminAIDashboard } from "@/components/admin/modules/AdminAIDashboard";
-import { AdminTeamManagement } from "@/components/admin/modules/AdminTeamManagement";
-import { AdminSuperAdmin } from "@/components/admin/modules/AdminSuperAdmin";
-import { AdminPluginsManagement } from "@/components/admin/modules/AdminPluginsManagement";
-import AdminTenantManagement from "@/components/admin/modules/AdminTenantManagement";
-import AdminPricingManagement from "@/components/admin/modules/AdminPricingManagement";
-import AdminOnboardingTracker from "@/components/admin/modules/AdminOnboardingTracker";
-import { AdminTenantBilling } from "@/components/admin/modules/AdminTenantBilling";
-import { AdminRevenueAnalytics } from "@/components/admin/modules/AdminRevenueAnalytics";
-import { AdminSystemHealth } from "@/components/admin/modules/AdminSystemHealth";
-import { AdminPipelineManagement } from "@/components/admin/modules/AdminPipelineManagement";
-import { AdminThreatDetection } from "@/components/admin/modules/AdminThreatDetection";
-import { AdminCloudResources } from "@/components/admin/modules/AdminCloudResources";
-import { AdminAccessControl } from "@/components/admin/modules/AdminAccessControl";
-import { AdminEmailCampaigns } from "@/components/admin/modules/AdminEmailCampaigns";
-import { AdminLeadScoring } from "@/components/admin/modules/AdminLeadScoring";
-import { AdminAPIGateway } from "@/components/admin/modules/AdminAPIGateway";
-import { AdminDatabaseStatus } from "@/components/admin/modules/AdminDatabaseStatus";
-import { AdminClientHealth } from "@/components/admin/modules/AdminClientHealth";
-import { AdminConversionFunnels } from "@/components/admin/modules/AdminConversionFunnels";
-import { AdminProjectTimeline } from "@/components/admin/modules/AdminProjectTimeline";
-import { AdminVideoConference } from "@/components/admin/modules/AdminVideoConference";
-import { AdminRolesPermissions } from "@/components/admin/modules/AdminRolesPermissions";
-import { AdminBackupRecovery } from "@/components/admin/modules/AdminBackupRecovery";
-import { AdminAPIKeysWebhooks } from "@/components/admin/modules/AdminAPIKeysWebhooks";
-import { AdminLiveChat } from "@/components/admin/modules/AdminLiveChat";
-import { AdminAIUsage } from "@/components/admin/modules/AdminAIUsage";
-import { AdminAIModels } from "@/components/admin/modules/AdminAIModels";
-import { AdminAutomationLogs } from "@/components/admin/modules/AdminAutomationLogs";
-import { AdminServerHealth } from "@/components/admin/modules/AdminServerHealth";
-import { AdminFeatureFlags } from "@/components/admin/modules/AdminFeatureFlags";
-import { AdminNotificationSystem } from "@/components/admin/AdminNotificationSystem";
-import { AdminNotificationPreferences } from "@/components/admin/AdminNotificationPreferences";
+import { AdminDashboardSkeleton, AdminTableSkeleton } from "@/components/admin/AdminCardSkeleton";
 import { Loader2 } from "lucide-react";
+
+// Lazy load all admin modules for code splitting
+const AdminOverview = lazy(() => import("@/components/admin/AdminOverview").then(m => ({ default: m.AdminOverview })));
+const AdminQuotes = lazy(() => import("@/components/admin/AdminQuotes").then(m => ({ default: m.AdminQuotes })));
+const AdminInvoices = lazy(() => import("@/components/admin/AdminInvoices").then(m => ({ default: m.AdminInvoices })));
+const AdminUsers = lazy(() => import("@/components/admin/AdminUsers").then(m => ({ default: m.AdminUsers })));
+const AdminInquiries = lazy(() => import("@/components/admin/AdminInquiries").then(m => ({ default: m.AdminInquiries })));
+const AdminSettings = lazy(() => import("@/components/admin/AdminSettings").then(m => ({ default: m.AdminSettings })));
+const AdminAnalytics = lazy(() => import("@/components/admin/modules/AdminAnalytics").then(m => ({ default: m.AdminAnalytics })));
+const AdminAnalyticsDashboard = lazy(() => import("@/components/admin/modules/AdminAnalyticsDashboard").then(m => ({ default: m.AdminAnalyticsDashboard })));
+const AdminABTesting = lazy(() => import("@/components/admin/modules/AdminABTesting").then(m => ({ default: m.AdminABTesting })));
+const AdminABResults = lazy(() => import("@/components/admin/modules/AdminABResults").then(m => ({ default: m.AdminABResults })));
+const AdminPredictiveAnalytics = lazy(() => import("@/components/admin/modules/AdminPredictiveAnalytics").then(m => ({ default: m.AdminPredictiveAnalytics })));
+const AdminOnboardingApprovals = lazy(() => import("@/components/admin/modules/AdminOnboardingApprovals").then(m => ({ default: m.AdminOnboardingApprovals })));
+const AdminAuditLogs = lazy(() => import("@/components/admin/modules/AdminAuditLogs").then(m => ({ default: m.AdminAuditLogs })));
+const AdminClientNotices = lazy(() => import("@/components/admin/modules/AdminClientNotices").then(m => ({ default: m.AdminClientNotices })));
+const AdminCompliance = lazy(() => import("@/components/admin/modules/AdminCompliance").then(m => ({ default: m.AdminCompliance })));
+const AdminSystemLogs = lazy(() => import("@/components/admin/modules/AdminSystemLogs").then(m => ({ default: m.AdminSystemLogs })));
+const AdminIntegrations = lazy(() => import("@/components/admin/modules/AdminIntegrations").then(m => ({ default: m.AdminIntegrations })));
+const AdminPortalSettings = lazy(() => import("@/components/admin/modules/AdminPortalSettings").then(m => ({ default: m.AdminPortalSettings })));
+const AdminCRM = lazy(() => import("@/components/admin/modules/AdminCRM").then(m => ({ default: m.AdminCRM })));
+const AdminClickstream = lazy(() => import("@/components/admin/modules/AdminClickstream").then(m => ({ default: m.AdminClickstream })));
+const AdminMSPMonitoring = lazy(() => import("@/components/admin/modules/AdminMSPMonitoring").then(m => ({ default: m.AdminMSPMonitoring })));
+const AdminMarketing = lazy(() => import("@/components/admin/modules/AdminMarketing").then(m => ({ default: m.AdminMarketing })));
+const AdminProjects = lazy(() => import("@/components/admin/modules/AdminProjects").then(m => ({ default: m.AdminProjects })));
+const AdminTickets = lazy(() => import("@/components/admin/modules/AdminTickets").then(m => ({ default: m.AdminTickets })));
+const AdminMeetings = lazy(() => import("@/components/admin/modules/AdminMeetings").then(m => ({ default: m.AdminMeetings })));
+const AdminFiles = lazy(() => import("@/components/admin/modules/AdminFiles").then(m => ({ default: m.AdminFiles })));
+const AdminAIDashboard = lazy(() => import("@/components/admin/modules/AdminAIDashboard").then(m => ({ default: m.AdminAIDashboard })));
+const AdminTeamManagement = lazy(() => import("@/components/admin/modules/AdminTeamManagement").then(m => ({ default: m.AdminTeamManagement })));
+const AdminSuperAdmin = lazy(() => import("@/components/admin/modules/AdminSuperAdmin").then(m => ({ default: m.AdminSuperAdmin })));
+const AdminPluginsManagement = lazy(() => import("@/components/admin/modules/AdminPluginsManagement").then(m => ({ default: m.AdminPluginsManagement })));
+const AdminTenantManagement = lazy(() => import("@/components/admin/modules/AdminTenantManagement"));
+const AdminPricingManagement = lazy(() => import("@/components/admin/modules/AdminPricingManagement"));
+const AdminOnboardingTracker = lazy(() => import("@/components/admin/modules/AdminOnboardingTracker"));
+const AdminTenantBilling = lazy(() => import("@/components/admin/modules/AdminTenantBilling").then(m => ({ default: m.AdminTenantBilling })));
+const AdminRevenueAnalytics = lazy(() => import("@/components/admin/modules/AdminRevenueAnalytics").then(m => ({ default: m.AdminRevenueAnalytics })));
+const AdminSystemHealth = lazy(() => import("@/components/admin/modules/AdminSystemHealth").then(m => ({ default: m.AdminSystemHealth })));
+const AdminPipelineManagement = lazy(() => import("@/components/admin/modules/AdminPipelineManagement").then(m => ({ default: m.AdminPipelineManagement })));
+const AdminThreatDetection = lazy(() => import("@/components/admin/modules/AdminThreatDetection").then(m => ({ default: m.AdminThreatDetection })));
+const AdminCloudResources = lazy(() => import("@/components/admin/modules/AdminCloudResources").then(m => ({ default: m.AdminCloudResources })));
+const AdminAccessControl = lazy(() => import("@/components/admin/modules/AdminAccessControl").then(m => ({ default: m.AdminAccessControl })));
+const AdminEmailCampaigns = lazy(() => import("@/components/admin/modules/AdminEmailCampaigns").then(m => ({ default: m.AdminEmailCampaigns })));
+const AdminLeadScoring = lazy(() => import("@/components/admin/modules/AdminLeadScoring").then(m => ({ default: m.AdminLeadScoring })));
+const AdminAPIGateway = lazy(() => import("@/components/admin/modules/AdminAPIGateway").then(m => ({ default: m.AdminAPIGateway })));
+const AdminDatabaseStatus = lazy(() => import("@/components/admin/modules/AdminDatabaseStatus").then(m => ({ default: m.AdminDatabaseStatus })));
+const AdminClientHealth = lazy(() => import("@/components/admin/modules/AdminClientHealth").then(m => ({ default: m.AdminClientHealth })));
+const AdminConversionFunnels = lazy(() => import("@/components/admin/modules/AdminConversionFunnels").then(m => ({ default: m.AdminConversionFunnels })));
+const AdminProjectTimeline = lazy(() => import("@/components/admin/modules/AdminProjectTimeline").then(m => ({ default: m.AdminProjectTimeline })));
+const AdminVideoConference = lazy(() => import("@/components/admin/modules/AdminVideoConference").then(m => ({ default: m.AdminVideoConference })));
+const AdminRolesPermissions = lazy(() => import("@/components/admin/modules/AdminRolesPermissions").then(m => ({ default: m.AdminRolesPermissions })));
+const AdminBackupRecovery = lazy(() => import("@/components/admin/modules/AdminBackupRecovery").then(m => ({ default: m.AdminBackupRecovery })));
+const AdminAPIKeysWebhooks = lazy(() => import("@/components/admin/modules/AdminAPIKeysWebhooks").then(m => ({ default: m.AdminAPIKeysWebhooks })));
+const AdminLiveChat = lazy(() => import("@/components/admin/modules/AdminLiveChat").then(m => ({ default: m.AdminLiveChat })));
+const AdminAIUsage = lazy(() => import("@/components/admin/modules/AdminAIUsage").then(m => ({ default: m.AdminAIUsage })));
+const AdminAIModels = lazy(() => import("@/components/admin/modules/AdminAIModels").then(m => ({ default: m.AdminAIModels })));
+const AdminAutomationLogs = lazy(() => import("@/components/admin/modules/AdminAutomationLogs").then(m => ({ default: m.AdminAutomationLogs })));
+const AdminServerHealth = lazy(() => import("@/components/admin/modules/AdminServerHealth").then(m => ({ default: m.AdminServerHealth })));
+const AdminFeatureFlags = lazy(() => import("@/components/admin/modules/AdminFeatureFlags").then(m => ({ default: m.AdminFeatureFlags })));
+const AdminNotificationSystem = lazy(() => import("@/components/admin/AdminNotificationSystem").then(m => ({ default: m.AdminNotificationSystem })));
+const AdminNotificationPreferences = lazy(() => import("@/components/admin/AdminNotificationPreferences").then(m => ({ default: m.AdminNotificationPreferences })));
+
+// Loading fallback based on route type
+const getLoadingFallback = (path: string) => {
+  // Dashboard-style pages
+  if (path === "/admin" || path.includes("analytics") || path.includes("health") || path.includes("overview")) {
+    return <AdminDashboardSkeleton />;
+  }
+  // Table-heavy pages
+  return <AdminTableSkeleton rows={8} />;
+};
 
 const AdminPage = () => {
   const navigate = useNavigate();
@@ -182,7 +195,9 @@ const AdminPage = () => {
 
   return (
     <AdminLayout>
-      {renderContent()}
+      <Suspense fallback={getLoadingFallback(location.pathname)}>
+        {renderContent()}
+      </Suspense>
     </AdminLayout>
   );
 };
