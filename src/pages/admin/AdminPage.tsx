@@ -57,6 +57,7 @@ import { AdminAutomationLogs } from "@/components/admin/modules/AdminAutomationL
 import { AdminServerHealth } from "@/components/admin/modules/AdminServerHealth";
 import { AdminFeatureFlags } from "@/components/admin/modules/AdminFeatureFlags";
 import { AdminNotificationSystem } from "@/components/admin/AdminNotificationSystem";
+import { AdminNotificationPreferences } from "@/components/admin/AdminNotificationPreferences";
 import { Loader2 } from "lucide-react";
 
 const AdminPage = () => {
@@ -164,6 +165,7 @@ const AdminPage = () => {
     if (path.startsWith("/admin/logs")) return <AdminSystemLogs />;
     if (path.startsWith("/admin/backup")) return <AdminBackupRecovery />;
     if (path.startsWith("/admin/super")) return <AdminSuperAdmin />;
+    if (path.startsWith("/admin/notifications/preferences")) return <AdminNotificationPreferences />;
     if (path.startsWith("/admin/notifications")) return <AdminNotificationSystem />;
     if (path.startsWith("/admin/settings")) return <AdminSettings />;
     

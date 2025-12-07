@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -11,7 +11,7 @@ import {
   Bell, Send, Mail, MessageSquare, AlertTriangle, 
   CheckCircle, XCircle, Clock, Filter, Plus, Trash2,
   Settings, Eye, Users, Globe, Smartphone, RefreshCw,
-  Volume2, VolumeX, BellRing, Archive
+  Volume2, VolumeX, BellRing, Archive, BellOff
 } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -27,6 +27,8 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { supabase } from "@/integrations/supabase/client";
+import { usePushNotifications } from "@/hooks/usePushNotifications";
+import { useNotificationSound } from "@/hooks/useNotificationSound";
 
 // Types
 interface Notification {
@@ -73,6 +75,45 @@ export const AdminNotificationSystem: React.FC = () => {
   const [emailEnabled, setEmailEnabled] = useState(true);
   const [soundEnabled, setSoundEnabled] = useState(true);
 
+  // Push notification hook
+  const {
+    isSupported: pushSupported,
+    permission: pushPermission,
+    isSubscribed,
+    subscribe: subscribePush,
+    unsubscribe: unsubscribePush,
+    showLocalNotification,
+    isLoading: pushLoading
+  } = usePushNotifications();
+
+  // Sound hook
+  const { playDefaultSound, playSuccessSound } = useNotificationSound({ 
+    volume: 0.5, 
+    enabled: soundEnabled 
+  });
+
+  // Handle new notification with sound and desktop alert
+  const handleNewNotification = useCallback(async (notification: any) => {
+    // Play notification sound
+    if (soundEnabled) {
+      playDefaultSound();
+    }
+
+    // Show toast notification
+    toast.info(notification.title, {
+      description: notification.message,
+    });
+
+    // Show desktop notification if push is enabled and subscribed
+    if (pushEnabled && isSubscribed && pushPermission === 'granted') {
+      await showLocalNotification(notification.title, {
+        body: notification.message,
+        tag: `admin-notification-${notification.id}`,
+        requireInteraction: notification.notification_type === 'error' || notification.notification_type === 'warning'
+      });
+    }
+  }, [soundEnabled, pushEnabled, isSubscribed, pushPermission, playDefaultSound, showLocalNotification]);
+
   // Fetch notifications
   useEffect(() => {
     fetchNotifications();
@@ -91,13 +132,7 @@ export const AdminNotificationSystem: React.FC = () => {
           console.log('Real-time notification update:', payload);
           if (payload.eventType === 'INSERT') {
             setNotifications(prev => [payload.new as Notification, ...prev]);
-            if (soundEnabled) {
-              // Play notification sound
-              playNotificationSound();
-            }
-            toast.info(payload.new.title, {
-              description: payload.new.message,
-            });
+            handleNewNotification(payload.new);
           } else if (payload.eventType === 'DELETE') {
             setNotifications(prev => prev.filter(n => n.id !== payload.old.id));
           } else if (payload.eventType === 'UPDATE') {
@@ -112,7 +147,7 @@ export const AdminNotificationSystem: React.FC = () => {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [soundEnabled]);
+  }, [handleNewNotification]);
 
   const fetchNotifications = async () => {
     setLoading(true);
@@ -131,13 +166,16 @@ export const AdminNotificationSystem: React.FC = () => {
     setLoading(false);
   };
 
-  const playNotificationSound = () => {
-    try {
-      const audio = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdH2Onq+2ubSwpJqNgXVqY11ZWFxiaXN/iquwtbOxrqilnpaNgXVpXlRQTU1PVl5odoSRoa2xtbOxraqjmY6Bd2xhWFBMSkxPVl1meIOPnKmxt7m3sq2mnpGFd2thWVJOTU5RV19qeImWo622ub27t7GqopaJfnJoYFhST05PUlhfaHaEkZ+qt7y+vLi0rqabj4N3bWReWVZVVllganmGk5+qt7y/vby4sqykl4uAdGtiXFlXWFphanyIlZ+qtry+vr28t7Gpo5eKfnJpYl1aWVpdZXF+ipensLi9v8C+urStpZmOg3htZV9cW1xfZW55hpKdqbO6vcDAvrq2r6iglYl+c2tkX11cXWFndYGNmKSvuL3Awb++u7WuqKCVin5zaWNfXV1fY2l2gY2YpK+4vb/AwL68t7GqpJqPg3htZWBdXV9ja3eCjpmlsLm+wMDAv7y3saumm5CEdmxlYF5dX2JoeYWQm6exuLzAwMC/vbm0rqihlo2Bd2xkYF5dX2Fnc4CKlqCrtbq+wMDAv7y4tK+qo5iNgXVrYl9dXF5iZ3N/i5airbW6vcDAwL++ura');
-      audio.volume = 0.3;
-      audio.play().catch(() => {});
-    } catch (e) {
-      console.log('Could not play notification sound');
+  // Handle push subscription toggle
+  const handlePushToggle = async () => {
+    if (isSubscribed) {
+      await unsubscribePush();
+      toast.success('Push notifications unsubscribed');
+    } else {
+      await subscribePush();
+      if (pushPermission === 'granted') {
+        toast.success('Push notifications enabled');
+      }
     }
   };
 
@@ -561,48 +599,144 @@ export const AdminNotificationSystem: React.FC = () => {
         </TabsContent>
 
         <TabsContent value="settings" className="space-y-4">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Push Notifications Card */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <BellRing className="w-5 h-5 text-primary" />
+                  Push Notifications
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
+                  <div>
+                    <p className="font-medium">Browser Status</p>
+                    <p className="text-sm text-muted-foreground">
+                      {!pushSupported ? 'Not supported' :
+                       pushPermission === 'granted' ? 'Enabled' :
+                       pushPermission === 'denied' ? 'Blocked' : 'Not set'}
+                    </p>
+                  </div>
+                  <Badge variant={
+                    !pushSupported ? 'secondary' :
+                    pushPermission === 'granted' ? 'default' :
+                    pushPermission === 'denied' ? 'destructive' : 'outline'
+                  }>
+                    {pushPermission === 'granted' ? 'Active' : 
+                     pushPermission === 'denied' ? 'Blocked' : 'Inactive'}
+                  </Badge>
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 rounded-lg bg-primary/10">
+                      <Smartphone className="w-5 h-5 text-primary" />
+                    </div>
+                    <div>
+                      <p className="font-medium">Enable Push</p>
+                      <p className="text-sm text-muted-foreground">Receive browser notifications</p>
+                    </div>
+                  </div>
+                  <Switch checked={pushEnabled} onCheckedChange={setPushEnabled} />
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="font-medium">Subscription Status</p>
+                    <p className="text-sm text-muted-foreground">
+                      {isSubscribed ? 'Subscribed to push' : 'Not subscribed'}
+                    </p>
+                  </div>
+                  <Button 
+                    variant={isSubscribed ? 'destructive' : 'default'}
+                    size="sm"
+                    onClick={handlePushToggle}
+                    disabled={pushLoading || !pushSupported || pushPermission === 'denied'}
+                  >
+                    {pushLoading ? <RefreshCw className="w-4 h-4 animate-spin" /> :
+                     isSubscribed ? <><BellOff className="w-4 h-4 mr-1" /> Unsubscribe</> :
+                     <><Bell className="w-4 h-4 mr-1" /> Subscribe</>}
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Other Settings Card */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Settings className="w-5 h-5 text-muted-foreground" />
+                  General Settings
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 rounded-lg bg-green-500/10">
+                      <Mail className="w-5 h-5 text-green-500" />
+                    </div>
+                    <div>
+                      <p className="font-medium">Email Notifications</p>
+                      <p className="text-sm text-muted-foreground">Receive email alerts</p>
+                    </div>
+                  </div>
+                  <Switch checked={emailEnabled} onCheckedChange={setEmailEnabled} />
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 rounded-lg bg-purple-500/10">
+                      {soundEnabled ? <Volume2 className="w-5 h-5 text-purple-500" /> : <VolumeX className="w-5 h-5 text-purple-500" />}
+                    </div>
+                    <div>
+                      <p className="font-medium">Notification Sound</p>
+                      <p className="text-sm text-muted-foreground">Play sound for new alerts</p>
+                    </div>
+                  </div>
+                  <Switch checked={soundEnabled} onCheckedChange={setSoundEnabled} />
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 rounded-lg bg-orange-500/10">
+                      <Bell className="w-5 h-5 text-orange-500" />
+                    </div>
+                    <div>
+                      <p className="font-medium">Desktop Toasts</p>
+                      <p className="text-sm text-muted-foreground">Show in-app notifications</p>
+                    </div>
+                  </div>
+                  <Switch checked={true} disabled />
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Test Notification */}
           <Card>
-            <CardHeader>
-              <CardTitle>Notification Preferences</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-6">
+            <CardContent className="p-4">
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 rounded-lg bg-primary/10">
-                    <Smartphone className="w-5 h-5 text-primary" />
-                  </div>
-                  <div>
-                    <p className="font-medium">Push Notifications</p>
-                    <p className="text-sm text-muted-foreground">Receive browser push notifications</p>
-                  </div>
+                <div>
+                  <p className="font-medium">Test Notifications</p>
+                  <p className="text-sm text-muted-foreground">Send a test notification to verify your settings</p>
                 </div>
-                <Switch checked={pushEnabled} onCheckedChange={setPushEnabled} />
-              </div>
-
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 rounded-lg bg-green-500/10">
-                    <Mail className="w-5 h-5 text-green-500" />
-                  </div>
-                  <div>
-                    <p className="font-medium">Email Notifications</p>
-                    <p className="text-sm text-muted-foreground">Receive email alerts for important events</p>
-                  </div>
-                </div>
-                <Switch checked={emailEnabled} onCheckedChange={setEmailEnabled} />
-              </div>
-
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 rounded-lg bg-purple-500/10">
-                    {soundEnabled ? <Volume2 className="w-5 h-5 text-purple-500" /> : <VolumeX className="w-5 h-5 text-purple-500" />}
-                  </div>
-                  <div>
-                    <p className="font-medium">Notification Sound</p>
-                    <p className="text-sm text-muted-foreground">Play sound for new notifications</p>
-                  </div>
-                </div>
-                <Switch checked={soundEnabled} onCheckedChange={setSoundEnabled} />
+                <Button 
+                  variant="outline"
+                  onClick={async () => {
+                    playSuccessSound();
+                    toast.success('Test notification', { description: 'Your notification settings are working!' });
+                    if (isSubscribed && pushPermission === 'granted') {
+                      await showLocalNotification('Test Notification', {
+                        body: 'This is a test push notification from ATLAS Admin',
+                        tag: 'test-notification'
+                      });
+                    }
+                  }}
+                >
+                  <Bell className="w-4 h-4 mr-2" />
+                  Send Test
+                </Button>
               </div>
             </CardContent>
           </Card>
