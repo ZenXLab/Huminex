@@ -22,22 +22,72 @@ export const HeroSection = ({ onQuoteClick }: HeroSectionProps) => {
 
       <div className="container mx-auto px-4 lg:px-8 relative z-10">
         <div className="max-w-5xl mx-auto text-center">
-          {/* Logo Icon */}
-          <div className="flex justify-center mb-8 animate-fade-in-up">
-            <div className="relative">
-              <div className="absolute inset-0 blur-3xl bg-primary/20 rounded-full animate-pulse-glow" />
-              <img 
-                src={cropxonIcon} 
-                alt="CropXon" 
-                className="relative h-28 w-28 object-contain animate-float"
-              />
+          {/* Animated ATLAS Logo & Name */}
+          <div className="flex flex-col items-center justify-center mb-10 animate-fade-in-up">
+            <div className="relative group">
+              {/* Outer glow ring */}
+              <div className="absolute inset-0 rounded-full bg-gradient-to-r from-primary via-accent to-primary opacity-20 blur-2xl animate-pulse-glow scale-150" />
+              
+              {/* Spinning ring */}
+              <div className="absolute inset-[-12px] rounded-full border-2 border-dashed border-primary/30 animate-[spin_20s_linear_infinite]" />
+              <div className="absolute inset-[-24px] rounded-full border border-accent/20 animate-[spin_30s_linear_infinite_reverse]" />
+              
+              {/* Logo container with spin animation on hover */}
+              <div className="relative w-28 h-28 sm:w-32 sm:h-32 flex items-center justify-center">
+                <div className="absolute inset-0 rounded-full bg-gradient-to-br from-primary/20 to-accent/20 animate-[spin_8s_ease-in-out_infinite]" />
+                <img 
+                  src={cropxonIcon} 
+                  alt="ATLAS" 
+                  className="relative h-20 w-20 sm:h-24 sm:w-24 object-contain animate-float drop-shadow-2xl z-10 group-hover:scale-110 transition-transform duration-500"
+                />
+              </div>
+
+              {/* Orbiting dots */}
+              <div className="absolute inset-0 animate-[spin_10s_linear_infinite]">
+                <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-2 w-2 h-2 rounded-full bg-primary shadow-lg shadow-primary/50" />
+              </div>
+              <div className="absolute inset-0 animate-[spin_15s_linear_infinite_reverse]">
+                <div className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-2 w-1.5 h-1.5 rounded-full bg-accent shadow-lg shadow-accent/50" />
+              </div>
+            </div>
+
+            {/* Animated ATLAS Text */}
+            <div className="mt-8 relative">
+              <h2 className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-heading font-black tracking-tighter">
+                <span className="inline-block relative">
+                  {/* Background glow text */}
+                  <span className="absolute inset-0 text-primary/20 blur-xl animate-pulse">ATLAS</span>
+                  
+                  {/* Main gradient text with letter animation */}
+                  <span className="relative bg-clip-text text-transparent bg-gradient-to-r from-primary via-accent to-primary bg-[length:200%_auto] animate-[shimmer_3s_linear_infinite]">
+                    {'ATLAS'.split('').map((letter, index) => (
+                      <span 
+                        key={index}
+                        className="inline-block hover:scale-110 hover:-translate-y-1 transition-transform duration-300 cursor-default"
+                        style={{ 
+                          animationDelay: `${index * 100}ms`,
+                          animation: 'fade-in-up 0.5s ease-out forwards',
+                          opacity: 0
+                        }}
+                      >
+                        {letter}
+                      </span>
+                    ))}
+                  </span>
+                </span>
+              </h2>
+              
+              {/* Subtitle with typewriter effect */}
+              <p className="mt-3 text-sm sm:text-base text-muted-foreground font-medium tracking-[0.3em] uppercase">
+                Workforce Operating System
+              </p>
             </div>
           </div>
 
           {/* Main Headline */}
-          <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-heading font-extrabold tracking-tight mb-6 animate-fade-in-up">
+          <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-heading font-extrabold tracking-tight mb-6 animate-fade-in-up animation-delay-200">
             <span className="text-gradient">From Hire to Retire</span>
-            <span className="block text-xl sm:text-2xl md:text-3xl lg:text-4xl mt-3 font-medium text-foreground/90">
+            <span className="block text-lg sm:text-xl md:text-2xl lg:text-3xl mt-3 font-medium text-foreground/90">
               And Everything in Between
             </span>
           </h1>

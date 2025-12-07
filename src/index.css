@@ -267,6 +267,24 @@
     }
   }
 
+  @keyframes spin {
+    from {
+      transform: rotate(0deg);
+    }
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  @keyframes spin-reverse {
+    from {
+      transform: rotate(360deg);
+    }
+    to {
+      transform: rotate(0deg);
+    }
+  }
+
   .animate-fade-in-up {
     animation: fade-in-up 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards;
   }

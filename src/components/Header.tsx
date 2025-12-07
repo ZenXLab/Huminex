@@ -23,12 +23,15 @@ import {
   Mail,
   DollarSign,
   Sparkles,
+  Sun,
+  Moon,
   type LucideIcon
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import cropxonIcon from "@/assets/cropxon-icon.png";
 import { useAuth } from "@/hooks/useAuth";
+import { useTheme } from "@/hooks/useTheme";
 
 interface HeaderProps {
   onQuoteClick?: () => void;
@@ -69,6 +72,7 @@ export const Header = ({ onQuoteClick }: HeaderProps) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
   const { user, signOut } = useAuth();
+  const { theme, toggleTheme } = useTheme();
 
   const renderDropdownItem = (item: MenuItem, index: number) => {
     const Icon = item.icon;
@@ -252,6 +256,31 @@ export const Header = ({ onQuoteClick }: HeaderProps) => {
 
           {/* CTA Buttons */}
           <div className="hidden lg:flex items-center gap-2">
+            {/* Dark Mode Toggle */}
+            <button
+              onClick={toggleTheme}
+              className="relative p-2.5 rounded-xl bg-secondary/50 hover:bg-secondary transition-all duration-300 group overflow-hidden"
+              aria-label={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}
+            >
+              <div className="relative w-5 h-5">
+                <Sun 
+                  className={`absolute inset-0 w-5 h-5 text-amber-500 transition-all duration-500 ${
+                    theme === 'light' 
+                      ? 'rotate-0 scale-100 opacity-100' 
+                      : 'rotate-90 scale-0 opacity-0'
+                  }`} 
+                />
+                <Moon 
+                  className={`absolute inset-0 w-5 h-5 text-primary transition-all duration-500 ${
+                    theme === 'dark' 
+                      ? 'rotate-0 scale-100 opacity-100' 
+                      : '-rotate-90 scale-0 opacity-0'
+                  }`} 
+                />
+              </div>
+              <div className="absolute inset-0 bg-gradient-to-r from-primary/0 via-primary/10 to-primary/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700" />
+            </button>
+
             {user ? (
               <>
                 <Link to="/dashboard">
@@ -356,7 +385,23 @@ export const Header = ({ onQuoteClick }: HeaderProps) => {
               </div>
               {company.map(renderMobileMenuItem)}
 
-              <div className="pt-4 px-4 space-y-2 border-t border-border/40 mt-4">
+              {/* Mobile Dark Mode Toggle */}
+              <div className="px-4 py-3 flex items-center justify-between border-t border-border/40 mt-4">
+                <span className="text-sm font-medium text-foreground/70">Theme</span>
+                <button
+                  onClick={toggleTheme}
+                  className="relative flex items-center gap-2 px-4 py-2 rounded-xl bg-secondary/50 hover:bg-secondary transition-all duration-300"
+                  aria-label={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}
+                >
+                  <Sun className={`w-4 h-4 transition-all duration-300 ${theme === 'light' ? 'text-amber-500' : 'text-muted-foreground'}`} />
+                  <div className={`w-10 h-5 rounded-full transition-colors duration-300 ${theme === 'dark' ? 'bg-primary' : 'bg-muted'} relative`}>
+                    <div className={`absolute top-0.5 w-4 h-4 rounded-full bg-white shadow-sm transition-transform duration-300 ${theme === 'dark' ? 'translate-x-5' : 'translate-x-0.5'}`} />
+                  </div>
+                  <Moon className={`w-4 h-4 transition-all duration-300 ${theme === 'dark' ? 'text-primary' : 'text-muted-foreground'}`} />
+                </button>
+              </div>
+
+              <div className="pt-4 px-4 space-y-2">
                 {user ? (
                   <>
                     <Link to="/dashboard" onClick={() => setMobileMenuOpen(false)}>
