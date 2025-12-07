@@ -17,3 +17,15 @@ verify_jwt = false
 
 [functions.send-bulk-notifications]
 verify_jwt = false
+
+[functions.shift-scheduler]
+verify_jwt = false
+
+[functions.shift-swap-workflow]
+verify_jwt = false
+
+[functions.overtime-calculator]
+verify_jwt = false
+
+[functions.geofence-attendance]
+verify_jwt = false

@@ -23,7 +23,7 @@ This guide covers the complete setup and deployment of the ATLAS Workforce Opera
 | **Database Tables** | 52 | 35 core + 7 operational + 5 HR + 5 shift/geofencing |
 | **Database Functions** | 7 | Generators + feature checks |
 | **Database Triggers** | 2 | Profile creation, feature unlock |
-| **Edge Functions** | 15 | 6 deployed, 9 documented |
+| **Edge Functions** | 15 | 10 deployed, 5 documented |
 | **Storage Buckets** | 1 | client-files |
 | **Secrets** | 6 | Supabase + Resend |
 | **Enums/Types** | 15 | RBAC, status workflows, notifications, shift, geofencing |

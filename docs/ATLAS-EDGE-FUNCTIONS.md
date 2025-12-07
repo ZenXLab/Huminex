@@ -13,8 +13,9 @@
 | **Database Tables** | 52 | 35 core + 7 operational + 5 HR + 5 shift/geofencing |
 | **Database Functions** | 7 | 6 generators + 1 feature check |
 | **Database Triggers** | 2 | Profile creation + feature unlock notification |
-| **Edge Functions (Deployed)** | 6 | Notifications, emails, PDF generation |
-| **Edge Functions (Documented)** | 15 | Including payroll, BGV, SSO, insurance, document verification |
+| **Edge Functions (Deployed)** | 10 | 6 notifications/email + 4 shift/geofence |
+| **Edge Functions (Documented)** | 5 | Payroll, BGV, SSO, insurance, document verification |
+| **Total Edge Functions** | 15 | Complete operational coverage |
 | **Storage Buckets** | 1 | client-files |
 | **Secrets Configured** | 6 | SUPABASE_URL, SUPABASE_ANON_KEY, SUPABASE_SERVICE_ROLE_KEY, RESEND_API_KEY, SUPABASE_DB_URL, SUPABASE_PUBLISHABLE_KEY |
 | **Enums/Types** | 15 | app_role, quote_status, invoice_status, feature_category, feature_tier, tenant_role, notification_type, notification_channel, notification_priority, shift_status, shift_assignment_status, shift_swap_status, overtime_type, geofence_zone_type, + HR enums |
