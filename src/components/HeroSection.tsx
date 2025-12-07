@@ -53,32 +53,21 @@ export const HeroSection = ({ onQuoteClick }: HeroSectionProps) => {
 
             {/* Animated ATLAS Text */}
             <div className="mt-8 relative">
-              <h2 className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-heading font-black tracking-tighter">
-                <span className="inline-block relative">
-                  {/* Background glow text */}
-                  <span className="absolute inset-0 text-primary/20 blur-xl animate-pulse">ATLAS</span>
-                  
-                  {/* Main gradient text with letter animation */}
-                  <span className="relative bg-clip-text text-transparent bg-gradient-to-r from-primary via-accent to-primary bg-[length:200%_auto] animate-[shimmer_3s_linear_infinite]">
-                    {'ATLAS'.split('').map((letter, index) => (
-                      <span 
-                        key={index}
-                        className="inline-block hover:scale-110 hover:-translate-y-1 transition-transform duration-300 cursor-default"
-                        style={{ 
-                          animationDelay: `${index * 100}ms`,
-                          animation: 'fade-in-up 0.5s ease-out forwards',
-                          opacity: 0
-                        }}
-                      >
-                        {letter}
-                      </span>
-                    ))}
+              {/* ATLAS Name with Glow */}
+              <div className="relative inline-block">
+                {/* Background glow */}
+                <div className="absolute inset-0 blur-2xl bg-gradient-to-r from-primary/30 via-accent/30 to-primary/30 animate-pulse" />
+                
+                {/* Main ATLAS text */}
+                <h2 className="relative text-6xl sm:text-7xl md:text-8xl lg:text-9xl font-heading font-black tracking-tight">
+                  <span className="bg-gradient-to-r from-primary via-accent to-primary bg-clip-text text-transparent bg-[length:200%_auto] animate-shimmer">
+                    ATLAS
                   </span>
-                </span>
-              </h2>
+                </h2>
+              </div>
               
-              {/* Subtitle with typewriter effect */}
-              <p className="mt-3 text-sm sm:text-base text-muted-foreground font-medium tracking-[0.3em] uppercase">
+              {/* Subtitle */}
+              <p className="mt-4 text-base sm:text-lg md:text-xl text-muted-foreground font-medium tracking-[0.25em] uppercase">
                 Workforce Operating System
               </p>
             </div>
