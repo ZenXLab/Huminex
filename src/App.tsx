@@ -15,6 +15,8 @@ import Contact from "./pages/Contact";
 import Industries from "./pages/Industries";
 import IndustryDetail from "./pages/industries/IndustryDetail";
 import GetQuote from "./pages/GetQuote";
+import Pricing from "./pages/Pricing";
+import Partners from "./pages/Partners";
 import Auth from "./pages/Auth";
 import Onboarding from "./pages/Onboarding";
 import Portal from "./pages/Portal";
@@ -82,6 +84,8 @@ const AnimatedRoutes = () => {
           <Route path="/industries" element={<Industries />} />
           <Route path="/industries/:slug" element={<IndustryDetail />} />
           <Route path="/get-quote" element={<GetQuote />} />
+          <Route path="/pricing" element={<Pricing />} />
+          <Route path="/partners" element={<Partners />} />
           <Route path="/auth" element={<Auth />} />
           <Route path="/onboarding" element={<Onboarding />} />
           
