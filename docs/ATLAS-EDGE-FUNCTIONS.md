@@ -6,25 +6,7 @@
 
 ---
 
-## Summary Statistics
-
-| Component | Count | Details |
-|-----------|-------|---------|
-| **Database Tables** | 52 | 35 core + 7 operational + 5 HR + 5 shift/geofencing |
-| **Database Functions** | 7 | 6 generators + 1 feature check |
-| **Database Triggers** | 2 | Profile creation + feature unlock notification |
-| **Edge Functions (Deployed)** | 10 | 6 notifications/email + 4 shift/geofence |
-| **Edge Functions (Documented)** | 5 | Payroll, BGV, SSO, insurance, document verification |
-| **Total Edge Functions** | 15 | Complete operational coverage |
-| **Storage Buckets** | 1 | client-files |
-| **Secrets Configured** | 6 | SUPABASE_URL, SUPABASE_ANON_KEY, SUPABASE_SERVICE_ROLE_KEY, RESEND_API_KEY, SUPABASE_DB_URL, SUPABASE_PUBLISHABLE_KEY |
-| **Enums/Types** | 15 | app_role, quote_status, invoice_status, feature_category, feature_tier, tenant_role, notification_type, notification_channel, notification_priority, shift_status, shift_assignment_status, shift_swap_status, overtime_type, geofence_zone_type, + HR enums |
-| **RLS Policies** | 75+ | Comprehensive row-level security across all tables |
-| **Database Indexes** | 50+ | Performance optimization indexes |
-
----
-
-## Edge Functions Summary Table (15 Functions)
+## Edge Functions Summary (15 Total)
 
 | # | Function Name | Status | Category | Purpose/Description |
 |---|---------------|--------|----------|---------------------|
@@ -48,70 +30,14 @@
 
 ---
 
-## Database Tables Summary (52 Tables)
+## Statistics
 
-| # | Table Name | Category | Purpose |
-|---|------------|----------|---------|
-| 1 | profiles | Core | User profile data (name, email, phone, company) |
-| 2 | user_roles | Core | User role assignments (admin, user) for RBAC |
-| 3 | client_tenants | Core | Organization/company tenant records |
-| 4 | client_tenant_users | Core | Maps users to their tenant memberships |
-| 5 | quotes | Sales & CRM | Service quotes with pricing, status, contact info |
-| 6 | invoices | Sales & CRM | Client invoices with amounts, due dates, status |
-| 7 | leads | Sales & CRM | Sales leads with scores, sources, conversion tracking |
-| 8 | inquiries | Sales & CRM | Contact form submissions and service inquiries |
-| 9 | onboarding_sessions | Onboarding | Client onboarding wizard progress and data |
-| 10 | client_onboarding | Onboarding | Simple onboarding requests (pre-approval stage) |
-| 11 | projects | Project Mgmt | Client projects with status, budget, timeline |
-| 12 | project_milestones | Project Mgmt | Project milestones with due dates and completion |
-| 13 | support_tickets | Support | Support tickets with priority, SLA, assignment |
-| 14 | ticket_messages | Support | Messages/replies within support tickets |
-| 15 | meetings | Communication | Scheduled meetings with clients and team |
-| 16 | client_files | File Mgmt | Client uploaded files with versioning |
-| 17 | client_feedback | Feedback | Client feedback ratings and comments |
-| 18 | client_msp_servers | MSP | Monitored servers for managed service clients |
-| 19 | client_msp_metrics | MSP | Server performance metrics (CPU, memory, disk) |
-| 20 | client_msp_alerts | MSP | Server alerts and incident notifications |
-| 21 | service_pricing | Pricing | Service pricing tiers and features |
-| 22 | service_addons | Pricing | Optional add-on services with pricing |
-| 23 | pricing_modifiers | Pricing | Industry/size pricing multipliers |
-| 24 | coupon_codes | Pricing | Discount coupons with usage limits |
-| 25 | admin_notifications | Admin | Admin-targeted notifications |
-| 26 | admin_settings | Admin | Platform-wide admin configuration |
-| 27 | portal_settings | Admin | Client portal configuration settings |
-| 28 | audit_logs | Logging | System audit trail for compliance |
-| 29 | system_logs | Logging | Application logs for debugging |
-| 30 | clickstream_events | Analytics | User interaction tracking for analytics |
-| 31 | api_usage | Analytics | API endpoint usage tracking |
-| 32 | team_members | Team | Internal team member profiles |
-| 33 | compliance_items | Compliance | Compliance checklist items and status |
-| 34 | integrations | Integrations | Third-party integration configurations |
-| 35 | client_notices | Communication | Announcements and notices for clients |
-| 36 | global_features | Features | Platform-wide feature definitions |
-| 37 | tenant_features | Features | Tenant-specific feature flags |
-| 38 | role_feature_defaults | Features | Default features by role |
-| 39 | employee_feature_access | Features | Individual employee feature permissions |
-| 40 | employee_notifications | Notifications | Employee notification records |
-| 41 | notification_preferences | Notifications | User notification channel preferences |
-| 42 | feature_unlock_log | Logging | Log of feature unlock events |
-| 43 | payroll_runs | Payroll | Monthly/weekly payroll processing runs |
-| 44 | payslips | Payroll | Individual employee payslips |
-| 45 | bgv_requests | BGV | Background verification requests |
-| 46 | sso_states | SSO | OAuth state tokens for SSO flows |
-| 47 | insurance_claims | Insurance | Employee insurance claim submissions |
-| 48 | document_verifications | Documents | Document verification requests and results |
-| 49 | document_extractions | Documents | OCR/data extraction from documents |
-| 50 | employees | HR | Employee master records with employment details |
-| 51 | attendance_records | HR | Daily attendance check-in/check-out records |
-| 52 | leave_types | HR | Leave type definitions (annual, sick, etc.) |
-| 53 | leave_balances | HR | Employee leave balance tracking |
-| 54 | leave_requests | HR | Leave application requests and approvals |
-| 55 | shifts | Shift Mgmt | Shift definitions with timing and settings |
-| 56 | shift_assignments | Shift Mgmt | Employee shift assignments |
-| 57 | shift_swap_requests | Shift Mgmt | Shift swap requests between employees |
-| 58 | overtime_records | Overtime | Overtime hours tracking with approval status |
-| 59 | geofence_zones | Geofencing | Office location geofence boundaries |
-| 60 | geofence_attendance_logs | Geofencing | GPS-validated attendance entries |
+| Metric | Count |
+|--------|-------|
+| **Total Edge Functions** | 15 |
+| **Deployed** | 10 |
+| **Documented (Pending)** | 5 |
+| **Required Secrets** | 4 (SUPABASE_URL, SUPABASE_ANON_KEY, SUPABASE_SERVICE_ROLE_KEY, RESEND_API_KEY) |
 
 ---
 
