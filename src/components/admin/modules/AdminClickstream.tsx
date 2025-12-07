@@ -8,7 +8,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { MousePointer, Eye, Link, BarChart3, Users, RefreshCw, Radio, FlaskConical, TrendingUp, Trash2, AlertTriangle, Download, FileSpreadsheet, ChevronDown, ChevronUp, Bell, Globe, Flame } from "lucide-react";
+import { MousePointer, Eye, Link, BarChart3, Users, RefreshCw, Radio, FlaskConical, TrendingUp, Trash2, AlertTriangle, Download, FileSpreadsheet, ChevronDown, ChevronUp, Bell, Globe, Flame, Monitor, Video } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { format } from "date-fns";
 import { toast } from "sonner";
@@ -19,6 +19,8 @@ import { SessionReplay } from "./clickstream/SessionReplay";
 import { GeoAnalytics } from "./clickstream/GeoAnalytics";
 import { UserJourney } from "./clickstream/UserJourney";
 import { DateRangePicker } from "./clickstream/DateRangePicker";
+import { DeviceAnalytics } from "./clickstream/DeviceAnalytics";
+import { LiveSessionRecording } from "./clickstream/LiveSessionRecording";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 
 export const AdminClickstream = () => {
@@ -512,26 +514,34 @@ export const AdminClickstream = () => {
 
       {/* Main Analytics Tabs for Modular Navigation */}
       <Tabs defaultValue="overview" className="space-y-4">
-        <TabsList className="grid w-full grid-cols-2 lg:grid-cols-5 h-auto">
+        <TabsList className="grid w-full grid-cols-3 lg:grid-cols-7 h-auto">
           <TabsTrigger value="overview" className="gap-2">
             <BarChart3 className="h-4 w-4" />
-            Overview
+            <span className="hidden sm:inline">Overview</span>
           </TabsTrigger>
           <TabsTrigger value="heatmaps" className="gap-2">
             <Flame className="h-4 w-4" />
-            Heatmaps
+            <span className="hidden sm:inline">Heatmaps</span>
           </TabsTrigger>
           <TabsTrigger value="journeys" className="gap-2">
             <TrendingUp className="h-4 w-4" />
-            Journeys
+            <span className="hidden sm:inline">Journeys</span>
+          </TabsTrigger>
+          <TabsTrigger value="devices" className="gap-2">
+            <Monitor className="h-4 w-4" />
+            <span className="hidden sm:inline">Devices</span>
           </TabsTrigger>
           <TabsTrigger value="geo" className="gap-2">
             <Globe className="h-4 w-4" />
-            Geographic
+            <span className="hidden sm:inline">Geographic</span>
+          </TabsTrigger>
+          <TabsTrigger value="recording" className="gap-2">
+            <Video className="h-4 w-4" />
+            <span className="hidden sm:inline">Recording</span>
           </TabsTrigger>
           <TabsTrigger value="replay" className="gap-2">
             <Eye className="h-4 w-4" />
-            Session Replay
+            <span className="hidden sm:inline">Replay</span>
           </TabsTrigger>
         </TabsList>
 
@@ -683,9 +693,19 @@ export const AdminClickstream = () => {
           <UserJourney events={events || []} />
         </TabsContent>
 
+        {/* Devices Tab */}
+        <TabsContent value="devices" className="space-y-6">
+          <DeviceAnalytics events={events || []} />
+        </TabsContent>
+
         {/* Geographic Tab */}
         <TabsContent value="geo" className="space-y-6">
           <GeoAnalytics events={events || []} />
+        </TabsContent>
+
+        {/* Live Recording Tab */}
+        <TabsContent value="recording" className="space-y-6">
+          <LiveSessionRecording events={events || []} />
         </TabsContent>
 
         {/* Session Replay Tab */}
