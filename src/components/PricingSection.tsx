@@ -1,72 +1,182 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Check, Star, Zap, Building2, ArrowRight } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Zap, Star, Building2, Globe, IndianRupee, TrendingUp, Shield, Clock } from "lucide-react";
+import { PricingTierCard } from "./pricing/PricingTierCard";
+import { PricingCalculator } from "./pricing/PricingCalculator";
+import { PricingAddons } from "./pricing/PricingAddons";
+import { PricingFAQ } from "./pricing/PricingFAQ";
+import { PricingLeadCapture } from "./pricing/PricingLeadCapture";
+import { PricingComparisonModal } from "./PricingComparisonModal";
 
-const pricingPlans = [
+const indiaPricing = [
   {
     name: "Starter",
-    description: "Perfect for small teams getting started",
+    description: "Best for small teams getting started",
     monthlyPrice: 4999,
     annualPrice: 3999,
+    originalMonthly: 4999,
+    originalAnnual: null,
+    perUser: false,
+    employeeLimit: "Up to 25 employees",
     icon: Zap,
     popular: false,
     features: [
-      "Up to 25 employees",
       "Core HR & Workforce",
-      "Attendance & Leave",
-      "Basic Payroll",
-      "Email Support",
-      "Standard Reports",
+      "Attendance & Leave Management",
+      "Basic Payroll (India statutory)",
+      "Standard Letters & Documents",
+      "Email Support (48hr response)",
+      "Standard Reports & Analytics",
+      "Unlimited Document Storage",
+      "AI-Powered Smart Search",
     ],
     cta: "Start Free Trial",
-    color: "from-blue-500 to-cyan-500"
+    ctaLink: "/get-quote",
+    gradient: "from-blue-500 to-cyan-500"
   },
   {
     name: "Professional",
-    description: "For growing businesses with more needs",
+    description: "Built for growing companies",
     monthlyPrice: 9999,
     annualPrice: 7999,
+    originalMonthly: 9999,
+    originalAnnual: null,
+    perUser: false,
+    employeeLimit: "Up to 100 employees",
     icon: Star,
     popular: true,
     features: [
-      "Up to 100 employees",
-      "Everything in Starter",
+      "Everything in Starter +",
+      "Advanced Payroll (India compliance)",
+      "Expense & Reimbursements",
+      "Recruitment & ATS",
+      "Auto-Offer Letter Generator",
+      "Compliance Suite (PF, ESIC, PT)",
+      "Priority Support (24hr response)",
+      "AI Smart Insights",
+      "Custom Workflows (OpZenix)",
+      "Integration Hub (Slack, GSuite)",
+    ],
+    cta: "Get Started",
+    ctaLink: "/get-quote",
+    gradient: "from-primary to-accent"
+  },
+  {
+    name: "Enterprise India",
+    description: "For 200–50,000+ employees",
+    monthlyPrice: null,
+    annualPrice: null,
+    originalMonthly: null,
+    originalAnnual: null,
+    perUser: false,
+    employeeLimit: "Unlimited employees",
+    icon: Building2,
+    popular: false,
+    features: [
+      "All 15+ ATLAS Modules",
+      "SSO & SAML Integration",
+      "Custom Integrations",
+      "On-Premise Deployment Option",
+      "White-label Branding",
+      "Dedicated Account Manager",
+      "24/7 Enterprise Support",
+      "99.9% SLA Guarantee",
+      "SOC2, ISO, GDPR Compliance",
+    ],
+    cta: "Contact Sales",
+    ctaLink: "/contact",
+    gradient: "from-purple-500 to-violet-500"
+  },
+];
+
+const globalPricing = [
+  {
+    name: "Essential",
+    description: "Perfect for small teams adopting smarter HR",
+    monthlyPrice: 2.5,
+    annualPrice: 2,
+    originalMonthly: 2.5,
+    originalAnnual: null,
+    perUser: true,
+    minimumFee: "$79/month",
+    icon: Zap,
+    popular: false,
+    features: [
+      "Core HRMS",
+      "Employee Database",
+      "Leave & Attendance",
+      "Basic Payroll",
+      "Standard Reports",
+      "Email Support",
+      "Unlimited Document Storage",
+      "AI-Powered Smart Search",
+    ],
+    cta: "Start Free Trial",
+    ctaLink: "/get-quote",
+    gradient: "from-blue-500 to-cyan-500"
+  },
+  {
+    name: "Growth",
+    description: "For scaling companies needing automations",
+    monthlyPrice: 4,
+    annualPrice: 3.2,
+    originalMonthly: 4,
+    originalAnnual: null,
+    perUser: true,
+    minimumFee: "$149/month",
+    icon: Star,
+    popular: true,
+    features: [
+      "Everything in Essential +",
       "Recruitment & ATS",
       "Expense Management",
       "Compliance Suite",
+      "Advanced Payroll Engine",
+      "Analytics + Dashboards",
+      "Custom Workflows (OpZenix)",
       "Priority Support",
-      "Advanced Analytics",
-      "Custom Workflows",
+      "API Access",
+      "Integration Hub (Slack, GSuite, Office)",
     ],
     cta: "Get Started",
-    color: "from-primary to-accent"
+    ctaLink: "/get-quote",
+    gradient: "from-primary to-accent"
   },
   {
     name: "Enterprise",
-    description: "For large organizations with complex needs",
+    description: "For global organizations with complex workflows",
     monthlyPrice: null,
     annualPrice: null,
+    originalMonthly: null,
+    originalAnnual: null,
+    perUser: false,
     icon: Building2,
     popular: false,
     features: [
       "Unlimited employees",
-      "Everything in Professional",
-      "All 15 Modules",
-      "SSO & SAML",
-      "Dedicated Account Manager",
+      "All 15+ ATLAS Modules",
+      "SSO + SAML + SCIM",
+      "Dedicated Customer Success Manager",
+      "Onboarding & Implementation",
+      "24/7 Enterprise Support",
+      "White-label Option",
+      "On-Premise / Private Cloud",
+      "SLA-backed uptime",
       "Custom Integrations",
-      "On-premise Option",
-      "SLA Guarantee",
-      "White-label Options",
+      "SOC2, ISO, GDPR compliance",
     ],
     cta: "Contact Sales",
-    color: "from-purple-500 to-violet-500"
+    ctaLink: "/contact",
+    gradient: "from-purple-500 to-violet-500"
   },
 ];
 
 export const PricingSection = () => {
   const [isAnnual, setIsAnnual] = useState(true);
+  const [region, setRegion] = useState<'india' | 'global'>('india');
+
+  const pricing = region === 'india' ? indiaPricing : globalPricing;
+  const currency = region === 'india' ? '₹' : '$';
 
   return (
     <section id="pricing" className="py-24 bg-background relative overflow-hidden">
@@ -74,21 +184,52 @@ export const PricingSection = () => {
       <div className="absolute inset-0">
         <div className="absolute top-1/4 left-0 w-96 h-96 bg-primary/5 rounded-full blur-3xl" />
         <div className="absolute bottom-1/4 right-0 w-96 h-96 bg-accent/5 rounded-full blur-3xl" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-gradient-radial from-primary/5 to-transparent rounded-full" />
       </div>
 
       <div className="container mx-auto px-4 lg:px-8 relative z-10">
         {/* Header */}
-        <div className="text-center max-w-3xl mx-auto mb-16">
+        <div className="text-center max-w-4xl mx-auto mb-16">
           <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary text-sm font-medium mb-6">
             <Zap className="w-4 h-4" />
             Transparent Pricing
           </span>
-          <h2 className="text-4xl md:text-5xl font-heading font-bold text-foreground mb-6">
-            Choose Your <span className="text-gradient">Growth Plan</span>
+          <h2 className="text-4xl md:text-5xl lg:text-6xl font-heading font-bold text-foreground mb-6">
+            Workday-level Power.{" "}
+            <span className="text-gradient">Startup-friendly Pricing.</span>
           </h2>
-          <p className="text-muted-foreground text-lg">
-            No hidden fees. No surprises. Scale your workforce management with confidence.
+          <p className="text-muted-foreground text-lg md:text-xl max-w-3xl mx-auto">
+            Replace 12 tools with one AI-native platform. No hidden fees. No surprises. 
+            Scale your workforce management with confidence.
           </p>
+        </div>
+
+        {/* Region Toggle */}
+        <div className="flex items-center justify-center gap-2 mb-8">
+          <Button
+            variant={region === 'india' ? 'default' : 'outline'}
+            onClick={() => setRegion('india')}
+            className={`h-12 px-6 rounded-full font-semibold transition-all ${
+              region === 'india' 
+                ? 'bg-gradient-to-r from-orange-500 to-green-600 text-white shadow-lg' 
+                : 'hover:border-primary'
+            }`}
+          >
+            <IndianRupee className="w-4 h-4 mr-2" />
+            India (₹)
+          </Button>
+          <Button
+            variant={region === 'global' ? 'default' : 'outline'}
+            onClick={() => setRegion('global')}
+            className={`h-12 px-6 rounded-full font-semibold transition-all ${
+              region === 'global' 
+                ? 'bg-gradient-to-r from-primary to-accent text-primary-foreground shadow-lg' 
+                : 'hover:border-primary'
+            }`}
+          >
+            <Globe className="w-4 h-4 mr-2" />
+            Global ($)
+          </Button>
         </div>
 
         {/* Billing Toggle */}
@@ -98,124 +239,116 @@ export const PricingSection = () => {
           </span>
           <button
             onClick={() => setIsAnnual(!isAnnual)}
-            className="relative w-16 h-8 rounded-full bg-secondary border border-border transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
+            className="relative w-20 h-10 rounded-full bg-secondary border-2 border-border transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 hover:border-primary/50"
             role="switch"
             aria-checked={isAnnual}
           >
             <div
-              className={`absolute top-1 w-6 h-6 rounded-full bg-primary shadow-lg transition-transform duration-300 ${
-                isAnnual ? 'translate-x-9' : 'translate-x-1'
+              className={`absolute top-1 w-7 h-7 rounded-full bg-gradient-to-r from-primary to-accent shadow-lg transition-transform duration-300 ${
+                isAnnual ? 'translate-x-11' : 'translate-x-1'
               }`}
             />
           </button>
           <span className={`text-sm font-medium transition-colors ${isAnnual ? 'text-foreground' : 'text-muted-foreground'}`}>
             Annual
-            <span className="ml-2 px-2 py-0.5 rounded-full bg-primary/10 text-primary text-xs">
+            <span className="ml-2 px-3 py-1 rounded-full bg-green-500/10 text-green-600 dark:text-green-400 text-xs font-bold animate-pulse">
               Save 20%
             </span>
           </span>
         </div>
 
+        {/* Trust Badges */}
+        <div className="flex flex-wrap items-center justify-center gap-6 mb-12">
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <Shield className="w-4 h-4 text-primary" />
+            Price Lock Guarantee
+          </div>
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <Clock className="w-4 h-4 text-primary" />
+            90-Day Free Trial
+          </div>
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <TrendingUp className="w-4 h-4 text-primary" />
+            No Hidden Fees
+          </div>
+        </div>
+
         {/* Pricing Cards */}
-        <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
-          {pricingPlans.map((plan, index) => {
-            const Icon = plan.icon;
-            const price = isAnnual ? plan.annualPrice : plan.monthlyPrice;
-            
-            return (
-              <div
-                key={plan.name}
-                className={`relative group rounded-2xl border transition-all duration-500 ${
-                  plan.popular 
-                    ? 'bg-card border-primary shadow-xl shadow-primary/10 scale-105 z-10' 
-                    : 'bg-card border-border hover:border-primary/50'
-                }`}
-                style={{ animationDelay: `${index * 100}ms` }}
-              >
-                {/* Popular Badge */}
-                {plan.popular && (
-                  <div className="absolute -top-4 left-1/2 -translate-x-1/2">
-                    <div className="px-4 py-1.5 rounded-full bg-gradient-to-r from-primary to-accent text-primary-foreground text-sm font-semibold shadow-lg">
-                      Most Popular
-                    </div>
-                  </div>
-                )}
+        <div className="grid md:grid-cols-3 gap-8 max-w-7xl mx-auto mb-20">
+          {pricing.map((plan) => (
+            <PricingTierCard
+              key={plan.name}
+              name={plan.name}
+              description={plan.description}
+              price={isAnnual ? plan.annualPrice : plan.monthlyPrice}
+              originalPrice={!isAnnual ? null : plan.originalMonthly}
+              perUser={plan.perUser}
+              minimumFee={plan.minimumFee}
+              employeeLimit={plan.employeeLimit}
+              icon={plan.icon}
+              popular={plan.popular}
+              features={plan.features}
+              cta={plan.cta}
+              ctaLink={plan.ctaLink}
+              gradient={plan.gradient}
+              isAnnual={isAnnual}
+              currency={currency}
+            />
+          ))}
+        </div>
 
-                {/* Gradient Background */}
-                <div className={`absolute inset-0 bg-gradient-to-br ${plan.color} opacity-5 rounded-2xl`} />
+        {/* Compare with Competitors */}
+        <div className="text-center mb-16">
+          <p className="text-muted-foreground mb-4">
+            See how much you can save compared to legacy HR platforms
+          </p>
+          <PricingComparisonModal />
+        </div>
 
-                <div className="relative p-8">
-                  {/* Icon & Name */}
-                  <div className="flex items-center gap-3 mb-4">
-                    <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${plan.color} flex items-center justify-center`}>
-                      <Icon className="w-6 h-6 text-white" />
-                    </div>
-                    <div>
-                      <h3 className="text-xl font-heading font-bold text-foreground">{plan.name}</h3>
-                    </div>
-                  </div>
+        {/* Pricing Calculator */}
+        <div className="mb-20">
+          <PricingCalculator region={region} />
+        </div>
 
-                  <p className="text-muted-foreground text-sm mb-6">{plan.description}</p>
+        {/* Add-ons */}
+        <div className="mb-20">
+          <PricingAddons region={region} />
+        </div>
 
-                  {/* Price */}
-                  <div className="mb-8">
-                    {price ? (
-                      <div className="flex items-baseline gap-2">
-                        <span className="text-4xl font-bold text-foreground">₹{price.toLocaleString()}</span>
-                        <span className="text-muted-foreground">/month</span>
-                      </div>
-                    ) : (
-                      <div className="text-3xl font-bold text-foreground">Custom Pricing</div>
-                    )}
-                    {price && isAnnual && (
-                      <p className="text-sm text-muted-foreground mt-1">
-                        Billed annually (₹{(price * 12).toLocaleString()}/year)
-                      </p>
-                    )}
-                  </div>
+        {/* Lead Capture */}
+        <div className="mb-20">
+          <PricingLeadCapture />
+        </div>
 
-                  {/* Features */}
-                  <ul className="space-y-3 mb-8">
-                    {plan.features.map((feature) => (
-                      <li key={feature} className="flex items-start gap-3">
-                        <div className="w-5 h-5 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 mt-0.5">
-                          <Check className="w-3 h-3 text-primary" />
-                        </div>
-                        <span className="text-sm text-foreground/80">{feature}</span>
-                      </li>
-                    ))}
-                  </ul>
-
-                  {/* CTA */}
-                  <Link to="/get-quote">
-                    <Button 
-                      className={`w-full h-12 font-semibold transition-all duration-300 ${
-                        plan.popular 
-                          ? 'bg-gradient-to-r from-primary to-accent hover:opacity-90 text-primary-foreground shadow-lg' 
-                          : ''
-                      }`}
-                      variant={plan.popular ? "default" : "outline"}
-                    >
-                      {plan.cta}
-                      <ArrowRight className="w-4 h-4 ml-2" />
-                    </Button>
-                  </Link>
-                </div>
-              </div>
-            );
-          })}
+        {/* FAQ */}
+        <div className="mb-16">
+          <PricingFAQ />
         </div>
 
         {/* Bottom CTA */}
-        <div className="text-center mt-16">
-          <p className="text-muted-foreground mb-4">
-            Need a custom solution? We've got you covered.
+        <div className="text-center bg-gradient-to-r from-primary/10 via-accent/10 to-primary/10 rounded-3xl p-12 border border-primary/20">
+          <h3 className="text-3xl font-heading font-bold text-foreground mb-4">
+            Ready to Transform Your Workforce?
+          </h3>
+          <p className="text-muted-foreground text-lg mb-8 max-w-2xl mx-auto">
+            Join thousands of companies using ATLAS to automate HR, payroll, and compliance. 
+            Start your 90-day free trial today.
           </p>
-          <Link to="/contact">
-            <Button variant="ghost" className="text-primary hover:text-primary/80">
-              Talk to our team <ArrowRight className="w-4 h-4 ml-2" />
+          <div className="flex flex-wrap items-center justify-center gap-4">
+            <Button 
+              size="lg" 
+              className="h-14 px-8 bg-gradient-to-r from-primary to-accent hover:opacity-90 text-primary-foreground font-semibold rounded-xl shadow-lg"
+            >
+              Start Free Trial
             </Button>
-          </Link>
+            <Button 
+              size="lg" 
+              variant="outline"
+              className="h-14 px-8 rounded-xl font-semibold"
+            >
+              Talk to Sales
+            </Button>
+          </div>
         </div>
       </div>
     </section>
