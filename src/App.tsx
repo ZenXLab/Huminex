@@ -24,6 +24,7 @@ import AdminPage from "./pages/admin/AdminPage";
 
 // Tenant Super-Admin Portal
 import TenantPortal from "./pages/tenant/TenantPortal";
+import TenantAuth from "./pages/tenant/TenantAuth";
 
 // Service pages
 import DigitalEngineering from "./pages/services/DigitalEngineering";
@@ -62,6 +63,7 @@ const App = () => (
             <Route path="/admin/*" element={<AdminPage />} />
             
             {/* Tenant Super-Admin Portal Routes */}
+            <Route path="/tenant/login" element={<TenantAuth />} />
             <Route path="/tenant/*" element={<TenantPortal />} />
             
             {/* Service Pages */}

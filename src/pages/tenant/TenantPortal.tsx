@@ -20,6 +20,9 @@ import TenantSettings from "./TenantSettings";
 import TenantEMS from "./TenantEMS";
 import TenantIdentityAccess from "./TenantIdentityAccess";
 import TenantRiskGovernance from "./TenantRiskGovernance";
+import TenantRequests from "./TenantRequests";
+import TenantNotifications from "./TenantNotifications";
+import TenantManagedOps from "./TenantManagedOps";
 
 // Placeholder for remaining pages
 const PlaceholderPage: React.FC<{ title: string; description: string }> = ({ title, description }) => (
@@ -35,9 +38,7 @@ const PlaceholderPage: React.FC<{ title: string; description: string }> = ({ tit
         </svg>
       </div>
       <h3 className="text-lg font-semibold text-[#0F1E3A] mb-2">Coming Soon</h3>
-      <p className="text-[#6B7280] max-w-md mx-auto">
-        This module is currently under development.
-      </p>
+      <p className="text-[#6B7280] max-w-md mx-auto">This module is under development.</p>
     </div>
   </div>
 );
@@ -84,8 +85,8 @@ const TenantPortal: React.FC = () => {
         {/* Operations */}
         <Route path="projects" element={<TenantProjects />} />
         <Route path="ems" element={<TenantEMS />} />
-        <Route path="requests" element={<PlaceholderPage title="My Requests" description="Track your submitted requests and approvals" />} />
-        <Route path="notifications" element={<PlaceholderPage title="Notifications" description="View all your notifications" />} />
+        <Route path="requests" element={<TenantRequests />} />
+        <Route path="notifications" element={<TenantNotifications />} />
         
         {/* Compliance & Risk */}
         <Route path="compliance" element={<TenantCompliance />} />
@@ -95,7 +96,7 @@ const TenantPortal: React.FC = () => {
         {/* Intelligence & Automation */}
         <Route path="intelligence" element={<TenantProximaAI />} />
         <Route path="automations" element={<TenantOpZenix />} />
-        <Route path="managed-ops" element={<PlaceholderPage title="Managed Operations" description="Managed services and support tickets" />} />
+        <Route path="managed-ops" element={<TenantManagedOps />} />
         
         {/* Settings */}
         <Route path="settings" element={<TenantSettings />} />
