@@ -118,12 +118,18 @@ export const RRWebPlayer = () => {
     }
 
     try {
+      // Calculate responsive dimensions
+      const containerWidth = containerRef.current.offsetWidth || 600;
+      const aspectRatio = 16 / 9;
+      const playerWidth = Math.min(containerWidth, 800);
+      const playerHeight = Math.round(playerWidth / aspectRatio);
+
       playerRef.current = new rrwebPlayer({
         target: containerRef.current,
         props: {
           events: events,
-          width: 800,
-          height: 450,
+          width: playerWidth,
+          height: playerHeight,
           autoPlay: false,
           showController: false,
           speedOption: [0.5, 1, 2, 4],
@@ -241,11 +247,11 @@ export const RRWebPlayer = () => {
         onClear={() => setFilters(defaultFilters)}
       />
 
-      <div className="grid gap-6 lg:grid-cols-4">
+      <div className="grid gap-4 md:gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-4">
         {/* Session List */}
-        <Card className="lg:col-span-1">
+        <Card className="col-span-1">
           <CardHeader className="pb-3">
-            <CardTitle className="text-base flex items-center gap-2">
+            <CardTitle className="text-sm md:text-base flex items-center gap-2 flex-wrap">
               Recorded Sessions
               {filters.pageUrl || filters.dateRange ? (
                 <Badge variant="secondary" className="text-xs">
@@ -254,12 +260,12 @@ export const RRWebPlayer = () => {
                 </Badge>
               ) : null}
             </CardTitle>
-            <CardDescription>
+            <CardDescription className="text-xs md:text-sm">
               {filteredRecordings?.length || 0} of {recordings?.length || 0} sessions
             </CardDescription>
           </CardHeader>
           <CardContent className="p-0">
-            <div className="max-h-[400px] overflow-y-auto">
+            <div className="max-h-[300px] md:max-h-[400px] overflow-y-auto">
               {filteredRecordings?.length === 0 ? (
                 <div className="p-4 text-center text-muted-foreground">
                   <Video className="h-12 w-12 mx-auto mb-2 opacity-30" />
@@ -321,10 +327,10 @@ export const RRWebPlayer = () => {
         </Card>
 
         {/* Player */}
-        <Card className="lg:col-span-2">
+        <Card className="col-span-1 md:col-span-2">
           <CardHeader className="pb-3">
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-base">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
+              <CardTitle className="text-sm md:text-base">
                 Playback
                 {isPlaying && (
                   <Badge variant="outline" className="ml-2 bg-red-500/10 text-red-500 border-red-500/30">
@@ -348,10 +354,10 @@ export const RRWebPlayer = () => {
           </CardHeader>
           <CardContent>
             {!selectedRecording ? (
-              <div className="h-[450px] flex items-center justify-center bg-muted/30 rounded-lg border-2 border-dashed">
-                <div className="text-center text-muted-foreground">
-                  <Video className="h-16 w-16 mx-auto mb-4 opacity-30" />
-                  <p>Select a session to watch</p>
+              <div className="h-[250px] sm:h-[350px] md:h-[400px] flex items-center justify-center bg-muted/30 rounded-lg border-2 border-dashed">
+                <div className="text-center text-muted-foreground p-4">
+                  <Video className="h-12 w-12 md:h-16 md:w-16 mx-auto mb-4 opacity-30" />
+                  <p className="text-sm md:text-base">Select a session to watch</p>
                 </div>
               </div>
             ) : (
@@ -359,8 +365,8 @@ export const RRWebPlayer = () => {
                 {/* Player Container */}
                 <div 
                   ref={containerRef} 
-                  className="bg-slate-900 rounded-lg overflow-hidden"
-                  style={{ minHeight: "450px" }}
+                  className="bg-slate-900 rounded-lg overflow-hidden w-full"
+                  style={{ minHeight: "250px", maxWidth: "100%" }}
                 />
 
                 {/* Progress Bar */}
@@ -414,7 +420,7 @@ export const RRWebPlayer = () => {
         </Card>
 
         {/* Highlights Panel */}
-        <div className="lg:col-span-1">
+        <div className="col-span-1">
           <SessionHighlights
             recording={selectedRecording}
             onSeekTo={handleSeekToTimestamp}

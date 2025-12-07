@@ -2,8 +2,8 @@
 -- ATLAS Database Schema Documentation
 -- ============================================================================
 -- 
--- > **Version**: 3.5.0  
--- > **Last Updated**: December 7, 2025 @ 18:45 UTC  
+-- > **Version**: 3.6.0  
+-- > **Last Updated**: December 7, 2025 @ 22:30 UTC  
 -- > **Author**: CropXon ATLAS Team
 --
 -- ============================================================================
@@ -11,7 +11,7 @@
 -- ============================================================================
 
 -- ============================================================================
--- 📊 DATABASE SCHEMA SUMMARY (65 Tables)
+-- 📊 DATABASE SCHEMA SUMMARY (66 Tables)
 -- ============================================================================
 --
 -- | # | Table Name | Status | Category | Purpose/Description |
@@ -45,42 +45,43 @@
 -- | 27 | portal_settings | ✅ Live | Admin | Client portal configuration settings |
 -- | 28 | audit_logs | ✅ Live | Logging | System audit trail for compliance |
 -- | 29 | system_logs | ✅ Live | Logging | Application logs for debugging |
--- | 30 | clickstream_events | ✅ Live | Logging | User interaction tracking for analytics |
--- | 31 | api_usage | ✅ Live | Logging | API endpoint usage tracking |
--- | 32 | team_members | ✅ Live | Team | Internal team member profiles |
--- | 33 | compliance_items | ✅ Live | Compliance | Compliance checklist items and status |
--- | 34 | integrations | ✅ Live | Integrations | Third-party integration configurations |
--- | 35 | client_notices | ✅ Live | Communication | Announcements and notices for clients |
--- | 36 | ab_experiments | ✅ Live | A/B Testing | A/B test experiment definitions |
--- | 37 | ab_variants | ✅ Live | A/B Testing | Experiment variant configurations |
--- | 38 | ab_results | ✅ Live | A/B Testing | Experiment results and metrics |
--- | 39 | ab_user_assignments | ✅ Live | A/B Testing | User assignments to experiment variants |
--- | 40 | ai_predictions | ✅ Live | AI Analytics | AI prediction cache (MRR, churn, conversions) |
--- | 41 | global_features | 📋 Pending | Features | Platform-wide feature definitions |
--- | 42 | tenant_features | 📋 Pending | Features | Tenant-specific feature flags |
--- | 43 | role_feature_defaults | 📋 Pending | Features | Default features by role |
--- | 44 | employee_feature_access | 📋 Pending | Features | Individual employee feature permissions |
--- | 45 | employee_notifications | 📋 Pending | Notifications | Employee notification records |
--- | 46 | notification_preferences | 📋 Pending | Notifications | User notification channel preferences |
--- | 47 | feature_unlock_log | 📋 Pending | Notifications | Log of feature unlock events |
--- | 48 | payroll_runs | 📋 Pending | Payroll | Monthly/weekly payroll processing runs |
--- | 49 | payslips | 📋 Pending | Payroll | Individual employee payslips |
--- | 50 | bgv_requests | 📋 Pending | BGV | Background verification requests |
--- | 51 | sso_states | 📋 Pending | SSO | OAuth state tokens for SSO flows |
--- | 52 | insurance_claims | 📋 Pending | Insurance | Employee insurance claim submissions |
--- | 53 | document_verifications | 📋 Pending | Documents | Document verification requests/results |
--- | 54 | document_extractions | 📋 Pending | Documents | OCR/data extraction from documents |
--- | 55 | employees | 📋 Pending | HR | Employee master records with details |
--- | 56 | attendance_records | 📋 Pending | HR | Daily attendance check-in/check-out |
--- | 57 | leave_types | 📋 Pending | HR | Leave type definitions (annual, sick) |
--- | 58 | leave_balances | 📋 Pending | HR | Employee leave balance tracking |
--- | 59 | leave_requests | 📋 Pending | HR | Leave application requests/approvals |
--- | 60 | shifts | 📋 Pending | Shift Mgmt | Shift definitions with timing/settings |
--- | 61 | shift_assignments | 📋 Pending | Shift Mgmt | Employee shift assignments |
--- | 62 | shift_swap_requests | 📋 Pending | Shift Mgmt | Shift swap requests between employees |
--- | 63 | overtime_records | 📋 Pending | Overtime | Overtime hours with approval status |
--- | 64 | geofence_zones | 📋 Pending | Geofencing | Office location geofence boundaries |
--- | 65 | geofence_attendance_logs | 📋 Pending | Geofencing | GPS-validated attendance entries |
+-- | 30 | clickstream_events | ✅ Live | Analytics | User interaction tracking for analytics |
+-- | 31 | session_recordings | ✅ Live | Analytics | rrweb session recordings with DOM snapshots |
+-- | 32 | api_usage | ✅ Live | Logging | API endpoint usage tracking |
+-- | 33 | team_members | ✅ Live | Team | Internal team member profiles |
+-- | 34 | compliance_items | ✅ Live | Compliance | Compliance checklist items and status |
+-- | 35 | integrations | ✅ Live | Integrations | Third-party integration configurations |
+-- | 36 | client_notices | ✅ Live | Communication | Announcements and notices for clients |
+-- | 37 | ab_experiments | ✅ Live | A/B Testing | A/B test experiment definitions |
+-- | 38 | ab_variants | ✅ Live | A/B Testing | Experiment variant configurations |
+-- | 39 | ab_results | ✅ Live | A/B Testing | Experiment results and metrics |
+-- | 40 | ab_user_assignments | ✅ Live | A/B Testing | User assignments to experiment variants |
+-- | 41 | ai_predictions | ✅ Live | AI Analytics | AI prediction cache (MRR, churn, conversions) |
+-- | 42 | global_features | 📋 Pending | Features | Platform-wide feature definitions |
+-- | 43 | tenant_features | 📋 Pending | Features | Tenant-specific feature flags |
+-- | 44 | role_feature_defaults | 📋 Pending | Features | Default features by role |
+-- | 45 | employee_feature_access | 📋 Pending | Features | Individual employee feature permissions |
+-- | 46 | employee_notifications | 📋 Pending | Notifications | Employee notification records |
+-- | 47 | notification_preferences | 📋 Pending | Notifications | User notification channel preferences |
+-- | 48 | feature_unlock_log | 📋 Pending | Notifications | Log of feature unlock events |
+-- | 49 | payroll_runs | 📋 Pending | Payroll | Monthly/weekly payroll processing runs |
+-- | 50 | payslips | 📋 Pending | Payroll | Individual employee payslips |
+-- | 51 | bgv_requests | 📋 Pending | BGV | Background verification requests |
+-- | 52 | sso_states | 📋 Pending | SSO | OAuth state tokens for SSO flows |
+-- | 53 | insurance_claims | 📋 Pending | Insurance | Employee insurance claim submissions |
+-- | 54 | document_verifications | 📋 Pending | Documents | Document verification requests/results |
+-- | 55 | document_extractions | 📋 Pending | Documents | OCR/data extraction from documents |
+-- | 56 | employees | 📋 Pending | HR | Employee master records with details |
+-- | 57 | attendance_records | 📋 Pending | HR | Daily attendance check-in/check-out |
+-- | 58 | leave_types | 📋 Pending | HR | Leave type definitions (annual, sick) |
+-- | 59 | leave_balances | 📋 Pending | HR | Employee leave balance tracking |
+-- | 60 | leave_requests | 📋 Pending | HR | Leave application requests/approvals |
+-- | 61 | shifts | 📋 Pending | Shift Mgmt | Shift definitions with timing/settings |
+-- | 62 | shift_assignments | 📋 Pending | Shift Mgmt | Employee shift assignments |
+-- | 63 | shift_swap_requests | 📋 Pending | Shift Mgmt | Shift swap requests between employees |
+-- | 64 | overtime_records | 📋 Pending | Overtime | Overtime hours with approval status |
+-- | 65 | geofence_zones | 📋 Pending | Geofencing | Office location geofence boundaries |
+-- | 66 | geofence_attendance_logs | 📋 Pending | Geofencing | GPS-validated attendance entries |
 --
 -- ============================================================================
 
@@ -983,7 +984,64 @@ CREATE TABLE public.clickstream_events (
 );
 
 -- ----------------------------------------------------------------------------
--- 11.4 api_usage
+-- 11.4 session_recordings
+-- ----------------------------------------------------------------------------
+-- | Attribute | Details |
+-- |-----------|---------|
+-- | **Purpose** | rrweb session recordings with DOM snapshots |
+-- | **Primary Key** | id (uuid) |
+-- | **RLS** | Admins view, Anyone inserts/updates |
+-- | **Features** | DOM recording, event storage, metadata, privacy controls |
+-- | **Technology** | Uses rrweb library for DOM snapshot recording |
+-- ----------------------------------------------------------------------------
+
+CREATE TABLE public.session_recordings (
+    id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+    session_id text NOT NULL,
+    events jsonb NOT NULL DEFAULT '[]',
+    start_time timestamptz NOT NULL DEFAULT now(),
+    end_time timestamptz,
+    duration_ms integer,
+    page_count integer DEFAULT 1,
+    event_count integer DEFAULT 0,
+    metadata jsonb DEFAULT '{}',
+    created_at timestamptz DEFAULT now(),
+    updated_at timestamptz DEFAULT now()
+);
+
+COMMENT ON TABLE public.session_recordings IS 'Stores rrweb session recordings for user behavior analysis';
+COMMENT ON COLUMN public.session_recordings.events IS 'Array of rrweb events capturing DOM mutations, mouse movements, scrolls';
+COMMENT ON COLUMN public.session_recordings.metadata IS 'Contains userAgent, screenWidth, screenHeight, url, privacySettings';
+
+-- Enable realtime for session_recordings
+ALTER PUBLICATION supabase_realtime ADD TABLE public.session_recordings;
+
+-- Indexes for performance
+CREATE INDEX idx_session_recordings_session_id ON public.session_recordings(session_id);
+CREATE INDEX idx_session_recordings_start_time ON public.session_recordings(start_time DESC);
+CREATE INDEX idx_session_recordings_duration ON public.session_recordings(duration_ms);
+
+-- RLS Policies
+ALTER TABLE public.session_recordings ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Admins can view recordings"
+    ON public.session_recordings FOR SELECT
+    USING (EXISTS (
+        SELECT 1 FROM user_roles 
+        WHERE user_roles.user_id = auth.uid() 
+        AND user_roles.role = 'admin'
+    ));
+
+CREATE POLICY "Anyone can insert recordings"
+    ON public.session_recordings FOR INSERT
+    WITH CHECK (true);
+
+CREATE POLICY "Anyone can update own session recordings"
+    ON public.session_recordings FOR UPDATE
+    USING (true) WITH CHECK (true);
+
+-- ----------------------------------------------------------------------------
+-- 11.5 api_usage
 -- ----------------------------------------------------------------------------
 -- | Attribute | Details |
 -- |-----------|---------|

@@ -1,7 +1,7 @@
 # ATLAS Edge Functions Documentation
 
-> **Version**: 3.6.0  
-> **Last Updated**: December 7, 2025 @ 19:00 UTC  
+> **Version**: 3.7.0  
+> **Last Updated**: December 7, 2025 @ 22:30 UTC  
 > **Author**: CropXon ATLAS Team
 
 ---
@@ -54,6 +54,71 @@
 | **Insurance** | process-insurance-claim | 1 |
 | **Documents** | verify-document | 1 |
 | **AI Analytics** | predictive-analytics | 1 |
+
+---
+
+## 🎥 Session Recording & Clickstream Analytics (Frontend Feature)
+
+ATLAS includes a comprehensive session recording system using the **rrweb** library for true DOM-level replay.
+
+### Components
+
+| Component | File Path | Purpose |
+|-----------|-----------|---------|
+| `useSessionRecording` | `src/hooks/useSessionRecording.ts` | Hook to capture rrweb events and save to database |
+| `SessionRecorder` | `src/components/SessionRecorder.tsx` | Global component to enable recording across app |
+| `RRWebPlayer` | `src/components/admin/modules/clickstream/RRWebPlayer.tsx` | Admin playback component with filtering |
+| `SessionFilters` | `src/components/admin/modules/clickstream/SessionFilters.tsx` | Filter by URL, duration, date range |
+| `SessionHighlights` | `src/components/admin/modules/clickstream/SessionHighlights.tsx` | Detect rage clicks, dead clicks, form abandonment |
+| `PrivacyControls` | `src/components/admin/modules/clickstream/PrivacyControls.tsx` | Configure masking and exclusion rules |
+
+### Database Table
+
+The `session_recordings` table stores all rrweb session data:
+
+```sql
+CREATE TABLE public.session_recordings (
+    id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+    session_id text NOT NULL,
+    events jsonb NOT NULL DEFAULT '[]',
+    start_time timestamptz NOT NULL DEFAULT now(),
+    end_time timestamptz,
+    duration_ms integer,
+    page_count integer DEFAULT 1,
+    event_count integer DEFAULT 0,
+    metadata jsonb DEFAULT '{}',
+    created_at timestamptz DEFAULT now(),
+    updated_at timestamptz DEFAULT now()
+);
+```
+
+### Privacy Settings
+
+The recording system supports configurable privacy controls:
+
+```typescript
+interface PrivacySettings {
+  maskAllInputs: boolean;       // Mask all form inputs
+  maskPasswords: boolean;       // Mask password fields
+  maskEmails: boolean;          // Mask email inputs
+  maskCreditCards: boolean;     // Mask credit card inputs
+  excludedPages: string[];      // Pages to exclude from recording
+  excludedSelectors: string[];  // CSS selectors to block
+  recordCanvas: boolean;        // Record canvas elements
+  collectFonts: boolean;        // Collect font data
+  inlineStylesheet: boolean;    // Inline stylesheets for replay
+}
+```
+
+### Features
+
+1. **Session Filtering**: Filter recordings by page URL, duration range, and date range
+2. **Highlight Detection**: Automatically detect:
+   - Rage clicks (3+ clicks in 500ms)
+   - Dead clicks (clicks on non-interactive elements)
+   - Form abandonment (started but not submitted)
+3. **Privacy Controls**: Mask sensitive data and exclude pages from recording
+4. **Responsive Player**: Adaptive video player with speed controls
 
 ---
 
