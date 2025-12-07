@@ -8,7 +8,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { MousePointer, Eye, Link, BarChart3, Users, RefreshCw, Radio, FlaskConical, TrendingUp, Trash2, AlertTriangle, Download, FileSpreadsheet, ChevronDown, ChevronUp, Bell } from "lucide-react";
+import { MousePointer, Eye, Link, BarChart3, Users, RefreshCw, Radio, FlaskConical, TrendingUp, Trash2, AlertTriangle, Download, FileSpreadsheet, ChevronDown, ChevronUp, Bell, Globe, Flame } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { format } from "date-fns";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
@@ -509,20 +510,189 @@ export const AdminClickstream = () => {
         ))}
       </div>
 
-      {/* Conversion Funnel & Heatmap */}
-      <div className="grid gap-6 lg:grid-cols-2">
-        <ConversionFunnel events={events || []} />
-        <ClickHeatmap events={events || []} />
-      </div>
+      {/* Main Analytics Tabs for Modular Navigation */}
+      <Tabs defaultValue="overview" className="space-y-4">
+        <TabsList className="grid w-full grid-cols-2 lg:grid-cols-5 h-auto">
+          <TabsTrigger value="overview" className="gap-2">
+            <BarChart3 className="h-4 w-4" />
+            Overview
+          </TabsTrigger>
+          <TabsTrigger value="heatmaps" className="gap-2">
+            <Flame className="h-4 w-4" />
+            Heatmaps
+          </TabsTrigger>
+          <TabsTrigger value="journeys" className="gap-2">
+            <TrendingUp className="h-4 w-4" />
+            Journeys
+          </TabsTrigger>
+          <TabsTrigger value="geo" className="gap-2">
+            <Globe className="h-4 w-4" />
+            Geographic
+          </TabsTrigger>
+          <TabsTrigger value="replay" className="gap-2">
+            <Eye className="h-4 w-4" />
+            Session Replay
+          </TabsTrigger>
+        </TabsList>
 
-      {/* Session Replay & Geographic Analytics */}
-      <div className="grid gap-6 lg:grid-cols-2">
-        <SessionReplay events={events || []} />
-        <GeoAnalytics events={events || []} />
-      </div>
+        {/* Overview Tab */}
+        <TabsContent value="overview" className="space-y-6">
+          <div className="grid gap-6 lg:grid-cols-2">
+            <ConversionFunnel events={events || []} />
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Link className="h-5 w-5" />
+                  Top Pages
+                  <Badge variant="outline" className="ml-auto text-[10px] bg-emerald-500/10 text-emerald-600 border-emerald-500/30">
+                    <Radio className="h-2 w-2 mr-1 animate-pulse" />
+                    Live
+                  </Badge>
+                </CardTitle>
+                <CardDescription>Most visited pages</CardDescription>
+              </CardHeader>
+              <CardContent>
+                {sortedPages.length === 0 ? (
+                  <div className="text-center py-4 text-muted-foreground">No data yet</div>
+                ) : (
+                  <div className="space-y-3">
+                    {sortedPages.map(([page, count], i) => (
+                      <motion.div 
+                        key={page} 
+                        className="flex items-center justify-between"
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: i * 0.1 }}
+                      >
+                        <div className="flex items-center gap-2">
+                          <span className="text-muted-foreground w-4">{i + 1}.</span>
+                          <span className="font-medium truncate max-w-64">{page}</span>
+                        </div>
+                        <Badge variant="secondary">{count}</Badge>
+                      </motion.div>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
 
-      {/* User Journey Visualization */}
-      <UserJourney events={events || []} />
+          <div className="grid gap-6 lg:grid-cols-2">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <MousePointer className="h-5 w-5" />
+                  Top Clicked Elements
+                  <Badge variant="outline" className="ml-auto text-[10px] bg-emerald-500/10 text-emerald-600 border-emerald-500/30">
+                    <Radio className="h-2 w-2 mr-1 animate-pulse" />
+                    Live
+                  </Badge>
+                </CardTitle>
+                <CardDescription>Most clicked buttons and links</CardDescription>
+              </CardHeader>
+              <CardContent>
+                {sortedElements.length === 0 ? (
+                  <div className="text-center py-4 text-muted-foreground">No data yet</div>
+                ) : (
+                  <div className="space-y-3">
+                    {sortedElements.map(([element, count], i) => (
+                      <motion.div 
+                        key={element} 
+                        className="flex items-center justify-between"
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: i * 0.1 }}
+                      >
+                        <div className="flex items-center gap-2">
+                          <span className="text-muted-foreground w-4">{i + 1}.</span>
+                          <span className="font-medium truncate max-w-64">{element}</span>
+                        </div>
+                        <Badge variant="secondary">{count}</Badge>
+                      </motion.div>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+            {/* Quick Geo Summary */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Globe className="h-5 w-5" />
+                  Top Locations
+                  <Badge variant="outline" className="ml-auto text-[10px] bg-emerald-500/10 text-emerald-600 border-emerald-500/30">
+                    <Radio className="h-2 w-2 mr-1 animate-pulse" />
+                    Live
+                  </Badge>
+                </CardTitle>
+                <CardDescription>User locations from IP geolocation</CardDescription>
+              </CardHeader>
+              <CardContent>
+                {(() => {
+                  const locations = events?.reduce((acc, e) => {
+                    const metadata = e.metadata as Record<string, any> | null;
+                    const city = metadata?.geolocation?.city;
+                    const country = metadata?.geolocation?.country;
+                    if (city && country) {
+                      const key = `${city}, ${country}`;
+                      acc[key] = (acc[key] || 0) + 1;
+                    }
+                    return acc;
+                  }, {} as Record<string, number>) || {};
+                  
+                  const sorted = Object.entries(locations)
+                    .sort(([, a], [, b]) => b - a)
+                    .slice(0, 5);
+
+                  return sorted.length === 0 ? (
+                    <div className="text-center py-4 text-muted-foreground">
+                      No geolocation data yet
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      {sorted.map(([location, count], i) => (
+                        <motion.div 
+                          key={location} 
+                          className="flex items-center justify-between"
+                          initial={{ opacity: 0, x: -20 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ delay: i * 0.1 }}
+                        >
+                          <div className="flex items-center gap-2">
+                            <span className="text-muted-foreground w-4">{i + 1}.</span>
+                            <span className="font-medium truncate max-w-48">{location}</span>
+                          </div>
+                          <Badge variant="secondary">{count}</Badge>
+                        </motion.div>
+                      ))}
+                    </div>
+                  );
+                })()}
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
+
+        {/* Heatmaps Tab */}
+        <TabsContent value="heatmaps" className="space-y-6">
+          <ClickHeatmap events={events || []} />
+        </TabsContent>
+
+        {/* User Journeys Tab */}
+        <TabsContent value="journeys" className="space-y-6">
+          <UserJourney events={events || []} />
+        </TabsContent>
+
+        {/* Geographic Tab */}
+        <TabsContent value="geo" className="space-y-6">
+          <GeoAnalytics events={events || []} />
+        </TabsContent>
+
+        {/* Session Replay Tab */}
+        <TabsContent value="replay" className="space-y-6">
+          <SessionReplay events={events || []} />
+        </TabsContent>
+      </Tabs>
 
       {/* A/B Testing Integration */}
       {abTestStats.length > 0 && (
@@ -592,81 +762,6 @@ export const AdminClickstream = () => {
         </Card>
       )}
 
-      <div className="grid gap-6 md:grid-cols-2">
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Link className="h-5 w-5" />
-              Top Pages
-              <Badge variant="outline" className="ml-auto text-[10px] bg-emerald-500/10 text-emerald-600 border-emerald-500/30">
-                <Radio className="h-2 w-2 mr-1 animate-pulse" />
-                Live
-              </Badge>
-            </CardTitle>
-            <CardDescription>Most visited pages</CardDescription>
-          </CardHeader>
-          <CardContent>
-            {sortedPages.length === 0 ? (
-              <div className="text-center py-4 text-muted-foreground">No data yet</div>
-            ) : (
-              <div className="space-y-3">
-                {sortedPages.map(([page, count], i) => (
-                  <motion.div 
-                    key={page} 
-                    className="flex items-center justify-between"
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: i * 0.1 }}
-                  >
-                    <div className="flex items-center gap-2">
-                      <span className="text-muted-foreground w-4">{i + 1}.</span>
-                      <span className="font-medium truncate max-w-64">{page}</span>
-                    </div>
-                    <Badge variant="secondary">{count}</Badge>
-                  </motion.div>
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <MousePointer className="h-5 w-5" />
-              Top Clicked Elements
-              <Badge variant="outline" className="ml-auto text-[10px] bg-emerald-500/10 text-emerald-600 border-emerald-500/30">
-                <Radio className="h-2 w-2 mr-1 animate-pulse" />
-                Live
-              </Badge>
-            </CardTitle>
-            <CardDescription>Most clicked buttons and links</CardDescription>
-          </CardHeader>
-          <CardContent>
-            {sortedElements.length === 0 ? (
-              <div className="text-center py-4 text-muted-foreground">No data yet</div>
-            ) : (
-              <div className="space-y-3">
-                {sortedElements.map(([element, count], i) => (
-                  <motion.div 
-                    key={element} 
-                    className="flex items-center justify-between"
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: i * 0.1 }}
-                  >
-                    <div className="flex items-center gap-2">
-                      <span className="text-muted-foreground w-4">{i + 1}.</span>
-                      <span className="font-medium truncate max-w-64">{element}</span>
-                    </div>
-                    <Badge variant="secondary">{count}</Badge>
-                  </motion.div>
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      </div>
 
       {/* Collapsible Recent Events */}
       <Card>

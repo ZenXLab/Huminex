@@ -1,4 +1,4 @@
-import { useEffect, useCallback } from "react";
+import { useEffect, useCallback, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "./useAuth";
 
@@ -10,9 +10,87 @@ const generateSessionId = () => {
   return sessionId;
 };
 
+// Cache geolocation data to avoid repeated API calls
+const getGeolocation = async (): Promise<Record<string, any> | null> => {
+  const cached = sessionStorage.getItem("clickstream_geolocation");
+  if (cached) {
+    try {
+      return JSON.parse(cached);
+    } catch {
+      // Invalid cache, fetch fresh
+    }
+  }
+
+  try {
+    // Try ipapi.co first
+    const response = await fetch("https://ipapi.co/json/", { 
+      signal: AbortSignal.timeout(3000) 
+    });
+    if (response.ok) {
+      const data = await response.json();
+      const geoData = {
+        ip: data.ip,
+        city: data.city,
+        region: data.region,
+        country: data.country_name,
+        country_code: data.country_code,
+        latitude: data.latitude,
+        longitude: data.longitude,
+        timezone: data.timezone,
+        org: data.org,
+      };
+      sessionStorage.setItem("clickstream_geolocation", JSON.stringify(geoData));
+      return geoData;
+    }
+  } catch (e) {
+    console.warn("Primary geolocation API failed, trying fallback");
+  }
+
+  try {
+    // Fallback to ip-api.com
+    const response = await fetch("http://ip-api.com/json/?fields=status,message,country,countryCode,region,regionName,city,lat,lon,timezone,isp,org,query", {
+      signal: AbortSignal.timeout(3000)
+    });
+    if (response.ok) {
+      const data = await response.json();
+      if (data.status === "success") {
+        const geoData = {
+          ip: data.query,
+          city: data.city,
+          region: data.regionName,
+          country: data.country,
+          country_code: data.countryCode,
+          latitude: data.lat,
+          longitude: data.lon,
+          timezone: data.timezone,
+          org: data.org || data.isp,
+        };
+        sessionStorage.setItem("clickstream_geolocation", JSON.stringify(geoData));
+        return geoData;
+      }
+    }
+  } catch (e) {
+    console.warn("Fallback geolocation API also failed");
+  }
+
+  return null;
+};
+
 export const useClickstream = () => {
   const { user } = useAuth();
   const sessionId = generateSessionId();
+  const geoDataRef = useRef<Record<string, any> | null>(null);
+  const geoFetchedRef = useRef(false);
+
+  // Fetch geolocation on mount
+  useEffect(() => {
+    if (!geoFetchedRef.current) {
+      geoFetchedRef.current = true;
+      getGeolocation().then(data => {
+        geoDataRef.current = data;
+      });
+    }
+  }, []);
 
   // Only use user.id if it's a valid UUID (not dev mode)
   const isValidUUID = (id: string) => {
@@ -29,6 +107,15 @@ export const useClickstream = () => {
       // Only pass user_id if it's a valid UUID, otherwise use null
       const userId = user?.id && isValidUUID(user.id) ? user.id : null;
       
+      // Merge geolocation data with provided metadata
+      const enrichedMetadata = {
+        ...metadata,
+        geolocation: geoDataRef.current,
+        userAgent: navigator.userAgent,
+        screenWidth: window.innerWidth,
+        screenHeight: window.innerHeight,
+      };
+      
       await supabase.from("clickstream_events").insert({
         session_id: sessionId,
         user_id: userId,
@@ -37,7 +124,7 @@ export const useClickstream = () => {
         element_id: element?.id || null,
         element_class: element?.className?.toString().slice(0, 200) || null,
         element_text: element?.textContent?.slice(0, 100) || null,
-        metadata: metadata || {},
+        metadata: enrichedMetadata,
       });
     } catch (error) {
       console.error("Clickstream tracking error:", error);
