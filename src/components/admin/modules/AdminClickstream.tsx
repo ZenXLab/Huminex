@@ -7,23 +7,20 @@ import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { MousePointer, Eye, Link, BarChart3, Users, RefreshCw, Radio, FlaskConical, TrendingUp, Trash2, AlertTriangle, Download, FileSpreadsheet, ChevronDown, ChevronUp, Bell, Globe, Flame, Monitor, Video } from "lucide-react";
+import { MousePointer, Eye, BarChart3, Users, RefreshCw, Radio, Trash2, AlertTriangle, Download, ChevronDown, ChevronUp, Bell, AlertCircle, ShieldAlert } from "lucide-react";
 import { format } from "date-fns";
 import { toast } from "sonner";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { ConversionFunnel } from "./clickstream/ConversionFunnel";
 import { ClickHeatmap } from "./clickstream/ClickHeatmap";
-import { SessionReplay } from "./clickstream/SessionReplay";
-import { GeoAnalytics } from "./clickstream/GeoAnalytics";
 import { UserJourney } from "./clickstream/UserJourney";
 import { DateRangePicker } from "./clickstream/DateRangePicker";
 import { DeviceAnalytics } from "./clickstream/DeviceAnalytics";
-import { LiveSessionRecording } from "./clickstream/LiveSessionRecording";
 import { RRWebPlayer } from "./clickstream/RRWebPlayer";
 import { ClickstreamLayout } from "./clickstream/ClickstreamLayout";
 import { PrivacyControls, defaultPrivacySettings, PrivacySettings } from "./clickstream/PrivacyControls";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { GeoAnalytics } from "./clickstream/GeoAnalytics";
+import { ExportModal } from "./clickstream/ExportModal";
 
 export const AdminClickstream = () => {
   const [eventFilter, setEventFilter] = useState<string>("all");
@@ -37,6 +34,8 @@ export const AdminClickstream = () => {
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
   const [activeSection, setActiveSection] = useState("overview");
   const [privacySettings, setPrivacySettings] = useState<PrivacySettings>(defaultPrivacySettings);
+  const [showExportModal, setShowExportModal] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const queryClient = useQueryClient();
 
   const { data: events, isLoading, refetch } = useQuery({
@@ -147,33 +146,14 @@ export const AdminClickstream = () => {
       if (error) throw error;
       await refetch();
       setLiveEventsCount(0);
-      toast.success("All data deleted");
+      setShowDeleteDialog(false);
+      toast.success("All clickstream data deleted successfully");
     } catch {
       toast.error("Delete failed");
     } finally {
       setIsDeleting(false);
     }
   };
-
-  const exportToCSV = useCallback(() => {
-    if (!events?.length) { toast.error("No data"); return; }
-    const headers = ["Event Type", "Page URL", "Element ID", "Element Text", "Session ID", "User ID", "Created At"];
-    const csvRows = [
-      headers.join(","),
-      ...events.map(e => [
-        e.event_type, `"${e.page_url || ''}"`, `"${e.element_id || ''}"`,
-        `"${(e.element_text || '').replace(/"/g, '""')}"`, e.session_id,
-        e.user_id || '', format(new Date(e.created_at), "yyyy-MM-dd HH:mm:ss")
-      ].join(","))
-    ];
-    const blob = new Blob([csvRows.join("\n")], { type: "text/csv" });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = `clickstream_${format(new Date(), "yyyy-MM-dd_HH-mm")}.csv`;
-    link.click();
-    toast.success(`Exported ${events.length} events`);
-  }, [events]);
 
   const stats = {
     totalEvents: events?.length || 0,
@@ -203,48 +183,78 @@ export const AdminClickstream = () => {
     switch (activeSection) {
       case "overview":
         return (
-          <div className="space-y-6">
-            {/* Stats */}
-            <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
-              <Card><CardContent className="pt-6">
-                <div className="flex items-center gap-3">
-                  <div className="p-3 rounded-xl bg-primary/10"><BarChart3 className="h-5 w-5 text-primary" /></div>
-                  <div><p className="text-2xl font-bold">{stats.totalEvents}</p><p className="text-sm text-muted-foreground">Total Events</p></div>
-                </div>
-              </CardContent></Card>
-              <Card><CardContent className="pt-6">
-                <div className="flex items-center gap-3">
-                  <div className="p-3 rounded-xl bg-purple-500/10"><Users className="h-5 w-5 text-purple-600" /></div>
-                  <div><p className="text-2xl font-bold">{stats.uniqueSessions}</p><p className="text-sm text-muted-foreground">Sessions</p></div>
-                </div>
-              </CardContent></Card>
-              <Card><CardContent className="pt-6">
-                <div className="flex items-center gap-3">
-                  <div className="p-3 rounded-xl bg-red-500/10"><MousePointer className="h-5 w-5 text-red-500" /></div>
-                  <div><p className="text-2xl font-bold">{stats.clicks}</p><p className="text-sm text-muted-foreground">Clicks</p></div>
-                </div>
-              </CardContent></Card>
-              <Card><CardContent className="pt-6">
-                <div className="flex items-center gap-3">
-                  <div className="p-3 rounded-xl bg-blue-500/10"><Eye className="h-5 w-5 text-blue-500" /></div>
-                  <div><p className="text-2xl font-bold">{stats.pageViews}</p><p className="text-sm text-muted-foreground">Page Views</p></div>
-                </div>
-              </CardContent></Card>
+          <div className="space-y-4 sm:space-y-6">
+            {/* Stats Grid - Responsive */}
+            <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+              <Card className="overflow-hidden">
+                <CardContent className="p-4 sm:pt-6">
+                  <div className="flex items-center gap-2 sm:gap-3">
+                    <div className="p-2 sm:p-3 rounded-xl bg-primary/10 shrink-0">
+                      <BarChart3 className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-lg sm:text-2xl font-bold truncate">{stats.totalEvents.toLocaleString()}</p>
+                      <p className="text-xs sm:text-sm text-muted-foreground">Total Events</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+              <Card className="overflow-hidden">
+                <CardContent className="p-4 sm:pt-6">
+                  <div className="flex items-center gap-2 sm:gap-3">
+                    <div className="p-2 sm:p-3 rounded-xl bg-purple-500/10 shrink-0">
+                      <Users className="h-4 w-4 sm:h-5 sm:w-5 text-purple-600" />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-lg sm:text-2xl font-bold truncate">{stats.uniqueSessions.toLocaleString()}</p>
+                      <p className="text-xs sm:text-sm text-muted-foreground">Sessions</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+              <Card className="overflow-hidden">
+                <CardContent className="p-4 sm:pt-6">
+                  <div className="flex items-center gap-2 sm:gap-3">
+                    <div className="p-2 sm:p-3 rounded-xl bg-red-500/10 shrink-0">
+                      <MousePointer className="h-4 w-4 sm:h-5 sm:w-5 text-red-500" />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-lg sm:text-2xl font-bold truncate">{stats.clicks.toLocaleString()}</p>
+                      <p className="text-xs sm:text-sm text-muted-foreground">Clicks</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+              <Card className="overflow-hidden">
+                <CardContent className="p-4 sm:pt-6">
+                  <div className="flex items-center gap-2 sm:gap-3">
+                    <div className="p-2 sm:p-3 rounded-xl bg-blue-500/10 shrink-0">
+                      <Eye className="h-4 w-4 sm:h-5 sm:w-5 text-blue-500" />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-lg sm:text-2xl font-bold truncate">{stats.pageViews.toLocaleString()}</p>
+                      <p className="text-xs sm:text-sm text-muted-foreground">Page Views</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
             </div>
 
-            {/* Top Pages & Recent Events */}
-            <div className="grid lg:grid-cols-2 gap-6">
+            {/* Top Pages & Recent Events - Responsive */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
               <Card>
-                <CardHeader><CardTitle className="text-base">Top Pages</CardTitle></CardHeader>
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-sm sm:text-base">Top Pages</CardTitle>
+                </CardHeader>
                 <CardContent>
                   {sortedPages.length === 0 ? (
-                    <p className="text-muted-foreground text-center py-8">No page data</p>
+                    <p className="text-muted-foreground text-center py-6 sm:py-8 text-sm">No page data available</p>
                   ) : (
-                    <div className="space-y-3">
+                    <div className="space-y-2 sm:space-y-3">
                       {sortedPages.map(([page, count], idx) => (
-                        <div key={page} className="flex items-center justify-between">
-                          <span className="text-sm truncate flex-1">{page}</span>
-                          <Badge variant="secondary">{count}</Badge>
+                        <div key={page} className="flex items-center justify-between gap-2">
+                          <span className="text-xs sm:text-sm truncate flex-1 min-w-0">{page}</span>
+                          <Badge variant="secondary" className="shrink-0">{count}</Badge>
                         </div>
                       ))}
                     </div>
@@ -253,10 +263,10 @@ export const AdminClickstream = () => {
               </Card>
 
               <Card>
-                <CardHeader>
-                  <CardTitle className="text-base flex items-center justify-between">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-sm sm:text-base flex items-center justify-between">
                     Recent Events
-                    <Button variant="ghost" size="sm" onClick={() => setEventsExpanded(!eventsExpanded)}>
+                    <Button variant="ghost" size="sm" onClick={() => setEventsExpanded(!eventsExpanded)} className="h-8 w-8 p-0">
                       {eventsExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
                     </Button>
                   </CardTitle>
@@ -264,18 +274,21 @@ export const AdminClickstream = () => {
                 <CardContent>
                   <div className="space-y-2">
                     {events?.slice(0, eventsExpanded ? 20 : 5).map((event) => (
-                      <div key={event.id} className="flex items-center justify-between p-2 rounded bg-muted/30">
-                        <div className="flex items-center gap-2">
-                          <Badge className={getEventBadge(event.event_type)}>{event.event_type}</Badge>
-                          <span className="text-xs text-muted-foreground truncate max-w-[150px]">
+                      <div key={event.id} className="flex items-center justify-between p-2 rounded bg-muted/30 gap-2">
+                        <div className="flex items-center gap-2 min-w-0 flex-1">
+                          <Badge className={`${getEventBadge(event.event_type)} shrink-0 text-xs`}>{event.event_type}</Badge>
+                          <span className="text-xs text-muted-foreground truncate">
                             {event.element_text || event.page_url}
                           </span>
                         </div>
-                        <span className="text-xs text-muted-foreground">
+                        <span className="text-xs text-muted-foreground shrink-0">
                           {format(new Date(event.created_at), "HH:mm:ss")}
                         </span>
                       </div>
                     ))}
+                    {(!events || events.length === 0) && (
+                      <p className="text-muted-foreground text-center py-6 text-sm">No events recorded yet</p>
+                    )}
                   </div>
                 </CardContent>
               </Card>
@@ -292,22 +305,22 @@ export const AdminClickstream = () => {
       case "clicks":
         return (
           <Card>
-            <CardHeader><CardTitle>Click Analysis</CardTitle></CardHeader>
-            <CardContent>
+            <CardHeader><CardTitle className="text-sm sm:text-base">Click Analysis</CardTitle></CardHeader>
+            <CardContent className="overflow-x-auto">
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Element</TableHead>
-                    <TableHead>Page</TableHead>
-                    <TableHead>Time</TableHead>
+                    <TableHead className="text-xs">Element</TableHead>
+                    <TableHead className="text-xs hidden sm:table-cell">Page</TableHead>
+                    <TableHead className="text-xs">Time</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {events?.filter(e => e.event_type === "click").slice(0, 20).map(event => (
                     <TableRow key={event.id}>
-                      <TableCell className="max-w-[200px] truncate">{event.element_text || event.element_id || "Unknown"}</TableCell>
-                      <TableCell className="max-w-[150px] truncate">{event.page_url}</TableCell>
-                      <TableCell>{format(new Date(event.created_at), "MMM d, HH:mm:ss")}</TableCell>
+                      <TableCell className="max-w-[120px] sm:max-w-[200px] truncate text-xs sm:text-sm">{event.element_text || event.element_id || "Unknown"}</TableCell>
+                      <TableCell className="max-w-[150px] truncate text-xs sm:text-sm hidden sm:table-cell">{event.page_url}</TableCell>
+                      <TableCell className="text-xs sm:text-sm">{format(new Date(event.created_at), "MMM d, HH:mm")}</TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
@@ -332,26 +345,26 @@ export const AdminClickstream = () => {
       case "events":
         return (
           <Card>
-            <CardHeader><CardTitle>All Events</CardTitle></CardHeader>
-            <CardContent>
+            <CardHeader><CardTitle className="text-sm sm:text-base">All Events</CardTitle></CardHeader>
+            <CardContent className="overflow-x-auto">
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Type</TableHead>
-                    <TableHead>Element</TableHead>
-                    <TableHead>Page</TableHead>
-                    <TableHead>Session</TableHead>
-                    <TableHead>Time</TableHead>
+                    <TableHead className="text-xs">Type</TableHead>
+                    <TableHead className="text-xs hidden sm:table-cell">Element</TableHead>
+                    <TableHead className="text-xs">Page</TableHead>
+                    <TableHead className="text-xs hidden md:table-cell">Session</TableHead>
+                    <TableHead className="text-xs">Time</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {events?.slice(0, 50).map(event => (
                     <TableRow key={event.id}>
-                      <TableCell><Badge className={getEventBadge(event.event_type)}>{event.event_type}</Badge></TableCell>
-                      <TableCell className="max-w-[150px] truncate">{event.element_text || "-"}</TableCell>
-                      <TableCell className="max-w-[150px] truncate">{event.page_url}</TableCell>
-                      <TableCell className="font-mono text-xs">{event.session_id.slice(0, 8)}...</TableCell>
-                      <TableCell>{format(new Date(event.created_at), "MMM d, HH:mm:ss")}</TableCell>
+                      <TableCell><Badge className={`${getEventBadge(event.event_type)} text-xs`}>{event.event_type}</Badge></TableCell>
+                      <TableCell className="max-w-[100px] truncate text-xs hidden sm:table-cell">{event.element_text || "-"}</TableCell>
+                      <TableCell className="max-w-[100px] sm:max-w-[150px] truncate text-xs">{event.page_url}</TableCell>
+                      <TableCell className="font-mono text-xs hidden md:table-cell">{event.session_id.slice(0, 8)}...</TableCell>
+                      <TableCell className="text-xs">{format(new Date(event.created_at), "MMM d, HH:mm")}</TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
@@ -377,58 +390,148 @@ export const AdminClickstream = () => {
   };
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between flex-wrap gap-4">
-        <div className="flex items-center gap-3">
+    <div className="space-y-4 sm:space-y-6">
+      {/* Header - Responsive */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="flex flex-wrap items-center gap-2 sm:gap-3">
           <div>
-            <h1 className="text-3xl font-bold">Clickstream Analytics</h1>
-            <p className="text-muted-foreground">Track user interactions and behavior</p>
+            <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold">Clickstream Analytics</h1>
+            <p className="text-xs sm:text-sm text-muted-foreground">Track user interactions and behavior</p>
           </div>
           <motion.div animate={{ scale: [1, 1.05, 1] }} transition={{ duration: 2, repeat: Infinity }}>
-            <Badge variant="outline" className="bg-emerald-500/10 text-emerald-600 border-emerald-500/30">
+            <Badge variant="outline" className="bg-emerald-500/10 text-emerald-600 border-emerald-500/30 text-xs">
               <Radio className="h-3 w-3 mr-1 animate-pulse" />Live
             </Badge>
           </motion.div>
           {liveEventsCount > 0 && (
-            <Badge variant="secondary" className="bg-primary/10 text-primary">+{liveEventsCount} new</Badge>
+            <Badge variant="secondary" className="bg-primary/10 text-primary text-xs">+{liveEventsCount} new</Badge>
           )}
         </div>
         
-        <div className="flex gap-2 flex-wrap">
-          <AlertDialog>
+        {/* Action Buttons - Responsive */}
+        <div className="flex flex-wrap gap-2">
+          {/* Delete All Button with Enhanced Dialog */}
+          <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
             <AlertDialogTrigger asChild>
-              <Button variant="destructive" size="sm"><Trash2 className="h-4 w-4 mr-1" />Delete All</Button>
+              <Button 
+                variant="destructive" 
+                size="sm" 
+                className="gap-1 text-xs sm:text-sm"
+              >
+                <Trash2 className="h-3 w-3 sm:h-4 sm:w-4" />
+                <span className="hidden sm:inline">Delete All</span>
+              </Button>
             </AlertDialogTrigger>
-            <AlertDialogContent>
+            <AlertDialogContent className="max-w-md">
               <AlertDialogHeader>
-                <AlertDialogTitle><AlertTriangle className="h-5 w-5 inline mr-2 text-destructive" />Delete All Data?</AlertDialogTitle>
-                <AlertDialogDescription>This will permanently delete {stats.totalEvents} events.</AlertDialogDescription>
+                <AlertDialogTitle className="flex items-center gap-2 text-destructive">
+                  <ShieldAlert className="h-5 w-5" />
+                  Danger: Delete All Data
+                </AlertDialogTitle>
+                <AlertDialogDescription asChild>
+                  <div className="space-y-4">
+                    <div className="p-4 bg-destructive/10 border border-destructive/30 rounded-lg">
+                      <div className="flex items-start gap-3">
+                        <AlertTriangle className="h-5 w-5 text-destructive shrink-0 mt-0.5" />
+                        <div className="space-y-2">
+                          <p className="font-medium text-destructive">This action cannot be undone!</p>
+                          <p className="text-sm text-muted-foreground">
+                            You are about to permanently delete all clickstream analytics data.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <p className="text-sm font-medium">Data to be deleted:</p>
+                      <ul className="space-y-1 text-sm text-muted-foreground">
+                        <li className="flex items-center gap-2">
+                          <AlertCircle className="h-4 w-4 text-destructive" />
+                          <strong>{stats.totalEvents.toLocaleString()}</strong> clickstream events
+                        </li>
+                        <li className="flex items-center gap-2">
+                          <AlertCircle className="h-4 w-4 text-destructive" />
+                          <strong>{stats.uniqueSessions.toLocaleString()}</strong> unique sessions
+                        </li>
+                        <li className="flex items-center gap-2">
+                          <AlertCircle className="h-4 w-4 text-destructive" />
+                          <strong>{stats.clicks.toLocaleString()}</strong> click events
+                        </li>
+                        <li className="flex items-center gap-2">
+                          <AlertCircle className="h-4 w-4 text-destructive" />
+                          <strong>{stats.pageViews.toLocaleString()}</strong> page view events
+                        </li>
+                      </ul>
+                    </div>
+                  </div>
+                </AlertDialogDescription>
               </AlertDialogHeader>
-              <AlertDialogFooter>
+              <AlertDialogFooter className="gap-2 sm:gap-0">
                 <AlertDialogCancel>Cancel</AlertDialogCancel>
-                <AlertDialogAction onClick={handleDeleteAllData} disabled={isDeleting} className="bg-destructive">
-                  {isDeleting ? "Deleting..." : "Delete"}
+                <AlertDialogAction 
+                  onClick={handleDeleteAllData} 
+                  disabled={isDeleting} 
+                  className="bg-destructive hover:bg-destructive/90"
+                >
+                  {isDeleting ? (
+                    <>Deleting...</>
+                  ) : (
+                    <>
+                      <Trash2 className="h-4 w-4 mr-2" />
+                      Delete All Data
+                    </>
+                  )}
                 </AlertDialogAction>
               </AlertDialogFooter>
             </AlertDialogContent>
           </AlertDialog>
 
-          <Button variant="outline" size="sm" onClick={exportToCSV}><Download className="h-4 w-4 mr-1" />Export</Button>
-          <Button variant={notificationsEnabled ? "secondary" : "outline"} size="sm" onClick={() => setNotificationsEnabled(!notificationsEnabled)}>
-            <Bell className={`h-4 w-4 mr-1 ${notificationsEnabled ? "text-primary" : ""}`} />
-            {notificationsEnabled ? "Alerts On" : "Alerts Off"}
+          {/* Export Button */}
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={() => setShowExportModal(true)}
+            className="gap-1 text-xs sm:text-sm"
+          >
+            <Download className="h-3 w-3 sm:h-4 sm:w-4" />
+            <span className="hidden sm:inline">Export</span>
           </Button>
-          <Button variant="outline" size="sm" onClick={handleRefresh} disabled={isRefreshing}>
-            <RefreshCw className={`h-4 w-4 mr-1 ${isRefreshing ? "animate-spin" : ""}`} />Refresh
+
+          {/* Notifications Toggle */}
+          <Button 
+            variant={notificationsEnabled ? "secondary" : "outline"} 
+            size="sm" 
+            onClick={() => setNotificationsEnabled(!notificationsEnabled)}
+            className="gap-1 text-xs sm:text-sm"
+          >
+            <Bell className={`h-3 w-3 sm:h-4 sm:w-4 ${notificationsEnabled ? "text-primary" : ""}`} />
+            <span className="hidden sm:inline">{notificationsEnabled ? "On" : "Off"}</span>
           </Button>
+
+          {/* Refresh Button */}
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={handleRefresh} 
+            disabled={isRefreshing}
+            className="gap-1 text-xs sm:text-sm"
+          >
+            <RefreshCw className={`h-3 w-3 sm:h-4 sm:w-4 ${isRefreshing ? "animate-spin" : ""}`} />
+            <span className="hidden sm:inline">Refresh</span>
+          </Button>
+
+          {/* Date Range Picker */}
           <DateRangePicker 
             value={timeRange} 
             onChange={(value, range) => { setTimeRange(value); setCustomDateRange(range || null); }}
             customRange={customDateRange}
           />
+
+          {/* Event Filter */}
           <Select value={eventFilter} onValueChange={setEventFilter}>
-            <SelectTrigger className="w-32"><SelectValue /></SelectTrigger>
+            <SelectTrigger className="w-24 sm:w-32 text-xs sm:text-sm h-8 sm:h-9">
+              <SelectValue />
+            </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Events</SelectItem>
               <SelectItem value="click">Clicks</SelectItem>
@@ -443,12 +546,20 @@ export const AdminClickstream = () => {
       <ClickstreamLayout activeSection={activeSection} onSectionChange={setActiveSection}>
         {isLoading ? (
           <div className="space-y-4">
-            {[...Array(3)].map((_, i) => <div key={i} className="h-32 bg-muted rounded-lg animate-pulse" />)}
+            {[...Array(3)].map((_, i) => <div key={i} className="h-24 sm:h-32 bg-muted rounded-lg animate-pulse" />)}
           </div>
         ) : (
           renderContent()
         )}
       </ClickstreamLayout>
+
+      {/* Export Modal */}
+      <ExportModal
+        open={showExportModal}
+        onOpenChange={setShowExportModal}
+        events={events || []}
+        stats={stats}
+      />
     </div>
   );
 };
