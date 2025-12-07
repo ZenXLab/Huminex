@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -11,7 +11,8 @@ import {
   Bell, Send, Mail, MessageSquare, AlertTriangle, 
   CheckCircle, XCircle, Clock, Filter, Plus, Trash2,
   Settings, Eye, Users, Globe, Smartphone, RefreshCw,
-  Volume2, VolumeX, BellRing, Archive, BellOff
+  Volume2, VolumeX, BellRing, Archive, BellOff,
+  Shield, CreditCard, FolderOpen, UserPlus, Cog, Search
 } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -49,6 +50,33 @@ interface NotificationTemplate {
   type: string;
 }
 
+// Notification Categories for filtering
+const NOTIFICATION_CATEGORIES = [
+  { id: "all", label: "All", icon: Bell, color: "text-foreground" },
+  { id: "system", label: "System", icon: Cog, color: "text-blue-500" },
+  { id: "security", label: "Security", icon: Shield, color: "text-red-500" },
+  { id: "billing", label: "Billing", icon: CreditCard, color: "text-green-500" },
+  { id: "users", label: "Users", icon: Users, color: "text-purple-500" },
+  { id: "projects", label: "Projects", icon: FolderOpen, color: "text-orange-500" },
+  { id: "onboarding", label: "Onboarding", icon: UserPlus, color: "text-cyan-500" },
+] as const;
+
+// Map notification types to categories
+const TYPE_TO_CATEGORY: Record<string, string> = {
+  info: "system",
+  success: "system",
+  warning: "system",
+  error: "system",
+  security: "security",
+  billing: "billing",
+  payment: "billing",
+  invoice: "billing",
+  user: "users",
+  onboarding: "onboarding",
+  project: "projects",
+  feature: "system",
+};
+
 // Mock templates
 const notificationTemplates: NotificationTemplate[] = [
   { id: "1", name: "Welcome Email", subject: "Welcome to ATLAS!", body: "Thank you for joining ATLAS. Your account is now active.", type: "email" },
@@ -65,12 +93,15 @@ export const AdminNotificationSystem: React.FC = () => {
     title: "",
     message: "",
     type: "info",
+    category: "system",
     sendEmail: false,
     sendPush: true,
     targetAll: true,
     targetUsers: [] as string[]
   });
-  const [filter, setFilter] = useState("all");
+  const [readFilter, setReadFilter] = useState("all");
+  const [categoryFilter, setCategoryFilter] = useState("all");
+  const [searchQuery, setSearchQuery] = useState("");
   const [pushEnabled, setPushEnabled] = useState(true);
   const [emailEnabled, setEmailEnabled] = useState(true);
   const [soundEnabled, setSoundEnabled] = useState(true);
@@ -202,6 +233,7 @@ export const AdminNotificationSystem: React.FC = () => {
         title: "",
         message: "",
         type: "info",
+        category: "system",
         sendEmail: false,
         sendPush: true,
         targetAll: true,
@@ -303,13 +335,56 @@ export const AdminNotificationSystem: React.FC = () => {
     }
   };
 
-  const filteredNotifications = notifications.filter(n => {
-    if (filter === 'unread') return !n.is_read;
-    if (filter === 'read') return n.is_read;
-    return true;
-  });
+  // Get category for a notification type
+  const getNotificationCategory = (type: string): string => {
+    return TYPE_TO_CATEGORY[type] || "system";
+  };
+
+  // Filter notifications by read status, category, and search
+  const filteredNotifications = useMemo(() => {
+    return notifications.filter(n => {
+      // Read filter
+      if (readFilter === 'unread' && n.is_read) return false;
+      if (readFilter === 'read' && !n.is_read) return false;
+      
+      // Category filter
+      if (categoryFilter !== 'all') {
+        const notifCategory = getNotificationCategory(n.notification_type);
+        if (notifCategory !== categoryFilter) return false;
+      }
+      
+      // Search filter
+      if (searchQuery) {
+        const query = searchQuery.toLowerCase();
+        return n.title.toLowerCase().includes(query) || 
+               n.message.toLowerCase().includes(query);
+      }
+      
+      return true;
+    });
+  }, [notifications, readFilter, categoryFilter, searchQuery]);
 
   const unreadCount = notifications.filter(n => !n.is_read).length;
+  
+  // Category counts for badges
+  const categoryCounts = useMemo(() => {
+    const counts: Record<string, number> = { all: notifications.length };
+    NOTIFICATION_CATEGORIES.forEach(cat => {
+      if (cat.id !== 'all') {
+        counts[cat.id] = notifications.filter(n => 
+          getNotificationCategory(n.notification_type) === cat.id
+        ).length;
+      }
+    });
+    return counts;
+  }, [notifications]);
+
+  // Get category icon component
+  const getCategoryIcon = (categoryId: string) => {
+    const category = NOTIFICATION_CATEGORIES.find(c => c.id === categoryId);
+    if (!category) return Bell;
+    return category.icon;
+  };
 
   return (
     <div className="space-y-6">
@@ -356,19 +431,41 @@ export const AdminNotificationSystem: React.FC = () => {
                     onChange={(e) => setNewNotification({ ...newNotification, message: e.target.value })}
                   />
                 </div>
-                <div className="space-y-2">
-                  <Label>Type</Label>
-                  <Select value={newNotification.type} onValueChange={(v) => setNewNotification({ ...newNotification, type: v })}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="info">Info</SelectItem>
-                      <SelectItem value="success">Success</SelectItem>
-                      <SelectItem value="warning">Warning</SelectItem>
-                      <SelectItem value="error">Error</SelectItem>
-                    </SelectContent>
-                  </Select>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>Type</Label>
+                    <Select value={newNotification.type} onValueChange={(v) => setNewNotification({ ...newNotification, type: v })}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="info">Info</SelectItem>
+                        <SelectItem value="success">Success</SelectItem>
+                        <SelectItem value="warning">Warning</SelectItem>
+                        <SelectItem value="error">Error</SelectItem>
+                        <SelectItem value="security">Security</SelectItem>
+                        <SelectItem value="billing">Billing</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Category</Label>
+                    <Select value={newNotification.category} onValueChange={(v) => setNewNotification({ ...newNotification, category: v })}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {NOTIFICATION_CATEGORIES.filter(c => c.id !== 'all').map(cat => (
+                          <SelectItem key={cat.id} value={cat.id}>
+                            <span className="flex items-center gap-2">
+                              <cat.icon className={`w-4 h-4 ${cat.color}`} />
+                              {cat.label}
+                            </span>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
                 <div className="space-y-3">
                   <Label>Delivery Methods</Label>
@@ -487,28 +584,67 @@ export const AdminNotificationSystem: React.FC = () => {
         </TabsList>
 
         <TabsContent value="notifications" className="space-y-4">
-          {/* Filters */}
-          <div className="flex justify-between items-center">
-            <div className="flex gap-2">
-              <Button variant={filter === 'all' ? 'default' : 'outline'} size="sm" onClick={() => setFilter('all')}>
-                All
-              </Button>
-              <Button variant={filter === 'unread' ? 'default' : 'outline'} size="sm" onClick={() => setFilter('unread')}>
-                Unread ({unreadCount})
-              </Button>
-              <Button variant={filter === 'read' ? 'default' : 'outline'} size="sm" onClick={() => setFilter('read')}>
-                Read
-              </Button>
+          {/* Search and Category Filters */}
+          <div className="space-y-4">
+            {/* Search Bar */}
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <Input
+                placeholder="Search notifications..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-10"
+              />
             </div>
-            <div className="flex gap-2">
-              <Button variant="outline" size="sm" onClick={markAllAsRead}>
-                <Eye className="w-4 h-4 mr-2" />
-                Mark All Read
-              </Button>
-              <Button variant="outline" size="sm" onClick={clearAllNotifications}>
-                <Archive className="w-4 h-4 mr-2" />
-                Clear All
-              </Button>
+            
+            {/* Category Filter Pills */}
+            <div className="flex flex-wrap gap-2">
+              {NOTIFICATION_CATEGORIES.map((cat) => {
+                const IconComponent = cat.icon;
+                const isActive = categoryFilter === cat.id;
+                return (
+                  <Button
+                    key={cat.id}
+                    variant={isActive ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setCategoryFilter(cat.id)}
+                    className={`flex items-center gap-1.5 ${isActive ? "" : "hover:bg-muted/50"}`}
+                  >
+                    <IconComponent className={`w-3.5 h-3.5 ${isActive ? "" : cat.color}`} />
+                    {cat.label}
+                    {categoryCounts[cat.id] > 0 && (
+                      <Badge variant={isActive ? "secondary" : "outline"} className="ml-1 text-xs px-1.5 py-0">
+                        {categoryCounts[cat.id]}
+                      </Badge>
+                    )}
+                  </Button>
+                );
+              })}
+            </div>
+            
+            {/* Read Status Filters and Actions */}
+            <div className="flex justify-between items-center">
+              <div className="flex gap-2">
+                <Button variant={readFilter === 'all' ? 'default' : 'outline'} size="sm" onClick={() => setReadFilter('all')}>
+                  All
+                </Button>
+                <Button variant={readFilter === 'unread' ? 'default' : 'outline'} size="sm" onClick={() => setReadFilter('unread')}>
+                  Unread ({unreadCount})
+                </Button>
+                <Button variant={readFilter === 'read' ? 'default' : 'outline'} size="sm" onClick={() => setReadFilter('read')}>
+                  Read
+                </Button>
+              </div>
+              <div className="flex gap-2">
+                <Button variant="outline" size="sm" onClick={markAllAsRead}>
+                  <Eye className="w-4 h-4 mr-2" />
+                  Mark All Read
+                </Button>
+                <Button variant="outline" size="sm" onClick={clearAllNotifications}>
+                  <Archive className="w-4 h-4 mr-2" />
+                  Clear All
+                </Button>
+              </div>
             </div>
           </div>
 
@@ -533,7 +669,7 @@ export const AdminNotificationSystem: React.FC = () => {
                         key={notification.id}
                         className={`p-4 hover:bg-muted/50 transition-colors ${!notification.is_read ? 'bg-primary/5' : ''}`}
                       >
-                        <div className="flex items-start gap-3">
+                          <div className="flex items-start gap-3">
                           <Badge className={getTypeColor(notification.notification_type)}>
                             {getTypeIcon(notification.notification_type)}
                           </Badge>
@@ -543,6 +679,21 @@ export const AdminNotificationSystem: React.FC = () => {
                               {!notification.is_read && (
                                 <Badge variant="secondary" className="text-xs">New</Badge>
                               )}
+                              {/* Category badge */}
+                              {(() => {
+                                const catId = getNotificationCategory(notification.notification_type);
+                                const cat = NOTIFICATION_CATEGORIES.find(c => c.id === catId);
+                                if (cat && cat.id !== 'all') {
+                                  const CatIcon = cat.icon;
+                                  return (
+                                    <Badge variant="outline" className={`text-xs ${cat.color}`}>
+                                      <CatIcon className="w-3 h-3 mr-1" />
+                                      {cat.label}
+                                    </Badge>
+                                  );
+                                }
+                                return null;
+                              })()}
                             </div>
                             <p className="text-sm text-muted-foreground">{notification.message}</p>
                             <div className="flex items-center gap-2 mt-2 text-xs text-muted-foreground">
