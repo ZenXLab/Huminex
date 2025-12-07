@@ -1,4 +1,4 @@
-import { ReactNode, useState } from "react";
+import { ReactNode, useState, useCallback } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import cropxonIcon from "@/assets/cropxon-icon.png";
 import { AdminNotificationBell } from "./AdminNotificationBell";
+import { prefetchAdminModule } from "@/lib/adminPrefetch";
 import { 
   LayoutDashboard, 
   Users, 
@@ -257,6 +258,11 @@ export const AdminLayout = ({ children }: AdminLayoutProps) => {
     setOpenSections(open ? navSections.map(s => s.title) : []);
   };
 
+  // Prefetch module on hover for instant navigation
+  const handleLinkHover = useCallback((href: string) => {
+    prefetchAdminModule(href);
+  }, []);
+
   return (
     <TooltipProvider delayDuration={0}>
       <div className="min-h-screen bg-background flex">
@@ -336,6 +342,8 @@ export const AdminLayout = ({ children }: AdminLayoutProps) => {
                       <TooltipTrigger asChild>
                         <Link
                           to={section.items[0].href}
+                          onMouseEnter={() => handleLinkHover(section.items[0].href)}
+                          onFocus={() => handleLinkHover(section.items[0].href)}
                           className={cn(
                             "flex items-center justify-center p-2.5 rounded-lg transition-all duration-200",
                             sectionActive
@@ -395,6 +403,8 @@ export const AdminLayout = ({ children }: AdminLayoutProps) => {
                         <Link
                           key={item.name}
                           to={item.href}
+                          onMouseEnter={() => handleLinkHover(item.href)}
+                          onFocus={() => handleLinkHover(item.href)}
                           className={cn(
                             "flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition-all duration-200 group",
                             isActive(item.href)
