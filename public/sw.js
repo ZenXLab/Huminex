@@ -1,21 +1,49 @@
-// ATLAS Push Notification Service Worker
-const CACHE_NAME = 'atlas-notifications-v1';
+// ATLAS Service Worker with Advanced Caching
+const CACHE_VERSION = 'v2';
+const STATIC_CACHE = `atlas-static-${CACHE_VERSION}`;
+const DYNAMIC_CACHE = `atlas-dynamic-${CACHE_VERSION}`;
+const API_CACHE = `atlas-api-${CACHE_VERSION}`;
+const ADMIN_CACHE = `atlas-admin-${CACHE_VERSION}`;
 
-// Install event - cache essential assets
+// Assets to pre-cache on install
+const STATIC_ASSETS = [
+  '/',
+  '/favicon.png',
+  '/manifest.json'
+];
+
+// Cache duration settings (in seconds)
+const CACHE_DURATIONS = {
+  static: 7 * 24 * 60 * 60,    // 7 days for static assets
+  api: 5 * 60,                  // 5 minutes for API responses
+  admin: 24 * 60 * 60,          // 24 hours for admin chunks
+};
+
+// Install event - pre-cache essential assets
 self.addEventListener('install', (event) => {
-  console.log('[Service Worker] Installing ATLAS Notification Service Worker');
+  console.log('[SW] Installing ATLAS Service Worker');
+  event.waitUntil(
+    caches.open(STATIC_CACHE).then((cache) => {
+      console.log('[SW] Pre-caching static assets');
+      return cache.addAll(STATIC_ASSETS).catch(err => {
+        console.warn('[SW] Pre-cache failed for some assets:', err);
+      });
+    })
+  );
   self.skipWaiting();
 });
 
 // Activate event - cleanup old caches
 self.addEventListener('activate', (event) => {
-  console.log('[Service Worker] Activating ATLAS Notification Service Worker');
+  console.log('[SW] Activating ATLAS Service Worker');
+  const currentCaches = [STATIC_CACHE, DYNAMIC_CACHE, API_CACHE, ADMIN_CACHE];
+  
   event.waitUntil(
     caches.keys().then((cacheNames) => {
       return Promise.all(
         cacheNames.map((cacheName) => {
-          if (cacheName !== CACHE_NAME) {
-            console.log('[Service Worker] Deleting old cache:', cacheName);
+          if (!currentCaches.includes(cacheName)) {
+            console.log('[SW] Deleting old cache:', cacheName);
             return caches.delete(cacheName);
           }
         })
@@ -25,9 +53,162 @@ self.addEventListener('activate', (event) => {
   return self.clients.claim();
 });
 
+// Determine caching strategy based on request
+function getCacheStrategy(request) {
+  const url = new URL(request.url);
+  
+  // API requests to Supabase
+  if (url.hostname.includes('supabase') || url.pathname.startsWith('/rest/')) {
+    return 'stale-while-revalidate';
+  }
+  
+  // Admin module chunks (lazy-loaded components)
+  if (url.pathname.includes('/assets/') && url.pathname.includes('Admin')) {
+    return 'cache-first';
+  }
+  
+  // Static assets (JS, CSS, images, fonts)
+  if (url.pathname.match(/\.(js|css|png|jpg|jpeg|gif|svg|woff|woff2|ttf|eot)$/)) {
+    return 'cache-first';
+  }
+  
+  // HTML pages - network first
+  if (request.mode === 'navigate' || url.pathname.endsWith('.html')) {
+    return 'network-first';
+  }
+  
+  // Default to network first
+  return 'network-first';
+}
+
+// Cache First Strategy - for static assets
+async function cacheFirst(request, cacheName) {
+  const cached = await caches.match(request);
+  if (cached) {
+    return cached;
+  }
+  
+  try {
+    const response = await fetch(request);
+    if (response.ok) {
+      const cache = await caches.open(cacheName);
+      cache.put(request, response.clone());
+    }
+    return response;
+  } catch (error) {
+    console.warn('[SW] Cache first fetch failed:', error);
+    throw error;
+  }
+}
+
+// Network First Strategy - for HTML pages
+async function networkFirst(request, cacheName) {
+  try {
+    const response = await fetch(request);
+    if (response.ok) {
+      const cache = await caches.open(cacheName);
+      cache.put(request, response.clone());
+    }
+    return response;
+  } catch (error) {
+    const cached = await caches.match(request);
+    if (cached) {
+      return cached;
+    }
+    throw error;
+  }
+}
+
+// Stale While Revalidate Strategy - for API requests
+async function staleWhileRevalidate(request, cacheName) {
+  const cache = await caches.open(cacheName);
+  const cached = await caches.match(request);
+  
+  const fetchPromise = fetch(request).then((response) => {
+    if (response.ok) {
+      // Add timestamp for cache expiration
+      const headers = new Headers(response.headers);
+      headers.set('sw-cached-at', Date.now().toString());
+      
+      const responseWithTimestamp = new Response(response.clone().body, {
+        status: response.status,
+        statusText: response.statusText,
+        headers
+      });
+      
+      cache.put(request, responseWithTimestamp);
+    }
+    return response;
+  }).catch(() => cached);
+  
+  // Return cached response immediately if available
+  if (cached) {
+    // Check if cache is still valid
+    const cachedAt = cached.headers.get('sw-cached-at');
+    if (cachedAt) {
+      const age = (Date.now() - parseInt(cachedAt)) / 1000;
+      if (age < CACHE_DURATIONS.api) {
+        // Still valid, return cached and update in background
+        fetchPromise.catch(() => {});
+        return cached;
+      }
+    }
+  }
+  
+  return fetchPromise;
+}
+
+// Main fetch handler
+self.addEventListener('fetch', (event) => {
+  const { request } = event;
+  
+  // Skip non-GET requests
+  if (request.method !== 'GET') {
+    return;
+  }
+  
+  // Skip chrome-extension and other non-http requests
+  if (!request.url.startsWith('http')) {
+    return;
+  }
+  
+  const strategy = getCacheStrategy(request);
+  
+  event.respondWith((async () => {
+    try {
+      switch (strategy) {
+        case 'cache-first':
+          return await cacheFirst(request, STATIC_CACHE);
+        
+        case 'network-first':
+          return await networkFirst(request, DYNAMIC_CACHE);
+        
+        case 'stale-while-revalidate':
+          return await staleWhileRevalidate(request, API_CACHE);
+        
+        default:
+          return await fetch(request);
+      }
+    } catch (error) {
+      // Return offline fallback page if available
+      const offlinePage = await caches.match('/offline.html');
+      if (offlinePage) {
+        return offlinePage;
+      }
+      
+      // Return a basic offline response
+      return new Response('Offline - Please check your connection', {
+        status: 503,
+        statusText: 'Service Unavailable',
+        headers: { 'Content-Type': 'text/plain' }
+      });
+    }
+  })());
+});
+
 // Push notification event handler
 self.addEventListener('push', (event) => {
-  console.log('[Service Worker] Push notification received');
+  console.log('[SW] Push notification received');
   
   let notificationData = {
     title: 'ATLAS Notification',
@@ -57,12 +238,11 @@ self.addEventListener('push', (event) => {
         }
       };
     } catch (e) {
-      console.error('[Service Worker] Error parsing push data:', e);
+      console.error('[SW] Error parsing push data:', e);
       notificationData.body = event.data.text();
     }
   }
 
-  // Show the notification
   event.waitUntil(
     self.registration.showNotification(notificationData.title, {
       body: notificationData.body,
@@ -82,8 +262,7 @@ self.addEventListener('push', (event) => {
 
 // Notification click handler
 self.addEventListener('notificationclick', (event) => {
-  console.log('[Service Worker] Notification clicked:', event.action);
-  
+  console.log('[SW] Notification clicked:', event.action);
   event.notification.close();
 
   if (event.action === 'dismiss') {
@@ -94,7 +273,6 @@ self.addEventListener('notificationclick', (event) => {
 
   event.waitUntil(
     clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
-      // Try to focus an existing window
       for (const client of clientList) {
         if (client.url.includes(self.location.origin) && 'focus' in client) {
           client.focus();
@@ -102,7 +280,6 @@ self.addEventListener('notificationclick', (event) => {
           return;
         }
       }
-      // Open a new window if none found
       if (clients.openWindow) {
         return clients.openWindow(url);
       }
@@ -110,17 +287,39 @@ self.addEventListener('notificationclick', (event) => {
   );
 });
 
-// Notification close handler
-self.addEventListener('notificationclose', (event) => {
-  console.log('[Service Worker] Notification closed');
-});
-
-// Message handler for communication with main app
+// Message handler
 self.addEventListener('message', (event) => {
-  console.log('[Service Worker] Message received:', event.data);
+  console.log('[SW] Message received:', event.data);
   
   if (event.data.type === 'SKIP_WAITING') {
     self.skipWaiting();
+  }
+  
+  if (event.data.type === 'CLEAR_CACHE') {
+    event.waitUntil(
+      caches.keys().then((cacheNames) => {
+        return Promise.all(cacheNames.map((name) => caches.delete(name)));
+      }).then(() => {
+        event.ports[0]?.postMessage({ success: true });
+      })
+    );
+  }
+  
+  if (event.data.type === 'GET_CACHE_STATUS') {
+    event.waitUntil(
+      Promise.all([
+        caches.open(STATIC_CACHE).then(c => c.keys()),
+        caches.open(API_CACHE).then(c => c.keys()),
+        caches.open(ADMIN_CACHE).then(c => c.keys()),
+      ]).then(([staticKeys, apiKeys, adminKeys]) => {
+        event.ports[0]?.postMessage({
+          static: staticKeys.length,
+          api: apiKeys.length,
+          admin: adminKeys.length,
+          version: CACHE_VERSION
+        });
+      })
+    );
   }
   
   if (event.data.type === 'GET_SUBSCRIPTION') {
@@ -132,9 +331,9 @@ self.addEventListener('message', (event) => {
   }
 });
 
-// Background sync for offline notifications
+// Background sync
 self.addEventListener('sync', (event) => {
-  console.log('[Service Worker] Sync event:', event.tag);
+  console.log('[SW] Sync event:', event.tag);
   
   if (event.tag === 'sync-notifications') {
     event.waitUntil(syncNotifications());
@@ -142,6 +341,5 @@ self.addEventListener('sync', (event) => {
 });
 
 async function syncNotifications() {
-  console.log('[Service Worker] Syncing notifications');
-  // Placeholder for syncing notifications when coming back online
+  console.log('[SW] Syncing notifications');
 }
