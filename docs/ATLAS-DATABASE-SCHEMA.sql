@@ -1,175 +1,230 @@
 -- ============================================================================
--- ATLAS DATABASE SCHEMA - COMPLETE SQL REFERENCE
+-- ATLAS Database Schema Documentation
 -- ============================================================================
 -- 
--- PURPOSE: Complete database schema for ATLAS Workforce Operating System
---          including all tables, functions, triggers, enums, and RLS policies
+-- > **Version**: 3.5.0  
+-- > **Last Updated**: December 7, 2025 @ 18:15 UTC  
+-- > **Author**: CropXon ATLAS Team
 --
--- VERSION: 3.0.0
--- LAST UPDATED: December 7, 2025
+-- ============================================================================
+
+-- ============================================================================
+-- 📊 DATABASE SCHEMA SUMMARY (60 Tables)
+-- ============================================================================
 --
--- CONTENTS:
---   Part 1: Enums & Types
---   Part 2: Core Tables (Users, Profiles, Roles, Tenants)
---   Part 3: Sales & CRM Tables (Quotes, Invoices, Leads)
---   Part 4: Client Onboarding Tables
---   Part 5: Project Management Tables
---   Part 6: Support & Communication Tables
---   Part 7: File Management Tables
---   Part 8: MSP Monitoring Tables
---   Part 9: Pricing & Configuration Tables
---   Part 10: Admin & System Tables
---   Part 11: Logging & Analytics Tables
---   Part 12: Team & Compliance Tables
---   Part 13: Feature Permissions & Notifications Tables
---   Part 14: Database Functions
---   Part 15: Triggers
---   Part 16: Row Level Security (RLS) Policies
---   Part 17: Multi-Tenancy Schema (Advanced)
+-- | # | Table Name | Status | Category | Purpose/Description |
+-- |---|------------|--------|----------|---------------------|
+-- | 1 | profiles | ✅ Live | Core | User profile data (name, email, phone, company) |
+-- | 2 | user_roles | ✅ Live | Core | User role assignments (admin, user) for RBAC |
+-- | 3 | client_tenants | ✅ Live | Core | Organization/company tenant records |
+-- | 4 | client_tenant_users | ✅ Live | Core | Maps users to their tenant memberships |
+-- | 5 | quotes | ✅ Live | Sales & CRM | Service quotes with pricing, status, contact info |
+-- | 6 | invoices | ✅ Live | Sales & CRM | Client invoices with amounts, due dates, status |
+-- | 7 | leads | ✅ Live | Sales & CRM | Sales leads with scores, sources, conversion |
+-- | 8 | inquiries | ✅ Live | Sales & CRM | Contact form submissions and service inquiries |
+-- | 9 | onboarding_sessions | ✅ Live | Onboarding | Client onboarding wizard progress and data |
+-- | 10 | client_onboarding | ✅ Live | Onboarding | Simple onboarding requests (pre-approval) |
+-- | 11 | projects | ✅ Live | Project Mgmt | Client projects with status, budget, timeline |
+-- | 12 | project_milestones | ✅ Live | Project Mgmt | Project milestones with due dates and completion |
+-- | 13 | support_tickets | ✅ Live | Support | Support tickets with priority, SLA, assignment |
+-- | 14 | ticket_messages | ✅ Live | Support | Messages/replies within support tickets |
+-- | 15 | meetings | ✅ Live | Communication | Scheduled meetings with clients and team |
+-- | 16 | client_files | ✅ Live | File Management | Client uploaded files with versioning |
+-- | 17 | client_feedback | ✅ Live | File Management | Client feedback ratings and comments |
+-- | 18 | client_msp_servers | ✅ Live | MSP Monitoring | Monitored servers for managed service clients |
+-- | 19 | client_msp_metrics | ✅ Live | MSP Monitoring | Server metrics (CPU, memory, disk) |
+-- | 20 | client_msp_alerts | ✅ Live | MSP Monitoring | Server alerts and incident notifications |
+-- | 21 | service_pricing | ✅ Live | Pricing | Service pricing tiers and features |
+-- | 22 | service_addons | ✅ Live | Pricing | Optional add-on services with pricing |
+-- | 23 | pricing_modifiers | ✅ Live | Pricing | Industry/size pricing multipliers |
+-- | 24 | coupon_codes | ✅ Live | Pricing | Discount coupons with usage limits |
+-- | 25 | admin_notifications | ✅ Live | Admin | Admin-targeted notifications |
+-- | 26 | admin_settings | ✅ Live | Admin | Platform-wide admin configuration |
+-- | 27 | portal_settings | ✅ Live | Admin | Client portal configuration settings |
+-- | 28 | audit_logs | ✅ Live | Logging | System audit trail for compliance |
+-- | 29 | system_logs | ✅ Live | Logging | Application logs for debugging |
+-- | 30 | clickstream_events | ✅ Live | Logging | User interaction tracking for analytics |
+-- | 31 | api_usage | ✅ Live | Logging | API endpoint usage tracking |
+-- | 32 | team_members | ✅ Live | Team | Internal team member profiles |
+-- | 33 | compliance_items | ✅ Live | Compliance | Compliance checklist items and status |
+-- | 34 | integrations | ✅ Live | Integrations | Third-party integration configurations |
+-- | 35 | client_notices | ✅ Live | Communication | Announcements and notices for clients |
+-- | 36 | global_features | 📋 Pending | Features | Platform-wide feature definitions |
+-- | 37 | tenant_features | 📋 Pending | Features | Tenant-specific feature flags |
+-- | 38 | role_feature_defaults | 📋 Pending | Features | Default features by role |
+-- | 39 | employee_feature_access | 📋 Pending | Features | Individual employee feature permissions |
+-- | 40 | employee_notifications | 📋 Pending | Notifications | Employee notification records |
+-- | 41 | notification_preferences | 📋 Pending | Notifications | User notification channel preferences |
+-- | 42 | feature_unlock_log | 📋 Pending | Notifications | Log of feature unlock events |
+-- | 43 | payroll_runs | 📋 Pending | Payroll | Monthly/weekly payroll processing runs |
+-- | 44 | payslips | 📋 Pending | Payroll | Individual employee payslips |
+-- | 45 | bgv_requests | 📋 Pending | BGV | Background verification requests |
+-- | 46 | sso_states | 📋 Pending | SSO | OAuth state tokens for SSO flows |
+-- | 47 | insurance_claims | 📋 Pending | Insurance | Employee insurance claim submissions |
+-- | 48 | document_verifications | 📋 Pending | Documents | Document verification requests/results |
+-- | 49 | document_extractions | 📋 Pending | Documents | OCR/data extraction from documents |
+-- | 50 | employees | 📋 Pending | HR | Employee master records with details |
+-- | 51 | attendance_records | 📋 Pending | HR | Daily attendance check-in/check-out |
+-- | 52 | leave_types | 📋 Pending | HR | Leave type definitions (annual, sick) |
+-- | 53 | leave_balances | 📋 Pending | HR | Employee leave balance tracking |
+-- | 54 | leave_requests | 📋 Pending | HR | Leave application requests/approvals |
+-- | 55 | shifts | 📋 Pending | Shift Mgmt | Shift definitions with timing/settings |
+-- | 56 | shift_assignments | 📋 Pending | Shift Mgmt | Employee shift assignments |
+-- | 57 | shift_swap_requests | 📋 Pending | Shift Mgmt | Shift swap requests between employees |
+-- | 58 | overtime_records | 📋 Pending | Overtime | Overtime hours with approval status |
+-- | 59 | geofence_zones | 📋 Pending | Geofencing | Office location geofence boundaries |
+-- | 60 | geofence_attendance_logs | 📋 Pending | Geofencing | GPS-validated attendance entries |
+--
+-- ============================================================================
+
+-- ============================================================================
+-- 📈 STATISTICS
+-- ============================================================================
+--
+-- | Metric | Count |
+-- |--------|-------|
+-- | **Total Tables** | 60 |
+-- | **Live (Deployed)** | 35 ✅ |
+-- | **Pending Migration** | 25 📋 |
+-- | **Database Functions** | 7 |
+-- | **Database Triggers** | 2 |
+-- | **Enums/Types** | 15 |
+-- | **RLS Policies** | 75+ |
+-- | **Indexes** | 50+ |
+-- | **Storage Buckets** | 1 |
+--
+-- ============================================================================
+
+-- ============================================================================
+-- 🗂️ TABLES BY CATEGORY
+-- ============================================================================
+--
+-- | Category | Tables | Count |
+-- |----------|--------|-------|
+-- | **Core** | profiles, user_roles, client_tenants, client_tenant_users | 4 |
+-- | **Sales & CRM** | quotes, invoices, leads, inquiries | 4 |
+-- | **Onboarding** | onboarding_sessions, client_onboarding | 2 |
+-- | **Project Mgmt** | projects, project_milestones | 2 |
+-- | **Support** | support_tickets, ticket_messages | 2 |
+-- | **Communication** | meetings, client_notices | 2 |
+-- | **File Management** | client_files, client_feedback | 2 |
+-- | **MSP Monitoring** | client_msp_servers, client_msp_metrics, client_msp_alerts | 3 |
+-- | **Pricing** | service_pricing, service_addons, pricing_modifiers, coupon_codes | 4 |
+-- | **Admin** | admin_notifications, admin_settings, portal_settings | 3 |
+-- | **Logging** | audit_logs, system_logs, clickstream_events, api_usage | 4 |
+-- | **Team** | team_members | 1 |
+-- | **Compliance** | compliance_items | 1 |
+-- | **Integrations** | integrations | 1 |
+-- | **Features** | global_features, tenant_features, role_feature_defaults, employee_feature_access | 4 |
+-- | **Notifications** | employee_notifications, notification_preferences, feature_unlock_log | 3 |
+-- | **Payroll** | payroll_runs, payslips | 2 |
+-- | **BGV** | bgv_requests | 1 |
+-- | **SSO** | sso_states | 1 |
+-- | **Insurance** | insurance_claims | 1 |
+-- | **Documents** | document_verifications, document_extractions | 2 |
+-- | **HR** | employees, attendance_records, leave_types, leave_balances, leave_requests | 5 |
+-- | **Shift Mgmt** | shifts, shift_assignments, shift_swap_requests | 3 |
+-- | **Overtime** | overtime_records | 1 |
+-- | **Geofencing** | geofence_zones, geofence_attendance_logs | 2 |
+--
+-- ============================================================================
+
+-- ============================================================================
+-- 🔧 DATABASE FUNCTIONS (7 Total)
+-- ============================================================================
+--
+-- | # | Function Name | Purpose | Returns |
+-- |---|---------------|---------|---------|
+-- | 1 | generate_quote_number() | Auto-generate quote numbers | ATL-YYYY-XXXX |
+-- | 2 | generate_invoice_number() | Auto-generate invoice numbers | INV-YYYY-XXXX |
+-- | 3 | generate_client_id() | Auto-generate client IDs | ATLS-YYYYMMDD-XXXX |
+-- | 4 | generate_ticket_number() | Auto-generate ticket numbers | TKT-XXXXX |
+-- | 5 | handle_new_user() | Trigger: create profile on signup | trigger |
+-- | 6 | has_role() | Security: check user roles (RBAC) | boolean |
+-- | 7 | is_feature_enabled_for_user() | Check feature enabled for user | boolean |
+--
+-- ============================================================================
+
+-- ============================================================================
+-- ⚡ DATABASE TRIGGERS (2 Total)
+-- ============================================================================
+--
+-- | # | Trigger Name | Table | Event | Purpose |
+-- |---|--------------|-------|-------|---------|
+-- | 1 | on_auth_user_created | auth.users | INSERT | Creates profile when user signs up |
+-- | 2 | on_employee_feature_enabled | employee_feature_access | INSERT | Notifies when features unlocked |
+--
+-- ============================================================================
+
+-- ============================================================================
+-- 📝 ENUMS/TYPES (15 Total)
+-- ============================================================================
+--
+-- | # | Type Name | Values | Purpose |
+-- |---|-----------|--------|---------|
+-- | 1 | app_role | admin, user | User role assignment |
+-- | 2 | quote_status | draft, pending, approved, rejected, converted | Quote workflow |
+-- | 3 | invoice_status | draft, sent, paid, overdue, cancelled | Invoice workflow |
+-- | 4 | feature_category | core, payroll, talent, operations, compliance, intelligence, integrations | Feature grouping |
+-- | 5 | feature_tier | starter, professional, business, enterprise | Subscription tiers |
+-- | 6 | tenant_role | super_admin, admin, hr_manager, manager, employee | Tenant user roles |
+-- | 7 | notification_type | feature_unlock, system, alert, reminder, message | Notification types |
+-- | 8 | notification_channel | in_app, email, sms, push | Delivery channels |
+-- | 9 | notification_priority | low, normal, high, urgent | Priority levels |
+-- | 10 | employment_status | active, probation, notice, terminated, resigned | Employee status |
+-- | 11 | attendance_status | present, absent, half_day, late, on_leave, holiday | Attendance types |
+-- | 12 | shift_status | draft, published, active, completed, cancelled | Shift lifecycle |
+-- | 13 | shift_assignment_status | scheduled, confirmed, completed, missed, swapped | Assignment states |
+-- | 14 | shift_swap_status | pending, approved, rejected, cancelled | Swap workflow |
+-- | 15 | overtime_type | regular, weekend, holiday, night_shift | Overtime categories |
+--
+-- ============================================================================
+
+-- ============================================================================
+-- 🔑 REQUIRED SECRETS
+-- ============================================================================
+--
+-- | Secret | Description | Status |
+-- |--------|-------------|--------|
+-- | SUPABASE_URL | Auto-provided by Supabase | ✅ Configured |
+-- | SUPABASE_ANON_KEY | Auto-provided by Supabase | ✅ Configured |
+-- | SUPABASE_SERVICE_ROLE_KEY | Auto-provided by Supabase | ✅ Configured |
+-- | SUPABASE_DB_URL | Database connection URL | ✅ Configured |
+-- | SUPABASE_PUBLISHABLE_KEY | Public API key | ✅ Configured |
+-- | RESEND_API_KEY | For sending emails via Resend | ✅ Configured |
+--
+-- ============================================================================
+
+-- ============================================================================
+-- 💾 STORAGE BUCKETS
+-- ============================================================================
+--
+-- | Bucket Name | Public | Purpose |
+-- |-------------|--------|---------|
+-- | client-files | No | Client uploaded documents and files |
 --
 -- ============================================================================
 
 
--- ============================================================================
--- ATLAS DATABASE SCHEMA STATISTICS
--- ============================================================================
--- 
--- LAST UPDATED: December 7, 2025 @ 17:30 UTC
---
--- COMPONENT COUNTS:
---   Database Tables: 52 (35 core + 7 operational + 5 HR module + 5 shift/geofencing)
---   Database Functions: 7
---   Database Triggers: 2
---   Edge Functions: 15 (10 deployed + 5 documented)
---   Storage Buckets: 1
---   Secrets Configured: 6
---   Enums/Types: 15 (10 existing + 2 HR + 3 new shift/geofencing)
---   RLS Policies: 75+
---   Indexes: 50+
---
--- ============================================================================
--- TABLE SUMMARY (52 Tables) - Quick Reference
--- ============================================================================
---
--- | # | Table Name                  | Category          | Purpose/Description                                    |
--- |---|-----------------------------|--------------------|--------------------------------------------------------|
--- | 1 | profiles                    | Core               | User profile data (name, email, phone, company)        |
--- | 2 | user_roles                  | Core               | User role assignments (admin, user) for RBAC           |
--- | 3 | client_tenants              | Core               | Organization/company tenant records                    |
--- | 4 | client_tenant_users         | Core               | Maps users to their tenant memberships                 |
--- | 5 | quotes                      | Sales & CRM        | Service quotes with pricing, status, contact info      |
--- | 6 | invoices                    | Sales & CRM        | Client invoices with amounts, due dates, status        |
--- | 7 | leads                       | Sales & CRM        | Sales leads with scores, sources, conversion tracking  |
--- | 8 | inquiries                   | Sales & CRM        | Contact form submissions and service inquiries         |
--- | 9 | onboarding_sessions         | Onboarding         | Client onboarding wizard progress and data             |
--- |10 | client_onboarding           | Onboarding         | Simple onboarding requests (pre-approval stage)        |
--- |11 | projects                    | Project Mgmt       | Client projects with status, budget, timeline          |
--- |12 | project_milestones          | Project Mgmt       | Project milestones with due dates and completion       |
--- |13 | support_tickets             | Support            | Support tickets with priority, SLA, assignment         |
--- |14 | ticket_messages             | Support            | Messages/replies within support tickets                |
--- |15 | meetings                    | Communication      | Scheduled meetings with clients and team               |
--- |16 | client_files                | File Management    | Client uploaded files with versioning                  |
--- |17 | client_feedback             | File Management    | Client feedback ratings and comments                   |
--- |18 | client_msp_servers          | MSP Monitoring     | Monitored servers for managed service clients          |
--- |19 | client_msp_metrics          | MSP Monitoring     | Server performance metrics (CPU, memory, disk)         |
--- |20 | client_msp_alerts           | MSP Monitoring     | Server alerts and incident notifications               |
--- |21 | service_pricing             | Pricing            | Service pricing tiers and features                     |
--- |22 | service_addons              | Pricing            | Optional add-on services with pricing                  |
--- |23 | pricing_modifiers           | Pricing            | Industry/size pricing multipliers                      |
--- |24 | coupon_codes                | Pricing            | Discount coupons with usage limits                     |
--- |25 | admin_notifications         | Admin              | Admin-targeted notifications                           |
--- |26 | admin_settings              | Admin              | Platform-wide admin configuration                      |
--- |27 | portal_settings             | Admin              | Client portal configuration settings                   |
--- |28 | audit_logs                  | Logging            | System audit trail for compliance                      |
--- |29 | system_logs                 | Logging            | Application logs for debugging                         |
--- |30 | clickstream_events          | Logging            | User interaction tracking for analytics                |
--- |31 | api_usage                   | Logging            | API endpoint usage tracking                            |
--- |32 | team_members                | Team               | Internal team member profiles                          |
--- |33 | compliance_items            | Compliance         | Compliance checklist items and status                  |
--- |34 | integrations                | Integrations       | Third-party integration configurations                 |
--- |35 | client_notices              | Communication      | Announcements and notices for clients                  |
--- |36 | global_features             | Features           | Platform-wide feature definitions                      |
--- |37 | tenant_features             | Features           | Tenant-specific feature flags                          |
--- |38 | role_feature_defaults       | Features           | Default features by role                               |
--- |39 | employee_feature_access     | Features           | Individual employee feature permissions                |
--- |40 | employee_notifications      | Notifications      | Employee notification records                          |
--- |41 | notification_preferences    | Notifications      | User notification channel preferences                  |
--- |42 | feature_unlock_log          | Notifications      | Log of feature unlock events                           |
--- |43 | payroll_runs                | Payroll            | Monthly/weekly payroll processing runs                 |
--- |44 | payslips                    | Payroll            | Individual employee payslips                           |
--- |45 | bgv_requests                | BGV                | Background verification requests                       |
--- |46 | sso_states                  | SSO                | OAuth state tokens for SSO flows                       |
--- |47 | insurance_claims            | Insurance          | Employee insurance claim submissions                   |
--- |48 | document_verifications      | Documents          | Document verification requests and results             |
--- |49 | document_extractions        | Documents          | OCR/data extraction from documents                     |
--- |50 | employees                   | HR                 | Employee master records with employment details        |
--- |51 | attendance_records          | HR                 | Daily attendance check-in/check-out records            |
--- |52 | leave_types                 | HR                 | Leave type definitions (annual, sick, etc.)            |
--- |53 | leave_balances              | HR                 | Employee leave balance tracking                        |
--- |54 | leave_requests              | HR                 | Leave application requests and approvals               |
--- |55 | shifts                      | Shift Mgmt         | Shift definitions with timing and settings             |
--- |56 | shift_assignments           | Shift Mgmt         | Employee shift assignments                             |
--- |57 | shift_swap_requests         | Shift Mgmt         | Shift swap requests between employees                  |
--- |58 | overtime_records            | Overtime           | Overtime hours tracking with approval status           |
--- |59 | geofence_zones              | Geofencing         | Office location geofence boundaries                    |
--- |60 | geofence_attendance_logs    | Geofencing         | GPS-validated attendance entries                       |
---
--- ============================================================================
--- DATABASE FUNCTIONS SUMMARY (7 Functions)
--- ============================================================================
---
--- | # | Function Name              | Purpose                                              |
--- |---|----------------------------|------------------------------------------------------|
--- | 1 | generate_quote_number()    | Auto-generate quote numbers (ATL-YYYY-XXXX format)   |
--- | 2 | generate_invoice_number()  | Auto-generate invoice numbers (INV-YYYY-XXXX format) |
--- | 3 | generate_client_id()       | Auto-generate client IDs (ATLS-YYYYMMDD-XXXX format) |
--- | 4 | generate_ticket_number()   | Auto-generate ticket numbers (TKT-XXXXX format)      |
--- | 5 | handle_new_user()          | Trigger function to create profile on user signup    |
--- | 6 | has_role()                 | Security definer to check user roles (RBAC)          |
--- | 7 | is_feature_enabled_for_user() | Check if feature is enabled for specific user     |
---
--- ============================================================================
--- DATABASE TRIGGERS SUMMARY (2 Triggers)
--- ============================================================================
---
--- | # | Trigger Name               | Table      | Purpose                                |
--- |---|----------------------------|------------|----------------------------------------|
--- | 1 | on_auth_user_created       | auth.users | Creates profile when user signs up     |
--- | 2 | on_employee_feature_enabled| employee_feature_access | Notifies when features unlocked |
---
--- ============================================================================
--- ENUMS/TYPES SUMMARY (15 Types)
--- ============================================================================
---
--- | # | Type Name                  | Values                                               |
--- |---|----------------------------|------------------------------------------------------|
--- | 1 | app_role                   | admin, user                                          |
--- | 2 | quote_status               | draft, pending, approved, rejected, converted        |
--- | 3 | invoice_status             | draft, sent, paid, overdue, cancelled                |
--- | 4 | feature_category           | core, payroll, talent, operations, compliance, intelligence, integrations |
--- | 5 | feature_tier               | starter, professional, business, enterprise          |
--- | 6 | tenant_role                | super_admin, admin, hr_manager, manager, employee    |
--- | 7 | notification_type          | feature_unlock, system, alert, reminder, message     |
--- | 8 | notification_channel       | in_app, email, sms, push                             |
--- | 9 | notification_priority      | low, normal, high, urgent                            |
--- |10 | employment_status          | active, probation, notice, terminated, resigned      |
--- |11 | attendance_status          | present, absent, half_day, late, on_leave, holiday   |
--- |12 | shift_status               | draft, published, active, completed, cancelled       |
--- |13 | shift_assignment_status    | scheduled, confirmed, completed, missed, swapped     |
--- |14 | shift_swap_status          | pending, approved, rejected, cancelled               |
--- |15 | overtime_type              | regular, weekend, holiday, night_shift               |
---
--- ============================================================================
 
 
 -- ============================================================================
--- PART 1: ENUMS & TYPES
+-- ============================================================================
+--                        DETAILED TABLE DEFINITIONS
+-- ============================================================================
 -- ============================================================================
 
--- User roles for RBAC
+
+
+
+-- ============================================================================
+-- 📂 PART 1: ENUMS & TYPES
+-- ============================================================================
+
+-- 1.1 User roles for RBAC
 CREATE TYPE public.app_role AS ENUM ('admin', 'user');
 
--- Quote status workflow
+-- 1.2 Quote status workflow
 CREATE TYPE public.quote_status AS ENUM (
     'draft',      -- Initial creation
     'pending',    -- Awaiting review
@@ -178,7 +233,7 @@ CREATE TYPE public.quote_status AS ENUM (
     'converted'   -- Converted to invoice/project
 );
 
--- Invoice status workflow
+-- 1.3 Invoice status workflow
 CREATE TYPE public.invoice_status AS ENUM (
     'draft',      -- Initial creation
     'sent',       -- Sent to client
@@ -187,7 +242,7 @@ CREATE TYPE public.invoice_status AS ENUM (
     'cancelled'   -- Cancelled
 );
 
--- Feature permission enums
+-- 1.4 Feature permission enums
 CREATE TYPE public.feature_category AS ENUM (
     'core',           -- Core HR, Attendance, Leave
     'payroll',        -- Payroll, Compliance, Finance
@@ -239,27 +294,44 @@ CREATE TYPE public.notification_priority AS ENUM (
 
 
 -- ============================================================================
--- PART 2: CORE TABLES
+-- 📂 PART 2: CORE TABLES
 -- ============================================================================
 
--- 2.1 User Profiles (linked to auth.users)
--- Purpose: Extended user information beyond Supabase auth
+-- ----------------------------------------------------------------------------
+-- 2.1 profiles
+-- ----------------------------------------------------------------------------
+-- | Attribute | Details |
+-- |-----------|---------|
+-- | **Purpose** | Extended user information beyond Supabase auth |
+-- | **Primary Key** | id (references auth.users) |
+-- | **RLS** | Users can view/update own profile, Admins view all |
+-- | **Relationships** | → client_tenants (tenant_id) |
+-- ----------------------------------------------------------------------------
+
 CREATE TABLE public.profiles (
     id uuid NOT NULL PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
     email text NOT NULL,
     full_name text,
     company_name text,
     phone text,
-    tenant_id uuid,  -- Multi-tenancy link (FK added after client_tenants)
+    tenant_id uuid,
     created_at timestamptz DEFAULT now(),
     updated_at timestamptz DEFAULT now()
 );
 
 COMMENT ON TABLE public.profiles IS 'Extended user profile information linked to auth.users';
-COMMENT ON COLUMN public.profiles.tenant_id IS 'Optional link to client organization for multi-tenancy';
 
--- 2.2 User Roles (CRITICAL: Separate table for security)
--- Purpose: Role-based access control without privilege escalation risk
+-- ----------------------------------------------------------------------------
+-- 2.2 user_roles
+-- ----------------------------------------------------------------------------
+-- | Attribute | Details |
+-- |-----------|---------|
+-- | **Purpose** | Role-based access control (RBAC) |
+-- | **Primary Key** | id (uuid) |
+-- | **RLS** | Users view own roles, Admins manage all |
+-- | **SECURITY** | Separate table prevents privilege escalation |
+-- ----------------------------------------------------------------------------
+
 CREATE TABLE public.user_roles (
     id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
@@ -269,21 +341,29 @@ CREATE TABLE public.user_roles (
 );
 
 COMMENT ON TABLE public.user_roles IS 'SECURITY: User roles stored separately to prevent privilege escalation';
-COMMENT ON COLUMN public.user_roles.role IS 'admin = full platform access, user = standard access';
 
--- 2.3 Client Tenants (Multi-tenant organizations)
--- Purpose: Root table for multi-tenancy - each tenant is a client organization
+-- ----------------------------------------------------------------------------
+-- 2.3 client_tenants
+-- ----------------------------------------------------------------------------
+-- | Attribute | Details |
+-- |-----------|---------|
+-- | **Purpose** | Root table for multi-tenancy organizations |
+-- | **Primary Key** | id (uuid) |
+-- | **RLS** | Users view own tenant, Admins manage all |
+-- | **Unique** | slug (URL-friendly identifier) |
+-- ----------------------------------------------------------------------------
+
 CREATE TABLE public.client_tenants (
     id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-    slug text UNIQUE NOT NULL,              -- URL-friendly identifier
+    slug text UNIQUE NOT NULL,
     name text NOT NULL,
     contact_email text NOT NULL,
     contact_phone text,
     address text,
     logo_url text,
-    status text DEFAULT 'pending',          -- pending/active/suspended
-    tenant_type text DEFAULT 'individual',  -- individual/enterprise
-    settings jsonb DEFAULT '{}',            -- Custom configuration
+    status text DEFAULT 'pending',
+    tenant_type text DEFAULT 'individual',
+    settings jsonb DEFAULT '{}',
     created_at timestamptz DEFAULT now(),
     updated_at timestamptz DEFAULT now()
 );
@@ -295,13 +375,22 @@ ALTER TABLE public.profiles
     ADD CONSTRAINT profiles_tenant_id_fkey 
     FOREIGN KEY (tenant_id) REFERENCES public.client_tenants(id);
 
--- 2.4 Client Tenant Users (User-Tenant membership)
--- Purpose: Links users to tenants with role assignments
+-- ----------------------------------------------------------------------------
+-- 2.4 client_tenant_users
+-- ----------------------------------------------------------------------------
+-- | Attribute | Details |
+-- |-----------|---------|
+-- | **Purpose** | Links users to tenants with role assignments |
+-- | **Primary Key** | id (uuid) |
+-- | **RLS** | Users view own memberships, Admins manage all |
+-- | **Unique** | (tenant_id, user_id) |
+-- ----------------------------------------------------------------------------
+
 CREATE TABLE public.client_tenant_users (
     id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
     tenant_id uuid NOT NULL REFERENCES public.client_tenants(id) ON DELETE CASCADE,
     user_id uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
-    role text DEFAULT 'member',             -- super_admin/admin/member/viewer
+    role text DEFAULT 'member',
     created_at timestamptz DEFAULT now(),
     UNIQUE(tenant_id, user_id)
 );
@@ -310,79 +399,91 @@ COMMENT ON TABLE public.client_tenant_users IS 'Many-to-many: links users to ten
 
 
 -- ============================================================================
--- PART 3: SALES & CRM TABLES
+-- 📂 PART 3: SALES & CRM TABLES
 -- ============================================================================
 
--- 3.1 Quotes (Sales pricing quotes)
+-- ----------------------------------------------------------------------------
+-- 3.1 quotes
+-- ----------------------------------------------------------------------------
+-- | Attribute | Details |
+-- |-----------|---------|
+-- | **Purpose** | Service quotes with pricing, status, contact info |
+-- | **Primary Key** | id (uuid) |
+-- | **Auto-Generated** | quote_number via generate_quote_number() |
+-- | **RLS** | Users view own, Admins view/update all |
+-- ----------------------------------------------------------------------------
+
 CREATE TABLE public.quotes (
     id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-    quote_number text NOT NULL,             -- Format: ATL-YYYY-XXXX
-    user_id uuid REFERENCES public.profiles(id),
-    
-    -- Quote Configuration
-    client_type text NOT NULL,              -- individual/startup/enterprise
+    quote_number text UNIQUE NOT NULL,
+    user_id uuid REFERENCES auth.users(id),
+    client_type text NOT NULL,
     service_type text NOT NULL,
-    complexity text NOT NULL,               -- basic/standard/advanced
-    
-    -- Pricing
-    estimated_price numeric NOT NULL,
-    discount_percent integer DEFAULT 0,
-    final_price numeric NOT NULL,
-    
-    -- Add-ons & Features
+    complexity text NOT NULL,
     features jsonb DEFAULT '[]',
     addons jsonb DEFAULT '[]',
+    estimated_price numeric NOT NULL,
+    discount_percent integer DEFAULT 0,
     coupon_code text,
-    
-    -- Contact Info
+    final_price numeric NOT NULL,
+    status quote_status DEFAULT 'pending',
     contact_name text,
     contact_email text,
     contact_phone text,
     contact_company text,
-    
-    -- Status & Notes
-    status quote_status DEFAULT 'pending',
     notes text,
-    
     created_at timestamptz DEFAULT now(),
     updated_at timestamptz DEFAULT now()
 );
 
-COMMENT ON TABLE public.quotes IS 'Sales quotes generated via pricing calculator';
+-- ----------------------------------------------------------------------------
+-- 3.2 invoices
+-- ----------------------------------------------------------------------------
+-- | Attribute | Details |
+-- |-----------|---------|
+-- | **Purpose** | Client invoices with amounts, due dates, status |
+-- | **Primary Key** | id (uuid) |
+-- | **Auto-Generated** | invoice_number via generate_invoice_number() |
+-- | **RLS** | Users view own, Admins create/update all |
+-- ----------------------------------------------------------------------------
 
--- 3.2 Invoices (Billing)
 CREATE TABLE public.invoices (
     id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-    invoice_number text NOT NULL,           -- Format: INV-YYYY-XXXX
-    user_id uuid REFERENCES public.profiles(id),
+    invoice_number text UNIQUE NOT NULL,
+    user_id uuid REFERENCES auth.users(id),
     quote_id uuid REFERENCES public.quotes(id),
-    
-    -- Amounts
     amount numeric NOT NULL,
-    tax_percent numeric DEFAULT 18.00,      -- GST percentage
+    tax_percent numeric DEFAULT 18.00,
     tax_amount numeric NOT NULL,
     total_amount numeric NOT NULL,
-    
-    -- Status & Dates
     status invoice_status DEFAULT 'draft',
     due_date date,
     paid_at timestamptz,
-    
     notes text,
     created_at timestamptz DEFAULT now(),
     updated_at timestamptz DEFAULT now()
 );
 
--- 3.3 Leads (CRM)
+-- ----------------------------------------------------------------------------
+-- 3.3 leads
+-- ----------------------------------------------------------------------------
+-- | Attribute | Details |
+-- |-----------|---------|
+-- | **Purpose** | Sales leads with scores, sources, conversion tracking |
+-- | **Primary Key** | id (uuid) |
+-- | **RLS** | Admins only |
+-- | **Features** | Lead scoring, assignment, conversion tracking |
+-- ----------------------------------------------------------------------------
+
 CREATE TABLE public.leads (
     id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
     name text NOT NULL,
     email text NOT NULL,
     phone text,
     company text,
-    source text DEFAULT 'website',          -- website/referral/campaign
-    status text DEFAULT 'new',              -- new/contacted/qualified/converted
-    score integer DEFAULT 0,                -- Lead scoring (0-100)
+    source text DEFAULT 'website',
+    status text DEFAULT 'new',
+    score integer DEFAULT 0,
     assigned_to uuid,
     notes text,
     last_contact_at timestamptz,
@@ -391,7 +492,16 @@ CREATE TABLE public.leads (
     updated_at timestamptz DEFAULT now()
 );
 
--- 3.4 Inquiries (Contact form submissions)
+-- ----------------------------------------------------------------------------
+-- 3.4 inquiries
+-- ----------------------------------------------------------------------------
+-- | Attribute | Details |
+-- |-----------|---------|
+-- | **Purpose** | Contact form submissions and service inquiries |
+-- | **Primary Key** | id (uuid) |
+-- | **RLS** | Anyone can create, Users view own, Admins view all |
+-- ----------------------------------------------------------------------------
+
 CREATE TABLE public.inquiries (
     id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
     name text NOT NULL,
@@ -401,61 +511,67 @@ CREATE TABLE public.inquiries (
     service_interest text,
     message text,
     source text DEFAULT 'website',
-    user_id uuid REFERENCES public.profiles(id),
+    user_id uuid REFERENCES auth.users(id),
     created_at timestamptz DEFAULT now()
 );
 
 
 -- ============================================================================
--- PART 4: CLIENT ONBOARDING TABLES
+-- 📂 PART 4: ONBOARDING TABLES
 -- ============================================================================
 
--- 4.1 Onboarding Sessions (Multi-step wizard)
+-- ----------------------------------------------------------------------------
+-- 4.1 onboarding_sessions
+-- ----------------------------------------------------------------------------
+-- | Attribute | Details |
+-- |-----------|---------|
+-- | **Purpose** | Client onboarding wizard progress and data |
+-- | **Primary Key** | id (uuid) |
+-- | **Auto-Generated** | client_id via generate_client_id() |
+-- | **RLS** | Users view/update own, Admins manage all |
+-- ----------------------------------------------------------------------------
+
 CREATE TABLE public.onboarding_sessions (
     id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-    client_id text NOT NULL,                -- Format: ATLS-YYYYMMDD-XXXX
+    client_id text NOT NULL,
     user_id uuid REFERENCES auth.users(id),
     quote_id uuid REFERENCES public.quotes(id),
-    
-    -- Client Info
-    full_name text NOT NULL,
     email text NOT NULL,
+    full_name text NOT NULL,
     phone text,
     company_name text,
-    
-    -- Classification
     client_type text NOT NULL,
     industry_type text NOT NULL,
     industry_subtype text,
-    
-    -- Onboarding Progress
-    current_step integer DEFAULT 1,         -- 1-4 step wizard
-    status text DEFAULT 'new',              -- new/in_progress/verified/approved/rejected
-    
-    -- Selections
     selected_services jsonb DEFAULT '[]',
     selected_addons jsonb DEFAULT '[]',
-    consent_accepted jsonb DEFAULT '{}',
     pricing_snapshot jsonb,
-    
-    -- Verification
+    consent_accepted jsonb DEFAULT '{}',
+    current_step integer DEFAULT 1,
+    status text DEFAULT 'new',
+    dashboard_tier text DEFAULT 'basic',
     verification_code text,
     verification_sent_at timestamptz,
     verified_at timestamptz,
-    
-    -- Approval
-    dashboard_tier text DEFAULT 'basic',
-    assigned_pm uuid,
-    assigned_team jsonb DEFAULT '[]',
     approved_by uuid,
     approved_at timestamptz,
     approval_notes text,
-    
+    assigned_pm uuid,
+    assigned_team jsonb DEFAULT '[]',
     created_at timestamptz DEFAULT now(),
     updated_at timestamptz DEFAULT now()
 );
 
--- 4.2 Client Onboarding (Legacy/simplified)
+-- ----------------------------------------------------------------------------
+-- 4.2 client_onboarding
+-- ----------------------------------------------------------------------------
+-- | Attribute | Details |
+-- |-----------|---------|
+-- | **Purpose** | Simple onboarding requests (pre-approval stage) |
+-- | **Primary Key** | id (uuid) |
+-- | **RLS** | Admins only |
+-- ----------------------------------------------------------------------------
+
 CREATE TABLE public.client_onboarding (
     id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
     full_name text NOT NULL,
@@ -473,34 +589,53 @@ CREATE TABLE public.client_onboarding (
 
 
 -- ============================================================================
--- PART 5: PROJECT MANAGEMENT TABLES
+-- 📂 PART 5: PROJECT MANAGEMENT TABLES
 -- ============================================================================
 
--- 5.1 Projects
+-- ----------------------------------------------------------------------------
+-- 5.1 projects
+-- ----------------------------------------------------------------------------
+-- | Attribute | Details |
+-- |-----------|---------|
+-- | **Purpose** | Client projects with status, budget, timeline |
+-- | **Primary Key** | id (uuid) |
+-- | **RLS** | Users view own, Admins manage all |
+-- | **Features** | Progress tracking, health score, team assignments |
+-- ----------------------------------------------------------------------------
+
 CREATE TABLE public.projects (
     id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-    user_id uuid REFERENCES public.profiles(id),
+    user_id uuid REFERENCES auth.users(id),
     name text NOT NULL,
     description text,
-    status text DEFAULT 'planning',         -- planning/active/on_hold/completed
+    status text DEFAULT 'planning',
     phase text DEFAULT 'Discovery',
-    progress integer DEFAULT 0,             -- 0-100%
+    progress integer DEFAULT 0,
     health_score integer DEFAULT 100,
+    budget numeric,
     start_date date,
     due_date date,
-    budget numeric,
     team_members jsonb DEFAULT '[]',
     created_at timestamptz DEFAULT now(),
     updated_at timestamptz DEFAULT now()
 );
 
--- 5.2 Project Milestones
+-- ----------------------------------------------------------------------------
+-- 5.2 project_milestones
+-- ----------------------------------------------------------------------------
+-- | Attribute | Details |
+-- |-----------|---------|
+-- | **Purpose** | Project milestones with due dates and completion |
+-- | **Primary Key** | id (uuid) |
+-- | **RLS** | Users view own project milestones, Admins manage all |
+-- ----------------------------------------------------------------------------
+
 CREATE TABLE public.project_milestones (
     id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
     project_id uuid REFERENCES public.projects(id) ON DELETE CASCADE,
     name text NOT NULL,
     description text,
-    status text DEFAULT 'pending',          -- pending/in_progress/completed
+    status text DEFAULT 'pending',
     due_date date,
     completed_at timestamptz,
     created_at timestamptz DEFAULT now()
@@ -508,19 +643,29 @@ CREATE TABLE public.project_milestones (
 
 
 -- ============================================================================
--- PART 6: SUPPORT & COMMUNICATION TABLES
+-- 📂 PART 6: SUPPORT & COMMUNICATION TABLES
 -- ============================================================================
 
--- 6.1 Support Tickets
+-- ----------------------------------------------------------------------------
+-- 6.1 support_tickets
+-- ----------------------------------------------------------------------------
+-- | Attribute | Details |
+-- |-----------|---------|
+-- | **Purpose** | Support tickets with priority, SLA, assignment |
+-- | **Primary Key** | id (uuid) |
+-- | **Auto-Generated** | ticket_number via generate_ticket_number() |
+-- | **RLS** | Users create/view own, Admins manage all |
+-- ----------------------------------------------------------------------------
+
 CREATE TABLE public.support_tickets (
     id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-    ticket_number text NOT NULL,            -- Format: TKT-XXXXX
-    user_id uuid REFERENCES public.profiles(id),
+    ticket_number text UNIQUE NOT NULL,
+    user_id uuid REFERENCES auth.users(id),
     project_id uuid REFERENCES public.projects(id),
     subject text NOT NULL,
     description text,
-    status text DEFAULT 'open',             -- open/in_progress/resolved/closed
-    priority text DEFAULT 'medium',         -- low/medium/high/urgent
+    status text DEFAULT 'open',
+    priority text DEFAULT 'medium',
     assigned_to uuid,
     sla_due_at timestamptz,
     resolved_at timestamptz,
@@ -528,46 +673,76 @@ CREATE TABLE public.support_tickets (
     updated_at timestamptz DEFAULT now()
 );
 
--- 6.2 Ticket Messages
+-- ----------------------------------------------------------------------------
+-- 6.2 ticket_messages
+-- ----------------------------------------------------------------------------
+-- | Attribute | Details |
+-- |-----------|---------|
+-- | **Purpose** | Messages/replies within support tickets |
+-- | **Primary Key** | id (uuid) |
+-- | **RLS** | Users add to own tickets, Admins manage all |
+-- | **Features** | Internal notes (is_internal flag) |
+-- ----------------------------------------------------------------------------
+
 CREATE TABLE public.ticket_messages (
     id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
     ticket_id uuid REFERENCES public.support_tickets(id) ON DELETE CASCADE,
     user_id uuid,
     message text NOT NULL,
-    is_internal boolean DEFAULT false,      -- Internal notes (admin only)
+    is_internal boolean DEFAULT false,
     created_at timestamptz DEFAULT now()
 );
 
--- 6.3 Meetings
+-- ----------------------------------------------------------------------------
+-- 6.3 meetings
+-- ----------------------------------------------------------------------------
+-- | Attribute | Details |
+-- |-----------|---------|
+-- | **Purpose** | Scheduled meetings with clients and team |
+-- | **Primary Key** | id (uuid) |
+-- | **RLS** | Users view own, Admins manage all |
+-- | **Features** | Video links, recordings, notes |
+-- ----------------------------------------------------------------------------
+
 CREATE TABLE public.meetings (
     id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-    user_id uuid REFERENCES public.profiles(id),
+    user_id uuid REFERENCES auth.users(id),
     project_id uuid REFERENCES public.projects(id),
     title text NOT NULL,
     description text,
     scheduled_at timestamptz NOT NULL,
     duration_minutes integer DEFAULT 30,
-    meeting_type text DEFAULT 'client',     -- client/internal/demo
+    meeting_type text DEFAULT 'client',
     meeting_link text,
     recording_url text,
+    status text DEFAULT 'scheduled',
     notes text,
-    status text DEFAULT 'scheduled',        -- scheduled/completed/cancelled
     created_at timestamptz DEFAULT now()
 );
 
 
 -- ============================================================================
--- PART 7: FILE MANAGEMENT TABLES
+-- 📂 PART 7: FILE MANAGEMENT TABLES
 -- ============================================================================
 
--- 7.1 Client Files
+-- ----------------------------------------------------------------------------
+-- 7.1 client_files
+-- ----------------------------------------------------------------------------
+-- | Attribute | Details |
+-- |-----------|---------|
+-- | **Purpose** | Client uploaded files with versioning |
+-- | **Primary Key** | id (uuid) |
+-- | **RLS** | Users manage own files, Admins manage all |
+-- | **Features** | Folder organization, versioning |
+-- ----------------------------------------------------------------------------
+
 CREATE TABLE public.client_files (
     id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-    user_id uuid REFERENCES public.profiles(id),
+    user_id uuid REFERENCES auth.users(id),
     project_id uuid REFERENCES public.projects(id),
     name text NOT NULL,
-    file_path text NOT NULL,                -- Storage bucket path
-    file_type text,                         -- MIME type
+    file_path text NOT NULL,
+    file_type text,
     file_size bigint,
     folder text DEFAULT 'root',
     version integer DEFAULT 1,
@@ -575,13 +750,23 @@ CREATE TABLE public.client_files (
     created_at timestamptz DEFAULT now()
 );
 
--- 7.2 Client Feedback
+-- ----------------------------------------------------------------------------
+-- 7.2 client_feedback
+-- ----------------------------------------------------------------------------
+-- | Attribute | Details |
+-- |-----------|---------|
+-- | **Purpose** | Client feedback ratings and comments |
+-- | **Primary Key** | id (uuid) |
+-- | **RLS** | Users create/view own, Admins view all |
+-- | **Features** | Star ratings, feedback types |
+-- ----------------------------------------------------------------------------
+
 CREATE TABLE public.client_feedback (
     id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-    user_id uuid REFERENCES public.profiles(id),
+    user_id uuid REFERENCES auth.users(id),
     project_id uuid REFERENCES public.projects(id),
     milestone_id uuid REFERENCES public.project_milestones(id),
-    rating integer,                         -- 1-5 stars
+    rating integer,
     comment text,
     feedback_type text DEFAULT 'general',
     created_at timestamptz DEFAULT now()
@@ -589,24 +774,43 @@ CREATE TABLE public.client_feedback (
 
 
 -- ============================================================================
--- PART 8: MSP MONITORING TABLES
+-- 📂 PART 8: MSP MONITORING TABLES
 -- ============================================================================
 
--- 8.1 MSP Servers
+-- ----------------------------------------------------------------------------
+-- 8.1 client_msp_servers
+-- ----------------------------------------------------------------------------
+-- | Attribute | Details |
+-- |-----------|---------|
+-- | **Purpose** | Monitored servers for managed service clients |
+-- | **Primary Key** | id (uuid) |
+-- | **RLS** | Users view own tenant servers, Admins manage all |
+-- | **Features** | Server types, status tracking, last ping |
+-- ----------------------------------------------------------------------------
+
 CREATE TABLE public.client_msp_servers (
     id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
     tenant_id uuid NOT NULL REFERENCES public.client_tenants(id) ON DELETE CASCADE,
     name text NOT NULL,
     hostname text,
     ip_address text,
-    server_type text DEFAULT 'web',         -- web/database/application
-    status text DEFAULT 'unknown',          -- online/offline/warning/unknown
+    server_type text DEFAULT 'web',
+    status text DEFAULT 'unknown',
     last_ping_at timestamptz,
     created_at timestamptz DEFAULT now(),
     updated_at timestamptz DEFAULT now()
 );
 
--- 8.2 MSP Metrics
+-- ----------------------------------------------------------------------------
+-- 8.2 client_msp_metrics
+-- ----------------------------------------------------------------------------
+-- | Attribute | Details |
+-- |-----------|---------|
+-- | **Purpose** | Server performance metrics (CPU, memory, disk) |
+-- | **Primary Key** | id (uuid) |
+-- | **RLS** | Users view own tenant metrics, Admins manage all |
+-- ----------------------------------------------------------------------------
+
 CREATE TABLE public.client_msp_metrics (
     id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
     server_id uuid NOT NULL REFERENCES public.client_msp_servers(id) ON DELETE CASCADE,
@@ -619,14 +823,24 @@ CREATE TABLE public.client_msp_metrics (
     recorded_at timestamptz DEFAULT now()
 );
 
--- 8.3 MSP Alerts
+-- ----------------------------------------------------------------------------
+-- 8.3 client_msp_alerts
+-- ----------------------------------------------------------------------------
+-- | Attribute | Details |
+-- |-----------|---------|
+-- | **Purpose** | Server alerts and incident notifications |
+-- | **Primary Key** | id (uuid) |
+-- | **RLS** | Users view own tenant alerts, Admins manage all |
+-- | **Features** | Severity levels, resolution tracking |
+-- ----------------------------------------------------------------------------
+
 CREATE TABLE public.client_msp_alerts (
     id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
     tenant_id uuid NOT NULL REFERENCES public.client_tenants(id) ON DELETE CASCADE,
     server_id uuid NOT NULL REFERENCES public.client_msp_servers(id) ON DELETE CASCADE,
-    alert_type text NOT NULL,               -- cpu_high/memory_high/disk_full/offline
-    severity text DEFAULT 'warning',        -- info/warning/critical
+    alert_type text NOT NULL,
     message text NOT NULL,
+    severity text DEFAULT 'warning',
     is_resolved boolean DEFAULT false,
     resolved_at timestamptz,
     created_at timestamptz DEFAULT now()
@@ -634,24 +848,42 @@ CREATE TABLE public.client_msp_alerts (
 
 
 -- ============================================================================
--- PART 9: PRICING & CONFIGURATION TABLES
+-- 📂 PART 9: PRICING & CONFIGURATION TABLES
 -- ============================================================================
 
--- 9.1 Service Pricing
+-- ----------------------------------------------------------------------------
+-- 9.1 service_pricing
+-- ----------------------------------------------------------------------------
+-- | Attribute | Details |
+-- |-----------|---------|
+-- | **Purpose** | Service pricing tiers and features |
+-- | **Primary Key** | id (uuid) |
+-- | **RLS** | Anyone can view active, Admins manage all |
+-- ----------------------------------------------------------------------------
+
 CREATE TABLE public.service_pricing (
     id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
     service_name text NOT NULL,
     service_category text NOT NULL,
     plan_tier text DEFAULT 'basic',
     base_price numeric DEFAULT 0,
-    features jsonb DEFAULT '[]',
     description text,
+    features jsonb DEFAULT '[]',
     is_active boolean DEFAULT true,
     created_at timestamptz DEFAULT now(),
     updated_at timestamptz DEFAULT now()
 );
 
--- 9.2 Service Addons
+-- ----------------------------------------------------------------------------
+-- 9.2 service_addons
+-- ----------------------------------------------------------------------------
+-- | Attribute | Details |
+-- |-----------|---------|
+-- | **Purpose** | Optional add-on services with pricing |
+-- | **Primary Key** | id (uuid) |
+-- | **RLS** | Anyone can view active, Admins manage all |
+-- ----------------------------------------------------------------------------
+
 CREATE TABLE public.service_addons (
     id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
     name text NOT NULL,
@@ -662,10 +894,19 @@ CREATE TABLE public.service_addons (
     created_at timestamptz DEFAULT now()
 );
 
--- 9.3 Pricing Modifiers
+-- ----------------------------------------------------------------------------
+-- 9.3 pricing_modifiers
+-- ----------------------------------------------------------------------------
+-- | Attribute | Details |
+-- |-----------|---------|
+-- | **Purpose** | Industry/size pricing multipliers |
+-- | **Primary Key** | id (uuid) |
+-- | **RLS** | Anyone can view active, Admins manage all |
+-- ----------------------------------------------------------------------------
+
 CREATE TABLE public.pricing_modifiers (
     id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-    modifier_type text NOT NULL,            -- industry/client_type/size
+    modifier_type text NOT NULL,
     modifier_key text NOT NULL,
     multiplier numeric DEFAULT 1.0,
     description text,
@@ -673,11 +914,21 @@ CREATE TABLE public.pricing_modifiers (
     created_at timestamptz DEFAULT now()
 );
 
--- 9.4 Coupon Codes
+-- ----------------------------------------------------------------------------
+-- 9.4 coupon_codes
+-- ----------------------------------------------------------------------------
+-- | Attribute | Details |
+-- |-----------|---------|
+-- | **Purpose** | Discount coupons with usage limits |
+-- | **Primary Key** | id (uuid) |
+-- | **RLS** | Anyone can view active, Admins manage all |
+-- | **Features** | Usage tracking, validity dates |
+-- ----------------------------------------------------------------------------
+
 CREATE TABLE public.coupon_codes (
     id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
     code text UNIQUE NOT NULL,
-    discount_type text DEFAULT 'percentage', -- percentage/fixed
+    discount_type text DEFAULT 'percentage',
     discount_value numeric DEFAULT 0,
     max_uses integer,
     current_uses integer DEFAULT 0,
@@ -689,21 +940,41 @@ CREATE TABLE public.coupon_codes (
 
 
 -- ============================================================================
--- PART 10: ADMIN & SYSTEM TABLES
+-- 📂 PART 10: ADMIN & SYSTEM TABLES
 -- ============================================================================
 
--- 10.1 Admin Notifications
+-- ----------------------------------------------------------------------------
+-- 10.1 admin_notifications
+-- ----------------------------------------------------------------------------
+-- | Attribute | Details |
+-- |-----------|---------|
+-- | **Purpose** | Admin-targeted notifications |
+-- | **Primary Key** | id (uuid) |
+-- | **RLS** | Admins only |
+-- | **Features** | Types, priority, read status |
+-- ----------------------------------------------------------------------------
+
 CREATE TABLE public.admin_notifications (
     id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-    target_admin_id uuid,                   -- Specific admin or null for all
     title text NOT NULL,
     message text NOT NULL,
-    notification_type text DEFAULT 'info',  -- info/warning/error/success/security/billing
+    notification_type text DEFAULT 'info',
+    target_admin_id uuid,
     is_read boolean DEFAULT false,
     created_at timestamptz DEFAULT now()
 );
 
--- 10.2 Admin Settings
+-- ----------------------------------------------------------------------------
+-- 10.2 admin_settings
+-- ----------------------------------------------------------------------------
+-- | Attribute | Details |
+-- |-----------|---------|
+-- | **Purpose** | Platform-wide admin configuration |
+-- | **Primary Key** | id (uuid) |
+-- | **RLS** | Admins only |
+-- | **Features** | Key-value config storage |
+-- ----------------------------------------------------------------------------
+
 CREATE TABLE public.admin_settings (
     id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
     key text UNIQUE NOT NULL,
@@ -714,7 +985,16 @@ CREATE TABLE public.admin_settings (
     updated_at timestamptz DEFAULT now()
 );
 
--- 10.3 Portal Settings
+-- ----------------------------------------------------------------------------
+-- 10.3 portal_settings
+-- ----------------------------------------------------------------------------
+-- | Attribute | Details |
+-- |-----------|---------|
+-- | **Purpose** | Client portal configuration settings |
+-- | **Primary Key** | id (uuid) |
+-- | **RLS** | Admins only |
+-- ----------------------------------------------------------------------------
+
 CREATE TABLE public.portal_settings (
     id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
     key text UNIQUE NOT NULL,
@@ -727,14 +1007,24 @@ CREATE TABLE public.portal_settings (
 
 
 -- ============================================================================
--- PART 11: LOGGING & ANALYTICS TABLES
+-- 📂 PART 11: LOGGING & ANALYTICS TABLES
 -- ============================================================================
 
--- 11.1 Audit Logs (Immutable)
+-- ----------------------------------------------------------------------------
+-- 11.1 audit_logs
+-- ----------------------------------------------------------------------------
+-- | Attribute | Details |
+-- |-----------|---------|
+-- | **Purpose** | System audit trail for compliance |
+-- | **Primary Key** | id (uuid) |
+-- | **RLS** | Admins view, System inserts |
+-- | **Features** | Old/new values, IP tracking |
+-- ----------------------------------------------------------------------------
+
 CREATE TABLE public.audit_logs (
     id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id uuid,
-    action text NOT NULL,                   -- create/update/delete/login
+    action text NOT NULL,
     entity_type text NOT NULL,
     entity_id text,
     old_values jsonb,
@@ -744,24 +1034,42 @@ CREATE TABLE public.audit_logs (
     created_at timestamptz DEFAULT now()
 );
 
-COMMENT ON TABLE public.audit_logs IS 'Immutable audit trail for compliance - never delete rows';
+-- ----------------------------------------------------------------------------
+-- 11.2 system_logs
+-- ----------------------------------------------------------------------------
+-- | Attribute | Details |
+-- |-----------|---------|
+-- | **Purpose** | Application logs for debugging |
+-- | **Primary Key** | id (uuid) |
+-- | **RLS** | Admins view, System inserts |
+-- | **Features** | Log levels, source tracking |
+-- ----------------------------------------------------------------------------
 
--- 11.2 System Logs
 CREATE TABLE public.system_logs (
     id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-    level text NOT NULL,                    -- info/warning/error/debug
+    level text NOT NULL,
     source text NOT NULL,
     message text NOT NULL,
     metadata jsonb DEFAULT '{}',
     created_at timestamptz DEFAULT now()
 );
 
--- 11.3 Clickstream Events
+-- ----------------------------------------------------------------------------
+-- 11.3 clickstream_events
+-- ----------------------------------------------------------------------------
+-- | Attribute | Details |
+-- |-----------|---------|
+-- | **Purpose** | User interaction tracking for analytics |
+-- | **Primary Key** | id (uuid) |
+-- | **RLS** | Admins view, Anyone inserts |
+-- | **Features** | Element tracking, session grouping |
+-- ----------------------------------------------------------------------------
+
 CREATE TABLE public.clickstream_events (
     id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
     session_id text NOT NULL,
     user_id uuid,
-    event_type text NOT NULL,               -- page_view/click/scroll/form_submit
+    event_type text NOT NULL,
     page_url text,
     element_id text,
     element_class text,
@@ -770,7 +1078,17 @@ CREATE TABLE public.clickstream_events (
     created_at timestamptz DEFAULT now()
 );
 
--- 11.4 API Usage
+-- ----------------------------------------------------------------------------
+-- 11.4 api_usage
+-- ----------------------------------------------------------------------------
+-- | Attribute | Details |
+-- |-----------|---------|
+-- | **Purpose** | API endpoint usage tracking |
+-- | **Primary Key** | id (uuid) |
+-- | **RLS** | Admins view, System inserts |
+-- | **Features** | Response times, status codes |
+-- ----------------------------------------------------------------------------
+
 CREATE TABLE public.api_usage (
     id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id uuid,
@@ -784,10 +1102,20 @@ CREATE TABLE public.api_usage (
 
 
 -- ============================================================================
--- PART 12: TEAM & COMPLIANCE TABLES
+-- 📂 PART 12: TEAM & COMPLIANCE TABLES
 -- ============================================================================
 
--- 12.1 Team Members
+-- ----------------------------------------------------------------------------
+-- 12.1 team_members
+-- ----------------------------------------------------------------------------
+-- | Attribute | Details |
+-- |-----------|---------|
+-- | **Purpose** | Internal team member profiles |
+-- | **Primary Key** | id (uuid) |
+-- | **RLS** | Anyone can view, Admins manage |
+-- | **Features** | Skills, availability, departments |
+-- ----------------------------------------------------------------------------
+
 CREATE TABLE public.team_members (
     id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id uuid,
@@ -795,18 +1123,28 @@ CREATE TABLE public.team_members (
     email text NOT NULL,
     role text NOT NULL,
     department text,
-    avatar_url text,
     skills jsonb DEFAULT '[]',
     availability text DEFAULT 'available',
+    avatar_url text,
     created_at timestamptz DEFAULT now()
 );
 
--- 12.2 Compliance Items
+-- ----------------------------------------------------------------------------
+-- 12.2 compliance_items
+-- ----------------------------------------------------------------------------
+-- | Attribute | Details |
+-- |-----------|---------|
+-- | **Purpose** | Compliance checklist items and status |
+-- | **Primary Key** | id (uuid) |
+-- | **RLS** | Admins only |
+-- | **Features** | Categories, assignments, due dates |
+-- ----------------------------------------------------------------------------
+
 CREATE TABLE public.compliance_items (
     id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
     title text NOT NULL,
+    category text NOT NULL,
     description text,
-    category text NOT NULL,                 -- gdpr/hipaa/soc2/pci
     status text DEFAULT 'pending',
     due_date date,
     assigned_to uuid,
@@ -815,11 +1153,21 @@ CREATE TABLE public.compliance_items (
     updated_at timestamptz DEFAULT now()
 );
 
--- 12.3 Integrations
+-- ----------------------------------------------------------------------------
+-- 12.3 integrations
+-- ----------------------------------------------------------------------------
+-- | Attribute | Details |
+-- |-----------|---------|
+-- | **Purpose** | Third-party integration configurations |
+-- | **Primary Key** | id (uuid) |
+-- | **RLS** | Admins only |
+-- | **Features** | Config storage, sync tracking |
+-- ----------------------------------------------------------------------------
+
 CREATE TABLE public.integrations (
     id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
     name text NOT NULL,
-    type text NOT NULL,                     -- slack/google/stripe
+    type text NOT NULL,
     config jsonb DEFAULT '{}',
     is_active boolean DEFAULT false,
     last_sync_at timestamptz,
@@ -827,7 +1175,17 @@ CREATE TABLE public.integrations (
     updated_at timestamptz DEFAULT now()
 );
 
--- 12.4 Client Notices
+-- ----------------------------------------------------------------------------
+-- 12.4 client_notices
+-- ----------------------------------------------------------------------------
+-- | Attribute | Details |
+-- |-----------|---------|
+-- | **Purpose** | Announcements and notices for clients |
+-- | **Primary Key** | id (uuid) |
+-- | **RLS** | Users view active, Admins manage all |
+-- | **Features** | Expiration, targeting |
+-- ----------------------------------------------------------------------------
+
 CREATE TABLE public.client_notices (
     id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
     title text NOT NULL,
@@ -844,721 +1202,735 @@ CREATE TABLE public.client_notices (
 
 
 -- ============================================================================
--- PART 13: FEATURE PERMISSIONS & NOTIFICATIONS TABLES
+-- 📂 PART 13: FEATURE PERMISSIONS TABLES (PENDING MIGRATION)
 -- ============================================================================
 
--- 13.1 Global Features (Master registry)
+-- ----------------------------------------------------------------------------
+-- 13.1 global_features
+-- ----------------------------------------------------------------------------
+-- | Attribute | Details |
+-- |-----------|---------|
+-- | **Purpose** | Platform-wide feature definitions |
+-- | **Primary Key** | id (uuid) |
+-- | **Features** | Tiers, categories, trial periods |
+-- | **Status** | 📋 Pending Migration |
+-- ----------------------------------------------------------------------------
+
 CREATE TABLE public.global_features (
     id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-    feature_key text NOT NULL UNIQUE,       -- e.g., 'payroll.multi_currency'
-    name text NOT NULL,
+    feature_key text UNIQUE NOT NULL,
+    display_name text NOT NULL,
     description text,
-    category feature_category NOT NULL,
-    minimum_tier feature_tier NOT NULL DEFAULT 'starter',
+    category feature_category DEFAULT 'core',
+    minimum_tier feature_tier DEFAULT 'starter',
     is_addon boolean DEFAULT false,
-    addon_price_monthly numeric(10,2),
+    addon_price_monthly numeric,
+    addon_price_yearly numeric,
+    trial_days integer DEFAULT 0,
     is_active boolean DEFAULT true,
-    is_beta boolean DEFAULT false,
-    released_at timestamptz,
+    icon text,
+    sort_order integer DEFAULT 0,
     created_at timestamptz DEFAULT now(),
     updated_at timestamptz DEFAULT now()
 );
 
--- 13.2 Tenant Features (Per-tenant flags)
+-- ----------------------------------------------------------------------------
+-- 13.2 tenant_features
+-- ----------------------------------------------------------------------------
+-- | Attribute | Details |
+-- |-----------|---------|
+-- | **Purpose** | Tenant-specific feature flags |
+-- | **Primary Key** | id (uuid) |
+-- | **Features** | Overrides, trials, custom limits |
+-- | **Status** | 📋 Pending Migration |
+-- ----------------------------------------------------------------------------
+
 CREATE TABLE public.tenant_features (
     id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
     tenant_id uuid NOT NULL REFERENCES public.client_tenants(id) ON DELETE CASCADE,
     feature_id uuid NOT NULL REFERENCES public.global_features(id) ON DELETE CASCADE,
-    is_enabled boolean DEFAULT true,
-    enabled_at timestamptz DEFAULT now(),
-    enabled_by uuid,
-    expires_at timestamptz,
+    is_enabled boolean DEFAULT false,
     is_trial boolean DEFAULT false,
-    trial_days_remaining integer,
+    trial_started_at timestamptz,
+    trial_ends_at timestamptz,
+    enabled_at timestamptz,
+    enabled_by uuid,
+    custom_limit jsonb,
     notes text,
     created_at timestamptz DEFAULT now(),
     updated_at timestamptz DEFAULT now(),
     UNIQUE(tenant_id, feature_id)
 );
 
--- 13.3 Role Feature Defaults
+-- ----------------------------------------------------------------------------
+-- 13.3 role_feature_defaults
+-- ----------------------------------------------------------------------------
+-- | Attribute | Details |
+-- |-----------|---------|
+-- | **Purpose** | Default features by role |
+-- | **Primary Key** | id (uuid) |
+-- | **Status** | 📋 Pending Migration |
+-- ----------------------------------------------------------------------------
+
 CREATE TABLE public.role_feature_defaults (
     id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
     tenant_id uuid NOT NULL REFERENCES public.client_tenants(id) ON DELETE CASCADE,
     role tenant_role NOT NULL,
     feature_id uuid NOT NULL REFERENCES public.global_features(id) ON DELETE CASCADE,
-    can_view boolean DEFAULT false,
-    can_create boolean DEFAULT false,
-    can_edit boolean DEFAULT false,
-    can_delete boolean DEFAULT false,
-    can_export boolean DEFAULT false,
-    custom_permissions jsonb DEFAULT '{}',
+    is_enabled boolean DEFAULT true,
     created_at timestamptz DEFAULT now(),
-    updated_at timestamptz DEFAULT now(),
     UNIQUE(tenant_id, role, feature_id)
 );
 
--- 13.4 Employee Feature Access (Individual overrides)
+-- ----------------------------------------------------------------------------
+-- 13.4 employee_feature_access
+-- ----------------------------------------------------------------------------
+-- | Attribute | Details |
+-- |-----------|---------|
+-- | **Purpose** | Individual employee feature permissions |
+-- | **Primary Key** | id (uuid) |
+-- | **Features** | Override role defaults per employee |
+-- | **Status** | 📋 Pending Migration |
+-- ----------------------------------------------------------------------------
+
 CREATE TABLE public.employee_feature_access (
     id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-    tenant_id uuid NOT NULL REFERENCES public.client_tenants(id) ON DELETE CASCADE,
     employee_id uuid NOT NULL,
-    user_id uuid NOT NULL,
+    tenant_id uuid NOT NULL REFERENCES public.client_tenants(id) ON DELETE CASCADE,
     feature_id uuid NOT NULL REFERENCES public.global_features(id) ON DELETE CASCADE,
     is_enabled boolean DEFAULT true,
-    override_role_default boolean DEFAULT false,
-    can_view boolean DEFAULT true,
-    can_create boolean DEFAULT false,
-    can_edit boolean DEFAULT false,
-    can_delete boolean DEFAULT false,
-    can_export boolean DEFAULT false,
     enabled_at timestamptz DEFAULT now(),
     enabled_by uuid,
-    is_new boolean DEFAULT true,            -- Shows "NEW" badge
-    new_badge_expires_at timestamptz,
     notes text,
     created_at timestamptz DEFAULT now(),
-    updated_at timestamptz DEFAULT now(),
-    UNIQUE(tenant_id, employee_id, feature_id)
+    UNIQUE(employee_id, feature_id)
 );
 
--- 13.5 Employee Notifications
+
+-- ============================================================================
+-- 📂 PART 14: NOTIFICATION TABLES (PENDING MIGRATION)
+-- ============================================================================
+
+-- ----------------------------------------------------------------------------
+-- 14.1 employee_notifications
+-- ----------------------------------------------------------------------------
+-- | Attribute | Details |
+-- |-----------|---------|
+-- | **Purpose** | Employee notification records |
+-- | **Primary Key** | id (uuid) |
+-- | **Features** | Priority, actions, read tracking |
+-- | **Status** | 📋 Pending Migration |
+-- ----------------------------------------------------------------------------
+
 CREATE TABLE public.employee_notifications (
     id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+    employee_id uuid NOT NULL,
     tenant_id uuid NOT NULL REFERENCES public.client_tenants(id) ON DELETE CASCADE,
-    user_id uuid NOT NULL,
-    notification_type notification_type NOT NULL,
-    channel notification_channel DEFAULT 'both',
-    priority notification_priority DEFAULT 'normal',
+    type notification_type NOT NULL,
     title text NOT NULL,
     message text NOT NULL,
+    priority notification_priority DEFAULT 'normal',
     action_url text,
     action_label text,
-    feature_id uuid REFERENCES public.global_features(id),
-    metadata jsonb DEFAULT '{}',
     is_read boolean DEFAULT false,
     read_at timestamptz,
-    is_email_sent boolean DEFAULT false,
-    email_sent_at timestamptz,
-    email_error text,
+    metadata jsonb DEFAULT '{}',
     expires_at timestamptz,
     created_at timestamptz DEFAULT now()
 );
 
--- 13.6 Notification Preferences
+-- ----------------------------------------------------------------------------
+-- 14.2 notification_preferences
+-- ----------------------------------------------------------------------------
+-- | Attribute | Details |
+-- |-----------|---------|
+-- | **Purpose** | User notification channel preferences |
+-- | **Primary Key** | id (uuid) |
+-- | **Status** | 📋 Pending Migration |
+-- ----------------------------------------------------------------------------
+
 CREATE TABLE public.notification_preferences (
     id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-    user_id uuid NOT NULL UNIQUE,
-    feature_unlock_channel notification_channel DEFAULT 'both',
-    system_update_channel notification_channel DEFAULT 'in_app',
-    security_alert_channel notification_channel DEFAULT 'both',
-    action_required_channel notification_channel DEFAULT 'both',
-    email_digest_enabled boolean DEFAULT false,
-    email_digest_frequency text DEFAULT 'daily',
-    quiet_hours_enabled boolean DEFAULT false,
-    quiet_hours_start time,
-    quiet_hours_end time,
+    user_id uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+    notification_type notification_type NOT NULL,
+    channel notification_channel DEFAULT 'in_app',
+    is_enabled boolean DEFAULT true,
     created_at timestamptz DEFAULT now(),
-    updated_at timestamptz DEFAULT now()
+    updated_at timestamptz DEFAULT now(),
+    UNIQUE(user_id, notification_type)
 );
 
--- 13.7 Feature Unlock Log (Audit)
+-- ----------------------------------------------------------------------------
+-- 14.3 feature_unlock_log
+-- ----------------------------------------------------------------------------
+-- | Attribute | Details |
+-- |-----------|---------|
+-- | **Purpose** | Log of feature unlock events |
+-- | **Primary Key** | id (uuid) |
+-- | **Status** | 📋 Pending Migration |
+-- ----------------------------------------------------------------------------
+
 CREATE TABLE public.feature_unlock_log (
     id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-    tenant_id uuid REFERENCES public.client_tenants(id),
-    feature_id uuid NOT NULL REFERENCES public.global_features(id),
-    action text NOT NULL,                   -- enabled/disabled/trial_started/trial_expired
-    target_type text NOT NULL,              -- tenant/role/employee
-    target_id uuid,
-    performed_by uuid NOT NULL,
-    performed_by_type text NOT NULL,        -- atlas_admin/tenant_admin
-    previous_state jsonb,
-    new_state jsonb,
-    reason text,
-    ip_address text,
-    user_agent text,
+    tenant_id uuid NOT NULL REFERENCES public.client_tenants(id) ON DELETE CASCADE,
+    feature_id uuid NOT NULL REFERENCES public.global_features(id) ON DELETE CASCADE,
+    employee_id uuid,
+    action text NOT NULL,
+    performed_by uuid,
+    metadata jsonb DEFAULT '{}',
     created_at timestamptz DEFAULT now()
 );
 
 
 -- ============================================================================
--- PART 14: PAYROLL & HR OPERATIONS TABLES
+-- 📂 PART 15: HR & PAYROLL TABLES (PENDING MIGRATION)
 -- ============================================================================
 
--- 14.1 Payroll Runs
+-- ----------------------------------------------------------------------------
+-- 15.1 employees
+-- ----------------------------------------------------------------------------
+-- | Attribute | Details |
+-- |-----------|---------|
+-- | **Purpose** | Employee master records with employment details |
+-- | **Primary Key** | id (uuid) |
+-- | **Features** | Salary, department, manager hierarchy |
+-- | **Status** | 📋 Pending Migration |
+-- ----------------------------------------------------------------------------
+
+CREATE TABLE public.employees (
+    id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+    tenant_id uuid NOT NULL REFERENCES public.client_tenants(id) ON DELETE CASCADE,
+    user_id uuid REFERENCES auth.users(id),
+    employee_code text NOT NULL,
+    first_name text NOT NULL,
+    last_name text NOT NULL,
+    email text NOT NULL,
+    phone text,
+    department text,
+    designation text,
+    manager_id uuid,
+    date_of_joining date,
+    date_of_birth date,
+    gender text,
+    address jsonb DEFAULT '{}',
+    emergency_contact jsonb DEFAULT '{}',
+    bank_details jsonb DEFAULT '{}',
+    salary_details jsonb DEFAULT '{}',
+    documents jsonb DEFAULT '[]',
+    status text DEFAULT 'active',
+    created_at timestamptz DEFAULT now(),
+    updated_at timestamptz DEFAULT now(),
+    UNIQUE(tenant_id, employee_code)
+);
+
+-- ----------------------------------------------------------------------------
+-- 15.2 payroll_runs
+-- ----------------------------------------------------------------------------
+-- | Attribute | Details |
+-- |-----------|---------|
+-- | **Purpose** | Monthly/weekly payroll processing runs |
+-- | **Primary Key** | id (uuid) |
+-- | **Features** | Totals, approval workflow |
+-- | **Status** | 📋 Pending Migration |
+-- ----------------------------------------------------------------------------
+
 CREATE TABLE public.payroll_runs (
     id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
     tenant_id uuid NOT NULL REFERENCES public.client_tenants(id) ON DELETE CASCADE,
-    run_number text NOT NULL,               -- Format: PAY-YYYYMM-XXXX
-    pay_period_start date NOT NULL,
-    pay_period_end date NOT NULL,
-    status text DEFAULT 'pending',          -- pending/processing/completed/failed
+    payroll_period text NOT NULL,
+    start_date date NOT NULL,
+    end_date date NOT NULL,
+    status text DEFAULT 'draft',
     total_employees integer DEFAULT 0,
-    total_gross_pay numeric(15,2) DEFAULT 0,
-    total_deductions numeric(15,2) DEFAULT 0,
-    total_net_pay numeric(15,2) DEFAULT 0,
-    total_employer_contributions numeric(15,2) DEFAULT 0,
-    currency text DEFAULT 'INR',
-    processed_at timestamptz,
-    processed_by uuid,
-    approved_at timestamptz,
+    total_gross numeric DEFAULT 0,
+    total_deductions numeric DEFAULT 0,
+    total_net numeric DEFAULT 0,
     approved_by uuid,
+    approved_at timestamptz,
+    processed_at timestamptz,
     notes text,
-    metadata jsonb DEFAULT '{}',
     created_at timestamptz DEFAULT now(),
     updated_at timestamptz DEFAULT now()
 );
 
-COMMENT ON TABLE public.payroll_runs IS 'Monthly/weekly payroll processing runs for tenant organizations';
+-- ----------------------------------------------------------------------------
+-- 15.3 payslips
+-- ----------------------------------------------------------------------------
+-- | Attribute | Details |
+-- |-----------|---------|
+-- | **Purpose** | Individual employee payslips |
+-- | **Primary Key** | id (uuid) |
+-- | **Features** | Earnings, deductions, breakdown |
+-- | **Status** | 📋 Pending Migration |
+-- ----------------------------------------------------------------------------
 
--- 14.2 Payslips
 CREATE TABLE public.payslips (
     id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
     payroll_run_id uuid NOT NULL REFERENCES public.payroll_runs(id) ON DELETE CASCADE,
-    tenant_id uuid NOT NULL REFERENCES public.client_tenants(id) ON DELETE CASCADE,
     employee_id uuid NOT NULL,
-    user_id uuid,
-    
-    -- Employee Details (snapshot at time of payslip)
-    employee_name text NOT NULL,
-    employee_email text,
-    employee_code text,
-    department text,
-    designation text,
-    
-    -- Pay Period
-    pay_period_start date NOT NULL,
-    pay_period_end date NOT NULL,
-    
-    -- Earnings
-    basic_salary numeric(12,2) DEFAULT 0,
-    hra numeric(12,2) DEFAULT 0,
-    conveyance numeric(12,2) DEFAULT 0,
-    medical_allowance numeric(12,2) DEFAULT 0,
-    special_allowance numeric(12,2) DEFAULT 0,
-    other_earnings numeric(12,2) DEFAULT 0,
-    overtime_pay numeric(12,2) DEFAULT 0,
-    bonus numeric(12,2) DEFAULT 0,
-    gross_pay numeric(12,2) NOT NULL,
-    
-    -- Deductions
-    pf_employee numeric(12,2) DEFAULT 0,    -- Provident Fund (Employee)
-    pf_employer numeric(12,2) DEFAULT 0,    -- Provident Fund (Employer)
-    esic_employee numeric(12,2) DEFAULT 0,  -- ESI (Employee)
-    esic_employer numeric(12,2) DEFAULT 0,  -- ESI (Employer)
-    professional_tax numeric(12,2) DEFAULT 0,
-    tds numeric(12,2) DEFAULT 0,            -- Tax Deducted at Source
-    loan_deduction numeric(12,2) DEFAULT 0,
-    other_deductions numeric(12,2) DEFAULT 0,
-    total_deductions numeric(12,2) NOT NULL,
-    
-    -- Net Pay
-    net_pay numeric(12,2) NOT NULL,
-    
-    -- Payment Details
-    payment_mode text DEFAULT 'bank_transfer', -- bank_transfer/cheque/cash
-    bank_name text,
-    bank_account_last4 text,
-    payment_reference text,
-    paid_at timestamptz,
-    
-    -- Status
-    status text DEFAULT 'generated',        -- generated/sent/viewed/disputed
+    tenant_id uuid NOT NULL REFERENCES public.client_tenants(id) ON DELETE CASCADE,
+    basic_salary numeric DEFAULT 0,
+    hra numeric DEFAULT 0,
+    special_allowance numeric DEFAULT 0,
+    other_allowances numeric DEFAULT 0,
+    gross_salary numeric DEFAULT 0,
+    pf_employee numeric DEFAULT 0,
+    pf_employer numeric DEFAULT 0,
+    professional_tax numeric DEFAULT 0,
+    tds numeric DEFAULT 0,
+    other_deductions numeric DEFAULT 0,
+    total_deductions numeric DEFAULT 0,
+    net_salary numeric DEFAULT 0,
+    overtime_hours numeric DEFAULT 0,
+    overtime_amount numeric DEFAULT 0,
+    bonus numeric DEFAULT 0,
+    status text DEFAULT 'draft',
+    generated_at timestamptz,
     sent_at timestamptz,
-    viewed_at timestamptz,
-    
-    -- PDF
-    pdf_url text,
-    
-    created_at timestamptz DEFAULT now(),
-    updated_at timestamptz DEFAULT now()
+    created_at timestamptz DEFAULT now()
 );
 
-COMMENT ON TABLE public.payslips IS 'Individual employee payslips generated from payroll runs';
 
--- 14.3 BGV Requests (Background Verification)
+-- ============================================================================
+-- 📂 PART 16: BGV, SSO, INSURANCE, DOCUMENTS (PENDING MIGRATION)
+-- ============================================================================
+
+-- ----------------------------------------------------------------------------
+-- 16.1 bgv_requests
+-- ----------------------------------------------------------------------------
+-- | Attribute | Details |
+-- |-----------|---------|
+-- | **Purpose** | Background verification requests |
+-- | **Primary Key** | id (uuid) |
+-- | **Features** | Multiple check types, status tracking |
+-- | **Status** | 📋 Pending Migration |
+-- ----------------------------------------------------------------------------
+
 CREATE TABLE public.bgv_requests (
     id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-    request_number text NOT NULL,           -- Format: BGV-YYYYMMDD-XXXX
     tenant_id uuid NOT NULL REFERENCES public.client_tenants(id) ON DELETE CASCADE,
     employee_id uuid NOT NULL,
-    user_id uuid,
-    
-    -- Employee Info
-    employee_name text NOT NULL,
-    employee_email text NOT NULL,
-    
-    -- Verification Types Requested
-    verification_types jsonb DEFAULT '[]',  -- ["identity", "address", "education", "employment", "criminal"]
-    
-    -- Provider Info
-    provider_name text,                     -- e.g., "AuthBridge", "HireRight"
-    provider_request_id text,
-    provider_status text,
-    
-    -- Status
-    status text DEFAULT 'pending',          -- pending/in_progress/completed/failed
-    overall_result text,                    -- clear/adverse/pending
-    
-    -- Results (per verification type)
-    results jsonb DEFAULT '{}',
-    
-    -- Timestamps
-    initiated_at timestamptz DEFAULT now(),
-    initiated_by uuid,
+    request_type text NOT NULL,
+    checks jsonb DEFAULT '[]',
+    status text DEFAULT 'pending',
     submitted_at timestamptz,
     completed_at timestamptz,
-    
-    -- Cost
-    cost numeric(10,2),
-    currency text DEFAULT 'INR',
-    
-    -- Documents
-    documents jsonb DEFAULT '[]',
-    
+    results jsonb DEFAULT '{}',
     notes text,
     created_at timestamptz DEFAULT now(),
     updated_at timestamptz DEFAULT now()
 );
 
-COMMENT ON TABLE public.bgv_requests IS 'Background verification requests for employees via third-party providers';
+-- ----------------------------------------------------------------------------
+-- 16.2 sso_states
+-- ----------------------------------------------------------------------------
+-- | Attribute | Details |
+-- |-----------|---------|
+-- | **Purpose** | OAuth state tokens for SSO flows |
+-- | **Primary Key** | id (uuid) |
+-- | **Features** | Provider tracking, expiration |
+-- | **Status** | 📋 Pending Migration |
+-- ----------------------------------------------------------------------------
 
--- 14.4 SSO States (OAuth/SAML state management)
 CREATE TABLE public.sso_states (
     id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-    state_token text UNIQUE NOT NULL,
+    state text UNIQUE NOT NULL,
+    provider text NOT NULL,
     tenant_id uuid REFERENCES public.client_tenants(id) ON DELETE CASCADE,
-    provider text NOT NULL,                 -- google/microsoft/okta/saml
     redirect_url text,
-    code_verifier text,                     -- For PKCE
-    nonce text,
     metadata jsonb DEFAULT '{}',
     expires_at timestamptz NOT NULL,
     used_at timestamptz,
     created_at timestamptz DEFAULT now()
 );
 
-COMMENT ON TABLE public.sso_states IS 'Temporary state storage for SSO authentication flows (auto-cleanup after use)';
+-- ----------------------------------------------------------------------------
+-- 16.3 insurance_claims
+-- ----------------------------------------------------------------------------
+-- | Attribute | Details |
+-- |-----------|---------|
+-- | **Purpose** | Employee insurance claim submissions |
+-- | **Primary Key** | id (uuid) |
+-- | **Features** | Claim types, approval workflow |
+-- | **Status** | 📋 Pending Migration |
+-- ----------------------------------------------------------------------------
 
--- 14.5 Insurance Claims
 CREATE TABLE public.insurance_claims (
     id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-    claim_number text NOT NULL,             -- Format: CLM-YYYYMMDD-XXXX
     tenant_id uuid NOT NULL REFERENCES public.client_tenants(id) ON DELETE CASCADE,
     employee_id uuid NOT NULL,
-    user_id uuid,
-    
-    -- Employee Info
-    employee_name text NOT NULL,
-    employee_email text,
-    
-    -- Claim Details
-    claim_type text NOT NULL,               -- medical/dental/vision/life/disability
-    policy_number text,
-    policy_provider text,
-    
-    -- Amounts
-    claim_amount numeric(12,2) NOT NULL,
-    approved_amount numeric(12,2),
-    currency text DEFAULT 'INR',
-    
-    -- Status
-    status text DEFAULT 'submitted',        -- submitted/under_review/approved/rejected/paid
+    claim_type text NOT NULL,
+    claim_amount numeric NOT NULL,
+    description text,
+    documents jsonb DEFAULT '[]',
+    status text DEFAULT 'pending',
+    submitted_at timestamptz DEFAULT now(),
+    reviewed_by uuid,
+    reviewed_at timestamptz,
+    approved_amount numeric,
     rejection_reason text,
-    
-    -- Dates
-    incident_date date,
-    submission_date date DEFAULT CURRENT_DATE,
-    review_started_at timestamptz,
-    decision_date timestamptz,
-    payment_date timestamptz,
-    
-    -- Provider
-    provider_claim_id text,
-    provider_status text,
-    
-    -- Documents
-    documents jsonb DEFAULT '[]',           -- Array of document URLs/IDs
-    
-    -- Processing
-    processed_by uuid,
-    processed_at timestamptz,
-    
-    notes text,
-    metadata jsonb DEFAULT '{}',
+    paid_at timestamptz,
     created_at timestamptz DEFAULT now(),
     updated_at timestamptz DEFAULT now()
 );
 
-COMMENT ON TABLE public.insurance_claims IS 'Employee insurance claims (medical, dental, vision, life, disability)';
+-- ----------------------------------------------------------------------------
+-- 16.4 document_verifications
+-- ----------------------------------------------------------------------------
+-- | Attribute | Details |
+-- |-----------|---------|
+-- | **Purpose** | Document verification requests and results |
+-- | **Primary Key** | id (uuid) |
+-- | **Features** | OCR, verification status |
+-- | **Status** | 📋 Pending Migration |
+-- ----------------------------------------------------------------------------
 
--- 14.6 Document Verifications
 CREATE TABLE public.document_verifications (
     id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-    verification_number text NOT NULL,      -- Format: VER-YYYYMMDD-XXXX
-    tenant_id uuid REFERENCES public.client_tenants(id) ON DELETE CASCADE,
-    
-    -- Document Info
-    document_type text NOT NULL,            -- aadhaar/pan/passport/license/voter_id/bank_statement
+    tenant_id uuid NOT NULL REFERENCES public.client_tenants(id) ON DELETE CASCADE,
+    employee_id uuid NOT NULL,
+    document_type text NOT NULL,
+    document_url text NOT NULL,
     document_number text,
-    document_name text,
-    document_url text,
-    
-    -- Owner Info
-    owner_id uuid,
-    owner_type text,                        -- employee/candidate/vendor
-    owner_name text,
-    
-    -- Verification
-    verification_method text,               -- api/manual/ocr
-    provider_name text,
-    provider_request_id text,
-    
-    -- Status & Results
-    status text DEFAULT 'pending',          -- pending/processing/verified/failed/invalid
-    is_valid boolean,
-    confidence_score numeric(5,2),          -- 0-100%
+    status text DEFAULT 'pending',
     verification_result jsonb DEFAULT '{}',
-    failure_reason text,
-    
-    -- Timestamps
-    submitted_at timestamptz DEFAULT now(),
     verified_at timestamptz,
-    expires_at timestamptz,
-    
-    metadata jsonb DEFAULT '{}',
+    notes text,
     created_at timestamptz DEFAULT now(),
     updated_at timestamptz DEFAULT now()
 );
 
-COMMENT ON TABLE public.document_verifications IS 'KYC and document verification requests with API/OCR integration';
+-- ----------------------------------------------------------------------------
+-- 16.5 document_extractions
+-- ----------------------------------------------------------------------------
+-- | Attribute | Details |
+-- |-----------|---------|
+-- | **Purpose** | OCR/data extraction from documents |
+-- | **Primary Key** | id (uuid) |
+-- | **Features** | Extracted fields, confidence scores |
+-- | **Status** | 📋 Pending Migration |
+-- ----------------------------------------------------------------------------
 
--- 14.7 Document Extractions (OCR)
 CREATE TABLE public.document_extractions (
     id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-    extraction_number text NOT NULL,        -- Format: EXT-YYYYMMDD-XXXX
-    tenant_id uuid REFERENCES public.client_tenants(id) ON DELETE CASCADE,
-    verification_id uuid REFERENCES public.document_verifications(id),
-    
-    -- Document Info
-    document_url text NOT NULL,
-    document_type text,
-    file_name text,
-    file_size bigint,
-    mime_type text,
-    
-    -- Extraction Results
-    status text DEFAULT 'pending',          -- pending/processing/completed/failed
-    extracted_data jsonb DEFAULT '{}',      -- All extracted fields
-    
-    -- Specific Extracted Fields (common)
-    extracted_name text,
-    extracted_dob date,
-    extracted_address text,
-    extracted_id_number text,
-    
-    -- OCR Details
-    ocr_provider text,                      -- google_vision/aws_textract/azure
-    ocr_confidence numeric(5,2),
-    raw_ocr_response jsonb,
-    
-    -- Processing
-    processing_time_ms integer,
-    error_message text,
-    
-    processed_at timestamptz,
-    created_at timestamptz DEFAULT now(),
-    updated_at timestamptz DEFAULT now()
+    verification_id uuid NOT NULL REFERENCES public.document_verifications(id) ON DELETE CASCADE,
+    extracted_data jsonb DEFAULT '{}',
+    confidence_score numeric,
+    extraction_method text DEFAULT 'ocr',
+    created_at timestamptz DEFAULT now()
 );
-
-COMMENT ON TABLE public.document_extractions IS 'OCR document data extraction results from verification documents';
 
 
 -- ============================================================================
--- PART 15: HR MODULE TABLES (Employees, Attendance, Leave)
+-- 📂 PART 17: ATTENDANCE & LEAVE TABLES (PENDING MIGRATION)
 -- ============================================================================
 
--- 15.1 Employees (Core employee records)
-CREATE TABLE public.employees (
-    id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-    employee_code text NOT NULL,            -- Format: EMP-XXXX or custom per tenant
-    tenant_id uuid NOT NULL REFERENCES public.client_tenants(id) ON DELETE CASCADE,
-    user_id uuid REFERENCES auth.users(id), -- Linked Supabase auth user (optional)
-    
-    -- Personal Information
-    first_name text NOT NULL,
-    last_name text NOT NULL,
-    full_name text GENERATED ALWAYS AS (first_name || ' ' || last_name) STORED,
-    email text NOT NULL,
-    personal_email text,
-    phone text,
-    mobile text,
-    date_of_birth date,
-    gender text,                            -- male/female/other/prefer_not_to_say
-    blood_group text,
-    marital_status text,
-    nationality text DEFAULT 'Indian',
-    
-    -- Address
-    current_address jsonb DEFAULT '{}',
-    permanent_address jsonb DEFAULT '{}',
-    
-    -- Employment Details
-    employment_type text DEFAULT 'full_time', -- full_time/part_time/contract/intern/consultant
-    employment_status text DEFAULT 'active',  -- active/inactive/terminated/resigned/on_leave
-    department text,
-    designation text,
-    job_title text,
-    grade text,
-    reporting_manager_id uuid REFERENCES public.employees(id),
-    
-    -- Dates
-    date_of_joining date NOT NULL,
-    date_of_confirmation date,
-    date_of_exit date,
-    probation_end_date date,
-    
-    -- Work Location
-    work_location text,
-    branch text,
-    is_remote boolean DEFAULT false,
-    
-    -- Compensation
-    salary_currency text DEFAULT 'INR',
-    ctc_annual numeric(15,2),
-    basic_salary numeric(12,2),
-    
-    -- Bank Details (encrypted in production)
-    bank_name text,
-    bank_account_number text,
-    bank_ifsc_code text,
-    
-    -- Statutory IDs
-    pan_number text,
-    aadhaar_number text,
-    uan_number text,                        -- Universal Account Number (PF)
-    esic_number text,
-    
-    -- Emergency Contact
-    emergency_contact_name text,
-    emergency_contact_phone text,
-    emergency_contact_relation text,
-    
-    -- Profile
-    avatar_url text,
-    bio text,
-    skills jsonb DEFAULT '[]',
-    
-    -- Metadata
-    custom_fields jsonb DEFAULT '{}',
-    
-    created_at timestamptz DEFAULT now(),
-    updated_at timestamptz DEFAULT now(),
-    
-    UNIQUE(tenant_id, employee_code),
-    UNIQUE(tenant_id, email)
-);
+-- ----------------------------------------------------------------------------
+-- 17.1 attendance_records
+-- ----------------------------------------------------------------------------
+-- | Attribute | Details |
+-- |-----------|---------|
+-- | **Purpose** | Daily attendance check-in/check-out records |
+-- | **Primary Key** | id (uuid) |
+-- | **Features** | GPS location, work hours calculation |
+-- | **Status** | 📋 Pending Migration |
+-- ----------------------------------------------------------------------------
 
-COMMENT ON TABLE public.employees IS 'Core employee master data for each tenant organization';
-
--- 15.2 Attendance Records
 CREATE TABLE public.attendance_records (
     id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
     tenant_id uuid NOT NULL REFERENCES public.client_tenants(id) ON DELETE CASCADE,
-    employee_id uuid NOT NULL REFERENCES public.employees(id) ON DELETE CASCADE,
-    
-    -- Date
-    attendance_date date NOT NULL,
-    
-    -- Check-in/Check-out
+    employee_id uuid NOT NULL,
+    date date NOT NULL,
     check_in_time timestamptz,
     check_out_time timestamptz,
-    
-    -- Duration
-    total_hours numeric(5,2),               -- Calculated work hours
-    break_hours numeric(5,2) DEFAULT 0,
-    overtime_hours numeric(5,2) DEFAULT 0,
-    
-    -- Status
-    status text DEFAULT 'present',          -- present/absent/half_day/leave/holiday/weekend/work_from_home
-    attendance_type text DEFAULT 'regular', -- regular/wfh/on_site/field
-    
-    -- Location (for geo-fencing)
-    check_in_location jsonb,                -- {lat, lng, address}
+    check_in_location jsonb,
     check_out_location jsonb,
-    is_location_verified boolean DEFAULT false,
-    
-    -- Device Info
-    check_in_device text,                   -- mobile/web/biometric/manual
-    check_out_device text,
-    check_in_ip text,
-    check_out_ip text,
-    
-    -- Regularization
-    is_regularized boolean DEFAULT false,
-    regularized_by uuid,
-    regularized_at timestamptz,
-    regularization_reason text,
-    
-    -- Shift
-    shift_id uuid,
-    shift_name text,
-    expected_check_in time,
-    expected_check_out time,
-    
-    -- Late/Early
-    is_late boolean DEFAULT false,
-    late_by_minutes integer DEFAULT 0,
-    is_early_departure boolean DEFAULT false,
-    early_by_minutes integer DEFAULT 0,
-    
+    status text DEFAULT 'present',
+    work_hours numeric,
+    overtime_hours numeric DEFAULT 0,
     notes text,
     created_at timestamptz DEFAULT now(),
     updated_at timestamptz DEFAULT now(),
-    
-    UNIQUE(tenant_id, employee_id, attendance_date)
+    UNIQUE(tenant_id, employee_id, date)
 );
 
-COMMENT ON TABLE public.attendance_records IS 'Daily attendance records with check-in/out times, location, and regularization';
+-- ----------------------------------------------------------------------------
+-- 17.2 leave_types
+-- ----------------------------------------------------------------------------
+-- | Attribute | Details |
+-- |-----------|---------|
+-- | **Purpose** | Leave type definitions (annual, sick, etc.) |
+-- | **Primary Key** | id (uuid) |
+-- | **Features** | Carry forward, encashment rules |
+-- | **Status** | 📋 Pending Migration |
+-- ----------------------------------------------------------------------------
 
--- 15.3 Leave Types (Configurable per tenant)
 CREATE TABLE public.leave_types (
     id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
     tenant_id uuid NOT NULL REFERENCES public.client_tenants(id) ON DELETE CASCADE,
-    
-    name text NOT NULL,                     -- Casual Leave, Sick Leave, Earned Leave, etc.
-    code text NOT NULL,                     -- CL, SL, EL, etc.
+    name text NOT NULL,
+    code text NOT NULL,
     description text,
-    
-    -- Configuration
+    days_per_year integer DEFAULT 0,
     is_paid boolean DEFAULT true,
-    is_encashable boolean DEFAULT false,
     is_carry_forward boolean DEFAULT false,
-    max_carry_forward_days integer DEFAULT 0,
-    
-    -- Accrual
-    accrual_type text DEFAULT 'annual',     -- annual/monthly/quarterly/none
-    annual_quota numeric(5,2),              -- Days per year
-    monthly_accrual numeric(5,2),
-    
-    -- Limits
-    max_consecutive_days integer,
-    min_days_notice integer DEFAULT 0,
-    max_times_per_year integer,
-    
-    -- Applicability
-    applicable_gender text,                 -- all/male/female
-    applicable_employment_types jsonb DEFAULT '["full_time"]',
-    probation_allowed boolean DEFAULT false,
-    
-    -- Color for UI
-    color text DEFAULT '#3B82F6',
-    
+    max_carry_forward integer DEFAULT 0,
+    is_encashable boolean DEFAULT false,
     is_active boolean DEFAULT true,
-    sort_order integer DEFAULT 0,
-    
     created_at timestamptz DEFAULT now(),
-    updated_at timestamptz DEFAULT now(),
-    
     UNIQUE(tenant_id, code)
 );
 
-COMMENT ON TABLE public.leave_types IS 'Configurable leave types per tenant with accrual and limit rules';
+-- ----------------------------------------------------------------------------
+-- 17.3 leave_balances
+-- ----------------------------------------------------------------------------
+-- | Attribute | Details |
+-- |-----------|---------|
+-- | **Purpose** | Employee leave balance tracking |
+-- | **Primary Key** | id (uuid) |
+-- | **Features** | Year-wise, used/available tracking |
+-- | **Status** | 📋 Pending Migration |
+-- ----------------------------------------------------------------------------
 
--- 15.4 Leave Balances
 CREATE TABLE public.leave_balances (
     id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
     tenant_id uuid NOT NULL REFERENCES public.client_tenants(id) ON DELETE CASCADE,
-    employee_id uuid NOT NULL REFERENCES public.employees(id) ON DELETE CASCADE,
+    employee_id uuid NOT NULL,
     leave_type_id uuid NOT NULL REFERENCES public.leave_types(id) ON DELETE CASCADE,
-    
-    -- Balance Year
     year integer NOT NULL,
-    
-    -- Balance Details
-    opening_balance numeric(5,2) DEFAULT 0,
-    accrued numeric(5,2) DEFAULT 0,
-    used numeric(5,2) DEFAULT 0,
-    pending numeric(5,2) DEFAULT 0,         -- Requested but not approved
-    encashed numeric(5,2) DEFAULT 0,
-    lapsed numeric(5,2) DEFAULT 0,
-    carry_forward numeric(5,2) DEFAULT 0,
-    
-    -- Calculated
-    available_balance numeric(5,2) GENERATED ALWAYS AS (opening_balance + accrued + carry_forward - used - encashed - lapsed) STORED,
-    
-    last_accrual_date date,
-    
+    total_days numeric DEFAULT 0,
+    used_days numeric DEFAULT 0,
+    pending_days numeric DEFAULT 0,
+    available_days numeric DEFAULT 0,
+    carry_forward_days numeric DEFAULT 0,
     created_at timestamptz DEFAULT now(),
     updated_at timestamptz DEFAULT now(),
-    
     UNIQUE(tenant_id, employee_id, leave_type_id, year)
 );
 
-COMMENT ON TABLE public.leave_balances IS 'Employee leave balance tracking per leave type and year';
+-- ----------------------------------------------------------------------------
+-- 17.4 leave_requests
+-- ----------------------------------------------------------------------------
+-- | Attribute | Details |
+-- |-----------|---------|
+-- | **Purpose** | Leave application requests and approvals |
+-- | **Primary Key** | id (uuid) |
+-- | **Features** | Multi-level approval, attachments |
+-- | **Status** | 📋 Pending Migration |
+-- ----------------------------------------------------------------------------
 
--- 15.5 Leave Requests
 CREATE TABLE public.leave_requests (
     id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-    request_number text NOT NULL,           -- Format: LV-YYYYMMDD-XXXX
     tenant_id uuid NOT NULL REFERENCES public.client_tenants(id) ON DELETE CASCADE,
-    employee_id uuid NOT NULL REFERENCES public.employees(id) ON DELETE CASCADE,
+    employee_id uuid NOT NULL,
     leave_type_id uuid NOT NULL REFERENCES public.leave_types(id),
-    
-    -- Leave Period
     start_date date NOT NULL,
     end_date date NOT NULL,
-    
-    -- Days
-    total_days numeric(5,2) NOT NULL,
-    half_day_start boolean DEFAULT false,   -- Half day on start date
-    half_day_end boolean DEFAULT false,     -- Half day on end date
-    
-    -- Status
-    status text DEFAULT 'pending',          -- pending/approved/rejected/cancelled/withdrawn
-    
-    -- Reason
-    reason text NOT NULL,
-    
-    -- Approval Chain
-    approver_id uuid REFERENCES public.employees(id),
+    days numeric NOT NULL,
+    reason text,
+    status text DEFAULT 'pending',
+    approved_by uuid,
     approved_at timestamptz,
-    rejected_at timestamptz,
     rejection_reason text,
-    
-    -- Multi-level Approval
-    approval_chain jsonb DEFAULT '[]',      -- Array of {approver_id, status, timestamp, comments}
-    current_approval_level integer DEFAULT 1,
-    
-    -- Attachments (for medical certificates, etc.)
     attachments jsonb DEFAULT '[]',
-    
-    -- Contact during leave
-    contact_number text,
-    handover_to uuid REFERENCES public.employees(id),
-    handover_notes text,
-    
-    -- Cancellation
-    cancelled_at timestamptz,
-    cancellation_reason text,
-    
     created_at timestamptz DEFAULT now(),
     updated_at timestamptz DEFAULT now()
 );
 
-COMMENT ON TABLE public.leave_requests IS 'Employee leave requests with approval workflow';
+
+-- ============================================================================
+-- 📂 PART 18: SHIFT MANAGEMENT TABLES (PENDING MIGRATION)
+-- ============================================================================
+
+-- ----------------------------------------------------------------------------
+-- 18.1 shifts
+-- ----------------------------------------------------------------------------
+-- | Attribute | Details |
+-- |-----------|---------|
+-- | **Purpose** | Shift definitions with timing and settings |
+-- | **Primary Key** | id (uuid) |
+-- | **Features** | Break times, overtime rules |
+-- | **Status** | 📋 Pending Migration |
+-- ----------------------------------------------------------------------------
+
+CREATE TABLE public.shifts (
+    id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+    tenant_id uuid NOT NULL REFERENCES public.client_tenants(id) ON DELETE CASCADE,
+    name text NOT NULL,
+    code text NOT NULL,
+    start_time time NOT NULL,
+    end_time time NOT NULL,
+    break_duration_minutes integer DEFAULT 0,
+    grace_period_minutes integer DEFAULT 15,
+    overtime_threshold_minutes integer DEFAULT 30,
+    is_night_shift boolean DEFAULT false,
+    color text DEFAULT '#3B82F6',
+    is_active boolean DEFAULT true,
+    created_at timestamptz DEFAULT now(),
+    updated_at timestamptz DEFAULT now(),
+    UNIQUE(tenant_id, code)
+);
+
+-- ----------------------------------------------------------------------------
+-- 18.2 shift_assignments
+-- ----------------------------------------------------------------------------
+-- | Attribute | Details |
+-- |-----------|---------|
+-- | **Purpose** | Employee shift assignments |
+-- | **Primary Key** | id (uuid) |
+-- | **Features** | Date-based, status tracking |
+-- | **Status** | 📋 Pending Migration |
+-- ----------------------------------------------------------------------------
+
+CREATE TABLE public.shift_assignments (
+    id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+    tenant_id uuid NOT NULL REFERENCES public.client_tenants(id) ON DELETE CASCADE,
+    employee_id uuid NOT NULL,
+    shift_id uuid NOT NULL REFERENCES public.shifts(id) ON DELETE CASCADE,
+    date date NOT NULL,
+    status text DEFAULT 'scheduled',
+    notes text,
+    created_by uuid,
+    created_at timestamptz DEFAULT now(),
+    updated_at timestamptz DEFAULT now(),
+    UNIQUE(tenant_id, employee_id, date)
+);
+
+-- ----------------------------------------------------------------------------
+-- 18.3 shift_swap_requests
+-- ----------------------------------------------------------------------------
+-- | Attribute | Details |
+-- |-----------|---------|
+-- | **Purpose** | Shift swap requests between employees |
+-- | **Primary Key** | id (uuid) |
+-- | **Features** | Approval workflow, reason tracking |
+-- | **Status** | 📋 Pending Migration |
+-- ----------------------------------------------------------------------------
+
+CREATE TABLE public.shift_swap_requests (
+    id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+    tenant_id uuid NOT NULL REFERENCES public.client_tenants(id) ON DELETE CASCADE,
+    requester_id uuid NOT NULL,
+    requester_assignment_id uuid NOT NULL REFERENCES public.shift_assignments(id),
+    target_id uuid NOT NULL,
+    target_assignment_id uuid NOT NULL REFERENCES public.shift_assignments(id),
+    reason text,
+    status text DEFAULT 'pending',
+    approved_by uuid,
+    approved_at timestamptz,
+    rejection_reason text,
+    created_at timestamptz DEFAULT now(),
+    updated_at timestamptz DEFAULT now()
+);
 
 
 -- ============================================================================
--- PART 16: DATABASE FUNCTIONS
+-- 📂 PART 19: OVERTIME & GEOFENCING TABLES (PENDING MIGRATION)
 -- ============================================================================
 
--- 14.1 Generate Quote Number (ATL-YYYY-XXXX)
+-- ----------------------------------------------------------------------------
+-- 19.1 overtime_records
+-- ----------------------------------------------------------------------------
+-- | Attribute | Details |
+-- |-----------|---------|
+-- | **Purpose** | Overtime hours tracking with approval status |
+-- | **Primary Key** | id (uuid) |
+-- | **Features** | Rate multipliers, approval workflow |
+-- | **Status** | 📋 Pending Migration |
+-- ----------------------------------------------------------------------------
+
+CREATE TABLE public.overtime_records (
+    id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+    tenant_id uuid NOT NULL REFERENCES public.client_tenants(id) ON DELETE CASCADE,
+    employee_id uuid NOT NULL,
+    date date NOT NULL,
+    hours numeric NOT NULL,
+    overtime_type text DEFAULT 'regular',
+    rate_multiplier numeric DEFAULT 1.5,
+    amount numeric,
+    status text DEFAULT 'pending',
+    approved_by uuid,
+    approved_at timestamptz,
+    notes text,
+    created_at timestamptz DEFAULT now(),
+    updated_at timestamptz DEFAULT now()
+);
+
+-- ----------------------------------------------------------------------------
+-- 19.2 geofence_zones
+-- ----------------------------------------------------------------------------
+-- | Attribute | Details |
+-- |-----------|---------|
+-- | **Purpose** | Office location geofence boundaries |
+-- | **Primary Key** | id (uuid) |
+-- | **Features** | GPS coordinates, radius, active hours |
+-- | **Status** | 📋 Pending Migration |
+-- ----------------------------------------------------------------------------
+
+CREATE TABLE public.geofence_zones (
+    id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+    tenant_id uuid NOT NULL REFERENCES public.client_tenants(id) ON DELETE CASCADE,
+    name text NOT NULL,
+    latitude numeric NOT NULL,
+    longitude numeric NOT NULL,
+    radius_meters integer NOT NULL DEFAULT 100,
+    address text,
+    is_primary boolean DEFAULT false,
+    is_active boolean DEFAULT true,
+    active_days text[] DEFAULT ARRAY['mon','tue','wed','thu','fri'],
+    active_start_time time,
+    active_end_time time,
+    created_at timestamptz DEFAULT now(),
+    updated_at timestamptz DEFAULT now()
+);
+
+-- ----------------------------------------------------------------------------
+-- 19.3 geofence_attendance_logs
+-- ----------------------------------------------------------------------------
+-- | Attribute | Details |
+-- |-----------|---------|
+-- | **Purpose** | GPS-validated attendance entries |
+-- | **Primary Key** | id (uuid) |
+-- | **Features** | Distance calculation, mock location detection |
+-- | **Status** | 📋 Pending Migration |
+-- ----------------------------------------------------------------------------
+
+CREATE TABLE public.geofence_attendance_logs (
+    id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+    tenant_id uuid NOT NULL REFERENCES public.client_tenants(id) ON DELETE CASCADE,
+    employee_id uuid NOT NULL,
+    zone_id uuid NOT NULL REFERENCES public.geofence_zones(id),
+    action text NOT NULL,
+    latitude numeric NOT NULL,
+    longitude numeric NOT NULL,
+    accuracy_meters numeric,
+    distance_from_zone numeric,
+    is_within_zone boolean,
+    is_mock_location boolean DEFAULT false,
+    device_info jsonb DEFAULT '{}',
+    created_at timestamptz DEFAULT now()
+);
+
+
+-- ============================================================================
+-- 📂 PART 20: DATABASE FUNCTIONS
+-- ============================================================================
+
+-- ----------------------------------------------------------------------------
+-- 20.1 generate_quote_number()
+-- ----------------------------------------------------------------------------
+-- | Attribute | Details |
+-- |-----------|---------|
+-- | **Purpose** | Auto-generate quote numbers (ATL-YYYY-XXXX) |
+-- | **Returns** | text |
+-- | **Example** | ATL-2025-0001 |
+-- ----------------------------------------------------------------------------
+
 CREATE OR REPLACE FUNCTION public.generate_quote_number()
 RETURNS text
 LANGUAGE plpgsql
-SET search_path = public
-AS $$
+SET search_path TO 'public'
+AS $function$
 DECLARE
     new_number TEXT;
     year_part TEXT;
@@ -1573,16 +1945,23 @@ BEGIN
     new_number := 'ATL-' || year_part || '-' || LPAD(seq_num::TEXT, 4, '0');
     RETURN new_number;
 END;
-$$;
+$function$;
 
-COMMENT ON FUNCTION public.generate_quote_number IS 'Generates unique quote numbers in format ATL-YYYY-XXXX';
+-- ----------------------------------------------------------------------------
+-- 20.2 generate_invoice_number()
+-- ----------------------------------------------------------------------------
+-- | Attribute | Details |
+-- |-----------|---------|
+-- | **Purpose** | Auto-generate invoice numbers (INV-YYYY-XXXX) |
+-- | **Returns** | text |
+-- | **Example** | INV-2025-0001 |
+-- ----------------------------------------------------------------------------
 
--- 14.2 Generate Invoice Number (INV-YYYY-XXXX)
 CREATE OR REPLACE FUNCTION public.generate_invoice_number()
 RETURNS text
 LANGUAGE plpgsql
-SET search_path = public
-AS $$
+SET search_path TO 'public'
+AS $function$
 DECLARE
     new_number TEXT;
     year_part TEXT;
@@ -1597,16 +1976,23 @@ BEGIN
     new_number := 'INV-' || year_part || '-' || LPAD(seq_num::TEXT, 4, '0');
     RETURN new_number;
 END;
-$$;
+$function$;
 
-COMMENT ON FUNCTION public.generate_invoice_number IS 'Generates unique invoice numbers in format INV-YYYY-XXXX';
+-- ----------------------------------------------------------------------------
+-- 20.3 generate_client_id()
+-- ----------------------------------------------------------------------------
+-- | Attribute | Details |
+-- |-----------|---------|
+-- | **Purpose** | Auto-generate client IDs (ATLS-YYYYMMDD-XXXX) |
+-- | **Returns** | text |
+-- | **Example** | ATLS-20251207-0001 |
+-- ----------------------------------------------------------------------------
 
--- 14.3 Generate Client ID (ATLS-YYYYMMDD-XXXX)
 CREATE OR REPLACE FUNCTION public.generate_client_id()
 RETURNS text
 LANGUAGE plpgsql
-SET search_path = public
-AS $$
+SET search_path TO 'public'
+AS $function$
 DECLARE
     new_id TEXT;
     date_part TEXT;
@@ -1621,16 +2007,23 @@ BEGIN
     new_id := 'ATLS-' || date_part || '-' || LPAD(seq_num::TEXT, 4, '0');
     RETURN new_id;
 END;
-$$;
+$function$;
 
-COMMENT ON FUNCTION public.generate_client_id IS 'Generates unique client IDs in format ATLS-YYYYMMDD-XXXX';
+-- ----------------------------------------------------------------------------
+-- 20.4 generate_ticket_number()
+-- ----------------------------------------------------------------------------
+-- | Attribute | Details |
+-- |-----------|---------|
+-- | **Purpose** | Auto-generate ticket numbers (TKT-XXXXX) |
+-- | **Returns** | text |
+-- | **Example** | TKT-00001 |
+-- ----------------------------------------------------------------------------
 
--- 14.4 Generate Ticket Number (TKT-XXXXX)
 CREATE OR REPLACE FUNCTION public.generate_ticket_number()
 RETURNS text
 LANGUAGE plpgsql
-SET search_path = public
-AS $$
+SET search_path TO 'public'
+AS $function$
 DECLARE
     new_number TEXT;
     seq_num INTEGER;
@@ -1642,34 +2035,24 @@ BEGIN
     new_number := 'TKT-' || LPAD(seq_num::TEXT, 5, '0');
     RETURN new_number;
 END;
-$$;
+$function$;
 
-COMMENT ON FUNCTION public.generate_ticket_number IS 'Generates unique ticket numbers in format TKT-XXXXX';
+-- ----------------------------------------------------------------------------
+-- 20.5 handle_new_user()
+-- ----------------------------------------------------------------------------
+-- | Attribute | Details |
+-- |-----------|---------|
+-- | **Purpose** | Trigger function to create profile on user signup |
+-- | **Returns** | trigger |
+-- | **Trigger** | on_auth_user_created |
+-- ----------------------------------------------------------------------------
 
--- 14.5 Has Role (SECURITY DEFINER - bypasses RLS)
-CREATE OR REPLACE FUNCTION public.has_role(_user_id uuid, _role app_role)
-RETURNS boolean
-LANGUAGE sql
-STABLE SECURITY DEFINER
-SET search_path = public
-AS $$
-    SELECT EXISTS (
-        SELECT 1
-        FROM public.user_roles
-        WHERE user_id = _user_id
-          AND role = _role
-    )
-$$;
-
-COMMENT ON FUNCTION public.has_role IS 'SECURITY: Checks if user has specific role. SECURITY DEFINER bypasses RLS to prevent recursion.';
-
--- 14.6 Handle New User (Auth trigger)
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS trigger
 LANGUAGE plpgsql
 SECURITY DEFINER
-SET search_path = public
-AS $$
+SET search_path TO 'public'
+AS $function$
 BEGIN
     INSERT INTO public.profiles (id, email, full_name, company_name)
     VALUES (
@@ -1680,114 +2063,70 @@ BEGIN
     );
     RETURN NEW;
 END;
-$$;
+$function$;
 
-COMMENT ON FUNCTION public.handle_new_user IS 'Trigger function: Auto-creates profile when user signs up';
+-- ----------------------------------------------------------------------------
+-- 20.6 has_role()
+-- ----------------------------------------------------------------------------
+-- | Attribute | Details |
+-- |-----------|---------|
+-- | **Purpose** | Security definer to check user roles (RBAC) |
+-- | **Returns** | boolean |
+-- | **Parameters** | _user_id uuid, _role app_role |
+-- | **SECURITY** | SECURITY DEFINER for RLS policy use |
+-- ----------------------------------------------------------------------------
 
--- 14.7 Is Feature Enabled for User
-CREATE OR REPLACE FUNCTION public.is_feature_enabled_for_user(
-    p_user_id uuid,
-    p_feature_key text
-)
+CREATE OR REPLACE FUNCTION public.has_role(_user_id uuid, _role app_role)
 RETURNS boolean
-LANGUAGE plpgsql
-SECURITY DEFINER
-SET search_path = public
-AS $$
-DECLARE
-    v_feature_id uuid;
-    v_tenant_id uuid;
-    v_is_enabled boolean;
-BEGIN
-    -- Get feature ID
-    SELECT id INTO v_feature_id 
-    FROM public.global_features 
-    WHERE feature_key = p_feature_key AND is_active = true;
-    
-    IF v_feature_id IS NULL THEN
-        RETURN false;
-    END IF;
-    
-    -- Get user's tenant
-    SELECT ctu.tenant_id INTO v_tenant_id 
-    FROM public.client_tenant_users ctu 
-    WHERE ctu.user_id = p_user_id 
-    LIMIT 1;
-    
-    IF v_tenant_id IS NULL THEN
-        RETURN false;
-    END IF;
-    
-    -- Check tenant feature flag
-    SELECT is_enabled INTO v_is_enabled 
-    FROM public.tenant_features 
-    WHERE tenant_id = v_tenant_id AND feature_id = v_feature_id;
-    
-    IF v_is_enabled IS NULL OR v_is_enabled = false THEN
-        RETURN false;
-    END IF;
-    
-    -- Check employee-specific access
-    SELECT is_enabled INTO v_is_enabled 
-    FROM public.employee_feature_access 
-    WHERE user_id = p_user_id AND feature_id = v_feature_id;
-    
-    IF v_is_enabled IS NOT NULL THEN
-        RETURN v_is_enabled;
-    END IF;
-    
-    RETURN true;
-END;
-$$;
+LANGUAGE sql
+STABLE SECURITY DEFINER
+SET search_path TO 'public'
+AS $function$
+    SELECT EXISTS (
+        SELECT 1
+        FROM public.user_roles
+        WHERE user_id = _user_id
+        AND role = _role
+    )
+$function$;
 
-COMMENT ON FUNCTION public.is_feature_enabled_for_user IS 'Checks if a specific feature is enabled for a user based on tenant and individual access';
+-- ----------------------------------------------------------------------------
+-- 20.7 is_feature_enabled_for_user()
+-- ----------------------------------------------------------------------------
+-- | Attribute | Details |
+-- |-----------|---------|
+-- | **Purpose** | Check if feature is enabled for specific user |
+-- | **Returns** | boolean |
+-- | **Parameters** | _user_id uuid, _feature_key text |
+-- | **Status** | 📋 Pending (requires feature tables) |
+-- ----------------------------------------------------------------------------
+
+-- Function will be created after feature tables are migrated
+-- CREATE OR REPLACE FUNCTION public.is_feature_enabled_for_user(...)
 
 
 -- ============================================================================
--- PART 15: TRIGGERS
+-- 📂 PART 21: TRIGGERS
 -- ============================================================================
 
--- 15.1 Auto-create profile on signup
--- NOTE: Run this in Supabase SQL Editor - attaches to auth.users
+-- ----------------------------------------------------------------------------
+-- 21.1 on_auth_user_created
+-- ----------------------------------------------------------------------------
+-- | Attribute | Details |
+-- |-----------|---------|
+-- | **Table** | auth.users |
+-- | **Event** | AFTER INSERT |
+-- | **Function** | handle_new_user() |
+-- | **Purpose** | Creates profile when user signs up |
+-- ----------------------------------------------------------------------------
+
 CREATE TRIGGER on_auth_user_created
     AFTER INSERT ON auth.users
     FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
 
--- 15.2 Notify on feature unlock
-CREATE OR REPLACE FUNCTION public.notify_feature_unlock()
-RETURNS trigger
-LANGUAGE plpgsql
-SECURITY DEFINER
-SET search_path = public
-AS $$
-DECLARE
-    v_feature_name text;
-BEGIN
-    SELECT name INTO v_feature_name FROM public.global_features WHERE id = NEW.feature_id;
-    
-    INSERT INTO public.employee_notifications (
-        tenant_id, user_id, notification_type, channel, priority,
-        title, message, action_url, action_label, feature_id
-    ) VALUES (
-        NEW.tenant_id, NEW.user_id, 'feature_unlock', 'both', 'normal',
-        'New Feature Unlocked!',
-        format('You now have access to %s. Explore it now!', v_feature_name),
-        '/portal', 'Explore Feature', NEW.feature_id
-    );
-    
-    RETURN NEW;
-END;
-$$;
-
-CREATE TRIGGER on_employee_feature_enabled
-    AFTER INSERT ON public.employee_feature_access
-    FOR EACH ROW
-    WHEN (NEW.is_enabled = true)
-    EXECUTE FUNCTION public.notify_feature_unlock();
-
 
 -- ============================================================================
--- PART 16: ROW LEVEL SECURITY (RLS) POLICIES
+-- 📂 PART 22: ROW LEVEL SECURITY (RLS) POLICIES
 -- ============================================================================
 
 -- Enable RLS on all tables
@@ -1826,18 +2165,10 @@ ALTER TABLE public.team_members ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.compliance_items ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.integrations ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.client_notices ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.global_features ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.tenant_features ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.role_feature_defaults ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.employee_feature_access ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.employee_notifications ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.notification_preferences ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.feature_unlock_log ENABLE ROW LEVEL SECURITY;
 
--- ============================================================================
--- PROFILES POLICIES
--- ============================================================================
-
+-- ----------------------------------------------------------------------------
+-- Profiles Policies
+-- ----------------------------------------------------------------------------
 CREATE POLICY "Users can view own profile" ON public.profiles
     FOR SELECT USING (auth.uid() = id);
 
@@ -1850,10 +2181,9 @@ CREATE POLICY "Users can insert own profile" ON public.profiles
 CREATE POLICY "Admins can view all profiles" ON public.profiles
     FOR SELECT USING (has_role(auth.uid(), 'admin'));
 
--- ============================================================================
--- USER ROLES POLICIES
--- ============================================================================
-
+-- ----------------------------------------------------------------------------
+-- User Roles Policies
+-- ----------------------------------------------------------------------------
 CREATE POLICY "Users can view their own roles" ON public.user_roles
     FOR SELECT USING (auth.uid() = user_id);
 
@@ -1863,27 +2193,25 @@ CREATE POLICY "Admins can view all roles" ON public.user_roles
 CREATE POLICY "Admins can manage roles" ON public.user_roles
     FOR ALL USING (has_role(auth.uid(), 'admin'));
 
--- ============================================================================
--- CLIENT TENANTS POLICIES
--- ============================================================================
+-- ----------------------------------------------------------------------------
+-- Client Tenants Policies
+-- ----------------------------------------------------------------------------
+CREATE POLICY "Users can view own tenant" ON public.client_tenants
+    FOR SELECT USING (
+        id IN (SELECT tenant_id FROM public.client_tenant_users WHERE user_id = auth.uid())
+    );
 
 CREATE POLICY "Admins can manage tenants" ON public.client_tenants
     FOR ALL USING (has_role(auth.uid(), 'admin'));
 
-CREATE POLICY "Users can view own tenant" ON public.client_tenants
-    FOR SELECT USING (id IN (
-        SELECT tenant_id FROM public.client_tenant_users WHERE user_id = auth.uid()
-    ));
-
--- ============================================================================
--- QUOTES POLICIES
--- ============================================================================
-
+-- ----------------------------------------------------------------------------
+-- Quotes Policies
+-- ----------------------------------------------------------------------------
 CREATE POLICY "Anyone can create quotes" ON public.quotes
     FOR INSERT WITH CHECK (true);
 
 CREATE POLICY "Users can view own quotes" ON public.quotes
-    FOR SELECT USING ((auth.uid() = user_id) OR (user_id IS NULL));
+    FOR SELECT USING (auth.uid() = user_id OR user_id IS NULL);
 
 CREATE POLICY "Users can update own quotes" ON public.quotes
     FOR UPDATE USING (auth.uid() = user_id);
@@ -1894,10 +2222,9 @@ CREATE POLICY "Admins can view all quotes" ON public.quotes
 CREATE POLICY "Admins can update all quotes" ON public.quotes
     FOR UPDATE USING (has_role(auth.uid(), 'admin'));
 
--- ============================================================================
--- INVOICES POLICIES
--- ============================================================================
-
+-- ----------------------------------------------------------------------------
+-- Invoices Policies
+-- ----------------------------------------------------------------------------
 CREATE POLICY "Users can view own invoices" ON public.invoices
     FOR SELECT USING (auth.uid() = user_id);
 
@@ -1910,730 +2237,182 @@ CREATE POLICY "Admins can insert invoices" ON public.invoices
 CREATE POLICY "Admins can update invoices" ON public.invoices
     FOR UPDATE USING (has_role(auth.uid(), 'admin'));
 
--- ============================================================================
--- ADMIN NOTIFICATIONS POLICIES
--- ============================================================================
+-- ----------------------------------------------------------------------------
+-- Leads Policies (Admin Only)
+-- ----------------------------------------------------------------------------
+CREATE POLICY "Admins can manage leads" ON public.leads
+    FOR ALL USING (has_role(auth.uid(), 'admin'));
 
+-- ----------------------------------------------------------------------------
+-- Inquiries Policies
+-- ----------------------------------------------------------------------------
+CREATE POLICY "Anyone can create inquiry" ON public.inquiries
+    FOR INSERT WITH CHECK (true);
+
+CREATE POLICY "Users can view own inquiries" ON public.inquiries
+    FOR SELECT USING (auth.uid() = user_id);
+
+CREATE POLICY "Admins can view all inquiries" ON public.inquiries
+    FOR SELECT USING (has_role(auth.uid(), 'admin'));
+
+-- ----------------------------------------------------------------------------
+-- Projects Policies
+-- ----------------------------------------------------------------------------
+CREATE POLICY "Users can view own projects" ON public.projects
+    FOR SELECT USING (auth.uid() = user_id);
+
+CREATE POLICY "Admins can view all projects" ON public.projects
+    FOR SELECT USING (has_role(auth.uid(), 'admin'));
+
+CREATE POLICY "Admins can manage projects" ON public.projects
+    FOR ALL USING (has_role(auth.uid(), 'admin'));
+
+-- ----------------------------------------------------------------------------
+-- Support Tickets Policies
+-- ----------------------------------------------------------------------------
+CREATE POLICY "Users can create tickets" ON public.support_tickets
+    FOR INSERT WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Users can view own tickets" ON public.support_tickets
+    FOR SELECT USING (auth.uid() = user_id);
+
+CREATE POLICY "Admins can manage tickets" ON public.support_tickets
+    FOR ALL USING (has_role(auth.uid(), 'admin'));
+
+-- ----------------------------------------------------------------------------
+-- Admin-Only Table Policies
+-- ----------------------------------------------------------------------------
 CREATE POLICY "Admins can manage admin notifications" ON public.admin_notifications
     FOR ALL USING (has_role(auth.uid(), 'admin'));
 
--- ============================================================================
--- ADDITIONAL POLICIES (abbreviated for common patterns)
--- ============================================================================
-
--- Admin-only tables
-CREATE POLICY "Admins can manage leads" ON public.leads FOR ALL USING (has_role(auth.uid(), 'admin'));
-CREATE POLICY "Admins can manage admin settings" ON public.admin_settings FOR ALL USING (has_role(auth.uid(), 'admin'));
-CREATE POLICY "Admins can manage portal settings" ON public.portal_settings FOR ALL USING (has_role(auth.uid(), 'admin'));
-CREATE POLICY "Admins can manage compliance" ON public.compliance_items FOR ALL USING (has_role(auth.uid(), 'admin'));
-CREATE POLICY "Admins can manage integrations" ON public.integrations FOR ALL USING (has_role(auth.uid(), 'admin'));
-CREATE POLICY "Admins can manage onboarding" ON public.client_onboarding FOR ALL USING (has_role(auth.uid(), 'admin'));
-
--- Public read + admin write
-CREATE POLICY "Anyone can view active pricing" ON public.service_pricing FOR SELECT USING (is_active = true);
-CREATE POLICY "Admins can manage pricing" ON public.service_pricing FOR ALL USING (has_role(auth.uid(), 'admin'));
-
-CREATE POLICY "Anyone can view active addons" ON public.service_addons FOR SELECT USING (is_active = true);
-CREATE POLICY "Admins can manage addons" ON public.service_addons FOR ALL USING (has_role(auth.uid(), 'admin'));
-
-CREATE POLICY "Anyone can view active modifiers" ON public.pricing_modifiers FOR SELECT USING (is_active = true);
-CREATE POLICY "Admins can manage modifiers" ON public.pricing_modifiers FOR ALL USING (has_role(auth.uid(), 'admin'));
-
-CREATE POLICY "Anyone can view active coupons" ON public.coupon_codes FOR SELECT USING (is_active = true);
-CREATE POLICY "Admins can manage coupons" ON public.coupon_codes FOR ALL USING (has_role(auth.uid(), 'admin'));
-
-CREATE POLICY "Anyone can view team" ON public.team_members FOR SELECT USING (true);
-CREATE POLICY "Admins can manage team" ON public.team_members FOR ALL USING (has_role(auth.uid(), 'admin'));
-
--- Logs - insert allowed, read admin only
-CREATE POLICY "System can insert audit logs" ON public.audit_logs FOR INSERT WITH CHECK (true);
-CREATE POLICY "Admins can view audit logs" ON public.audit_logs FOR SELECT USING (has_role(auth.uid(), 'admin'));
-
-CREATE POLICY "System can insert system logs" ON public.system_logs FOR INSERT WITH CHECK (true);
-CREATE POLICY "Admins can view system logs" ON public.system_logs FOR SELECT USING (has_role(auth.uid(), 'admin'));
-
-CREATE POLICY "Anyone can insert clickstream" ON public.clickstream_events FOR INSERT WITH CHECK (true);
-CREATE POLICY "Admins can view clickstream" ON public.clickstream_events FOR SELECT USING (has_role(auth.uid(), 'admin'));
-
-CREATE POLICY "System can insert api usage" ON public.api_usage FOR INSERT WITH CHECK (true);
-CREATE POLICY "Admins can view api usage" ON public.api_usage FOR SELECT USING (has_role(auth.uid(), 'admin'));
-
-
--- ============================================================================
--- PART 17: INDEXES FOR PERFORMANCE
--- ============================================================================
-
-CREATE INDEX idx_profiles_tenant ON public.profiles(tenant_id);
-CREATE INDEX idx_user_roles_user ON public.user_roles(user_id);
-CREATE INDEX idx_quotes_user ON public.quotes(user_id);
-CREATE INDEX idx_quotes_status ON public.quotes(status);
-CREATE INDEX idx_invoices_user ON public.invoices(user_id);
-CREATE INDEX idx_invoices_status ON public.invoices(status);
-CREATE INDEX idx_leads_status ON public.leads(status);
-CREATE INDEX idx_leads_assigned ON public.leads(assigned_to);
-CREATE INDEX idx_projects_user ON public.projects(user_id);
-CREATE INDEX idx_projects_status ON public.projects(status);
-CREATE INDEX idx_tickets_user ON public.support_tickets(user_id);
-CREATE INDEX idx_tickets_status ON public.support_tickets(status);
-CREATE INDEX idx_audit_logs_created ON public.audit_logs(created_at DESC);
-CREATE INDEX idx_audit_logs_entity ON public.audit_logs(entity_type, entity_id);
-CREATE INDEX idx_clickstream_session ON public.clickstream_events(session_id);
-CREATE INDEX idx_clickstream_created ON public.clickstream_events(created_at DESC);
-CREATE INDEX idx_admin_notifications_admin ON public.admin_notifications(target_admin_id);
-CREATE INDEX idx_admin_notifications_unread ON public.admin_notifications(is_read) WHERE is_read = false;
-CREATE INDEX idx_global_features_category ON public.global_features(category);
-CREATE INDEX idx_tenant_features_tenant ON public.tenant_features(tenant_id);
-CREATE INDEX idx_employee_access_user ON public.employee_feature_access(user_id);
-CREATE INDEX idx_notifications_user_unread ON public.employee_notifications(user_id, is_read) WHERE is_read = false;
-
-
--- ============================================================================
--- PART 18: ENABLE REALTIME (Optional - for live updates)
--- ============================================================================
-
--- Enable realtime for notifications
-ALTER PUBLICATION supabase_realtime ADD TABLE public.admin_notifications;
-ALTER PUBLICATION supabase_realtime ADD TABLE public.employee_notifications;
-
--- Enable realtime for MSP monitoring
-ALTER PUBLICATION supabase_realtime ADD TABLE public.client_msp_alerts;
-ALTER PUBLICATION supabase_realtime ADD TABLE public.client_msp_metrics;
-
-
--- ============================================================================
--- PART 19: NEW TABLES - ENABLE RLS
--- ============================================================================
-
-ALTER TABLE public.payroll_runs ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.payslips ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.bgv_requests ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.sso_states ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.insurance_claims ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.document_verifications ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.document_extractions ENABLE ROW LEVEL SECURITY;
-
--- Payroll Runs Policies
-CREATE POLICY "Admins can manage payroll runs" ON public.payroll_runs
+CREATE POLICY "Admins can manage admin settings" ON public.admin_settings
     FOR ALL USING (has_role(auth.uid(), 'admin'));
 
-CREATE POLICY "Tenant admins can manage own payroll runs" ON public.payroll_runs
-    FOR ALL USING (tenant_id IN (
-        SELECT tenant_id FROM public.client_tenant_users 
-        WHERE user_id = auth.uid() AND role IN ('super_admin', 'admin')
-    ));
-
--- Payslips Policies
-CREATE POLICY "Admins can manage payslips" ON public.payslips
+CREATE POLICY "Admins can manage portal settings" ON public.portal_settings
     FOR ALL USING (has_role(auth.uid(), 'admin'));
 
-CREATE POLICY "Employees can view own payslips" ON public.payslips
-    FOR SELECT USING (user_id = auth.uid());
-
-CREATE POLICY "Tenant admins can manage payslips" ON public.payslips
-    FOR ALL USING (tenant_id IN (
-        SELECT tenant_id FROM public.client_tenant_users 
-        WHERE user_id = auth.uid() AND role IN ('super_admin', 'admin')
-    ));
-
--- BGV Requests Policies
-CREATE POLICY "Admins can manage BGV requests" ON public.bgv_requests
+CREATE POLICY "Admins can manage compliance" ON public.compliance_items
     FOR ALL USING (has_role(auth.uid(), 'admin'));
 
-CREATE POLICY "Tenant admins can manage BGV" ON public.bgv_requests
-    FOR ALL USING (tenant_id IN (
-        SELECT tenant_id FROM public.client_tenant_users 
-        WHERE user_id = auth.uid() AND role IN ('super_admin', 'admin')
-    ));
-
--- SSO States Policies (service role only typically)
-CREATE POLICY "System can manage SSO states" ON public.sso_states
-    FOR ALL USING (true);
-
--- Insurance Claims Policies
-CREATE POLICY "Admins can manage insurance claims" ON public.insurance_claims
+CREATE POLICY "Admins can manage integrations" ON public.integrations
     FOR ALL USING (has_role(auth.uid(), 'admin'));
 
-CREATE POLICY "Employees can view own claims" ON public.insurance_claims
-    FOR SELECT USING (user_id = auth.uid());
+-- ----------------------------------------------------------------------------
+-- Logging Table Policies
+-- ----------------------------------------------------------------------------
+CREATE POLICY "System can insert audit logs" ON public.audit_logs
+    FOR INSERT WITH CHECK (true);
 
-CREATE POLICY "Employees can submit claims" ON public.insurance_claims
-    FOR INSERT WITH CHECK (user_id = auth.uid());
+CREATE POLICY "Admins can view audit logs" ON public.audit_logs
+    FOR SELECT USING (has_role(auth.uid(), 'admin'));
 
-CREATE POLICY "Tenant admins can manage claims" ON public.insurance_claims
-    FOR ALL USING (tenant_id IN (
-        SELECT tenant_id FROM public.client_tenant_users 
-        WHERE user_id = auth.uid() AND role IN ('super_admin', 'admin')
-    ));
+CREATE POLICY "System can insert system logs" ON public.system_logs
+    FOR INSERT WITH CHECK (true);
 
--- Document Verifications Policies
-CREATE POLICY "Admins can manage verifications" ON public.document_verifications
-    FOR ALL USING (has_role(auth.uid(), 'admin'));
+CREATE POLICY "Admins can view system logs" ON public.system_logs
+    FOR SELECT USING (has_role(auth.uid(), 'admin'));
 
-CREATE POLICY "Tenant admins can manage verifications" ON public.document_verifications
-    FOR ALL USING (tenant_id IN (
-        SELECT tenant_id FROM public.client_tenant_users 
-        WHERE user_id = auth.uid() AND role IN ('super_admin', 'admin')
-    ));
+CREATE POLICY "Anyone can insert clickstream" ON public.clickstream_events
+    FOR INSERT WITH CHECK (true);
 
--- Document Extractions Policies
-CREATE POLICY "Admins can manage extractions" ON public.document_extractions
-    FOR ALL USING (has_role(auth.uid(), 'admin'));
+CREATE POLICY "Admins can view clickstream" ON public.clickstream_events
+    FOR SELECT USING (has_role(auth.uid(), 'admin'));
 
-CREATE POLICY "Tenant admins can manage extractions" ON public.document_extractions
-    FOR ALL USING (tenant_id IN (
-        SELECT tenant_id FROM public.client_tenant_users 
-        WHERE user_id = auth.uid() AND role IN ('super_admin', 'admin')
-    ));
-
-
--- ============================================================================
--- PART 20: NEW TABLES - INDEXES
--- ============================================================================
-
-CREATE INDEX idx_payroll_runs_tenant ON public.payroll_runs(tenant_id);
-CREATE INDEX idx_payroll_runs_status ON public.payroll_runs(status);
-CREATE INDEX idx_payroll_runs_period ON public.payroll_runs(pay_period_start, pay_period_end);
-
-CREATE INDEX idx_payslips_payroll_run ON public.payslips(payroll_run_id);
-CREATE INDEX idx_payslips_tenant ON public.payslips(tenant_id);
-CREATE INDEX idx_payslips_employee ON public.payslips(employee_id);
-CREATE INDEX idx_payslips_user ON public.payslips(user_id);
-
-CREATE INDEX idx_bgv_requests_tenant ON public.bgv_requests(tenant_id);
-CREATE INDEX idx_bgv_requests_employee ON public.bgv_requests(employee_id);
-CREATE INDEX idx_bgv_requests_status ON public.bgv_requests(status);
-
-CREATE INDEX idx_sso_states_token ON public.sso_states(state_token);
-CREATE INDEX idx_sso_states_expires ON public.sso_states(expires_at);
-
-CREATE INDEX idx_insurance_claims_tenant ON public.insurance_claims(tenant_id);
-CREATE INDEX idx_insurance_claims_employee ON public.insurance_claims(employee_id);
-CREATE INDEX idx_insurance_claims_status ON public.insurance_claims(status);
-
-CREATE INDEX idx_document_verifications_tenant ON public.document_verifications(tenant_id);
-CREATE INDEX idx_document_verifications_status ON public.document_verifications(status);
-
-CREATE INDEX idx_document_extractions_verification ON public.document_extractions(verification_id);
-CREATE INDEX idx_document_extractions_status ON public.document_extractions(status);
-
-
--- ============================================================================
--- PART 22: HR MODULE - ENABLE RLS
--- ============================================================================
-
-ALTER TABLE public.employees ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.attendance_records ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.leave_types ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.leave_balances ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.leave_requests ENABLE ROW LEVEL SECURITY;
-
--- Employees Policies
-CREATE POLICY "Admins can manage employees" ON public.employees
-    FOR ALL USING (has_role(auth.uid(), 'admin'));
-
-CREATE POLICY "Employees can view own record" ON public.employees
-    FOR SELECT USING (user_id = auth.uid());
-
-CREATE POLICY "Tenant admins can manage employees" ON public.employees
-    FOR ALL USING (tenant_id IN (
-        SELECT tenant_id FROM public.client_tenant_users 
-        WHERE user_id = auth.uid() AND role IN ('super_admin', 'admin')
-    ));
-
-CREATE POLICY "Managers can view team members" ON public.employees
-    FOR SELECT USING (reporting_manager_id IN (
-        SELECT id FROM public.employees WHERE user_id = auth.uid()
-    ));
-
--- Attendance Records Policies
-CREATE POLICY "Admins can manage attendance" ON public.attendance_records
-    FOR ALL USING (has_role(auth.uid(), 'admin'));
-
-CREATE POLICY "Employees can view own attendance" ON public.attendance_records
-    FOR SELECT USING (employee_id IN (
-        SELECT id FROM public.employees WHERE user_id = auth.uid()
-    ));
-
-CREATE POLICY "Employees can check in/out" ON public.attendance_records
-    FOR INSERT WITH CHECK (employee_id IN (
-        SELECT id FROM public.employees WHERE user_id = auth.uid()
-    ));
-
-CREATE POLICY "Tenant admins can manage attendance" ON public.attendance_records
-    FOR ALL USING (tenant_id IN (
-        SELECT tenant_id FROM public.client_tenant_users 
-        WHERE user_id = auth.uid() AND role IN ('super_admin', 'admin')
-    ));
-
--- Leave Types Policies
-CREATE POLICY "Anyone can view leave types" ON public.leave_types
+-- ----------------------------------------------------------------------------
+-- Public Read Policies
+-- ----------------------------------------------------------------------------
+CREATE POLICY "Anyone can view active pricing" ON public.service_pricing
     FOR SELECT USING (is_active = true);
 
-CREATE POLICY "Admins can manage leave types" ON public.leave_types
+CREATE POLICY "Admins can manage pricing" ON public.service_pricing
     FOR ALL USING (has_role(auth.uid(), 'admin'));
 
-CREATE POLICY "Tenant admins can manage leave types" ON public.leave_types
-    FOR ALL USING (tenant_id IN (
-        SELECT tenant_id FROM public.client_tenant_users 
-        WHERE user_id = auth.uid() AND role IN ('super_admin', 'admin')
-    ));
+CREATE POLICY "Anyone can view active addons" ON public.service_addons
+    FOR SELECT USING (is_active = true);
 
--- Leave Balances Policies
-CREATE POLICY "Admins can manage leave balances" ON public.leave_balances
+CREATE POLICY "Admins can manage addons" ON public.service_addons
     FOR ALL USING (has_role(auth.uid(), 'admin'));
 
-CREATE POLICY "Employees can view own balance" ON public.leave_balances
-    FOR SELECT USING (employee_id IN (
-        SELECT id FROM public.employees WHERE user_id = auth.uid()
-    ));
+CREATE POLICY "Anyone can view team" ON public.team_members
+    FOR SELECT USING (true);
 
-CREATE POLICY "Tenant admins can manage leave balances" ON public.leave_balances
-    FOR ALL USING (tenant_id IN (
-        SELECT tenant_id FROM public.client_tenant_users 
-        WHERE user_id = auth.uid() AND role IN ('super_admin', 'admin')
-    ));
-
--- Leave Requests Policies
-CREATE POLICY "Admins can manage leave requests" ON public.leave_requests
+CREATE POLICY "Admins can manage team" ON public.team_members
     FOR ALL USING (has_role(auth.uid(), 'admin'));
 
-CREATE POLICY "Employees can view own requests" ON public.leave_requests
-    FOR SELECT USING (employee_id IN (
-        SELECT id FROM public.employees WHERE user_id = auth.uid()
-    ));
 
-CREATE POLICY "Employees can submit leave requests" ON public.leave_requests
-    FOR INSERT WITH CHECK (employee_id IN (
-        SELECT id FROM public.employees WHERE user_id = auth.uid()
-    ));
+-- ============================================================================
+-- 📂 PART 23: INDEXES
+-- ============================================================================
 
-CREATE POLICY "Employees can cancel own requests" ON public.leave_requests
-    FOR UPDATE USING (
-        employee_id IN (SELECT id FROM public.employees WHERE user_id = auth.uid())
-        AND status = 'pending'
-    );
+-- Core table indexes
+CREATE INDEX idx_profiles_tenant_id ON public.profiles(tenant_id);
+CREATE INDEX idx_profiles_email ON public.profiles(email);
+CREATE INDEX idx_user_roles_user_id ON public.user_roles(user_id);
+CREATE INDEX idx_client_tenant_users_user_id ON public.client_tenant_users(user_id);
+CREATE INDEX idx_client_tenant_users_tenant_id ON public.client_tenant_users(tenant_id);
 
-CREATE POLICY "Managers can approve team requests" ON public.leave_requests
-    FOR UPDATE USING (
-        approver_id IN (SELECT id FROM public.employees WHERE user_id = auth.uid())
-    );
+-- Sales & CRM indexes
+CREATE INDEX idx_quotes_user_id ON public.quotes(user_id);
+CREATE INDEX idx_quotes_status ON public.quotes(status);
+CREATE INDEX idx_invoices_user_id ON public.invoices(user_id);
+CREATE INDEX idx_invoices_status ON public.invoices(status);
+CREATE INDEX idx_leads_status ON public.leads(status);
+CREATE INDEX idx_leads_email ON public.leads(email);
 
-CREATE POLICY "Tenant admins can manage leave requests" ON public.leave_requests
-    FOR ALL USING (tenant_id IN (
-        SELECT tenant_id FROM public.client_tenant_users 
-        WHERE user_id = auth.uid() AND role IN ('super_admin', 'admin')
-    ));
+-- Project indexes
+CREATE INDEX idx_projects_user_id ON public.projects(user_id);
+CREATE INDEX idx_projects_status ON public.projects(status);
+CREATE INDEX idx_project_milestones_project_id ON public.project_milestones(project_id);
+
+-- Support indexes
+CREATE INDEX idx_support_tickets_user_id ON public.support_tickets(user_id);
+CREATE INDEX idx_support_tickets_status ON public.support_tickets(status);
+CREATE INDEX idx_ticket_messages_ticket_id ON public.ticket_messages(ticket_id);
+
+-- MSP indexes
+CREATE INDEX idx_client_msp_servers_tenant_id ON public.client_msp_servers(tenant_id);
+CREATE INDEX idx_client_msp_metrics_server_id ON public.client_msp_metrics(server_id);
+CREATE INDEX idx_client_msp_alerts_tenant_id ON public.client_msp_alerts(tenant_id);
+
+-- Analytics indexes
+CREATE INDEX idx_clickstream_events_session_id ON public.clickstream_events(session_id);
+CREATE INDEX idx_clickstream_events_created_at ON public.clickstream_events(created_at);
+CREATE INDEX idx_audit_logs_entity_type ON public.audit_logs(entity_type);
+CREATE INDEX idx_audit_logs_created_at ON public.audit_logs(created_at);
+
+-- Onboarding indexes
+CREATE INDEX idx_onboarding_sessions_email ON public.onboarding_sessions(email);
+CREATE INDEX idx_onboarding_sessions_status ON public.onboarding_sessions(status);
+CREATE INDEX idx_onboarding_sessions_client_id ON public.onboarding_sessions(client_id);
 
 
 -- ============================================================================
--- PART 23: HR MODULE - INDEXES
+-- 📂 PART 24: REALTIME PUBLICATION
 -- ============================================================================
 
-CREATE INDEX idx_employees_tenant ON public.employees(tenant_id);
-CREATE INDEX idx_employees_user ON public.employees(user_id);
-CREATE INDEX idx_employees_department ON public.employees(tenant_id, department);
-CREATE INDEX idx_employees_manager ON public.employees(reporting_manager_id);
-CREATE INDEX idx_employees_status ON public.employees(employment_status);
-CREATE INDEX idx_employees_code ON public.employees(tenant_id, employee_code);
-
-CREATE INDEX idx_attendance_tenant ON public.attendance_records(tenant_id);
-CREATE INDEX idx_attendance_employee ON public.attendance_records(employee_id);
-CREATE INDEX idx_attendance_date ON public.attendance_records(attendance_date);
-CREATE INDEX idx_attendance_tenant_date ON public.attendance_records(tenant_id, attendance_date);
-
-CREATE INDEX idx_leave_types_tenant ON public.leave_types(tenant_id);
-CREATE INDEX idx_leave_types_active ON public.leave_types(tenant_id, is_active);
-
-CREATE INDEX idx_leave_balances_tenant ON public.leave_balances(tenant_id);
-CREATE INDEX idx_leave_balances_employee ON public.leave_balances(employee_id);
-CREATE INDEX idx_leave_balances_year ON public.leave_balances(tenant_id, year);
-
-CREATE INDEX idx_leave_requests_tenant ON public.leave_requests(tenant_id);
-CREATE INDEX idx_leave_requests_employee ON public.leave_requests(employee_id);
-CREATE INDEX idx_leave_requests_status ON public.leave_requests(status);
-CREATE INDEX idx_leave_requests_approver ON public.leave_requests(approver_id);
-CREATE INDEX idx_leave_requests_dates ON public.leave_requests(start_date, end_date);
+-- Enable realtime for specific tables
+ALTER PUBLICATION supabase_realtime ADD TABLE public.admin_notifications;
+ALTER PUBLICATION supabase_realtime ADD TABLE public.support_tickets;
+ALTER PUBLICATION supabase_realtime ADD TABLE public.ticket_messages;
+ALTER PUBLICATION supabase_realtime ADD TABLE public.client_msp_alerts;
 
 
 -- ============================================================================
--- PART 24: ENABLE REALTIME FOR NEW TABLES
+-- 🏁 END OF SCHEMA
 -- ============================================================================
-
-ALTER PUBLICATION supabase_realtime ADD TABLE public.payroll_runs;
-ALTER PUBLICATION supabase_realtime ADD TABLE public.bgv_requests;
-ALTER PUBLICATION supabase_realtime ADD TABLE public.insurance_claims;
-ALTER PUBLICATION supabase_realtime ADD TABLE public.attendance_records;
-ALTER PUBLICATION supabase_realtime ADD TABLE public.leave_requests;
-
-
--- ============================================================================
--- PART 25: SHIFT MANAGEMENT ENUMS
--- ============================================================================
-
--- Shift status
-CREATE TYPE public.shift_status AS ENUM (
-    'active',         -- Currently active shift
-    'inactive',       -- Disabled shift
-    'archived'        -- No longer in use
-);
-
--- Shift assignment status
-CREATE TYPE public.shift_assignment_status AS ENUM (
-    'scheduled',      -- Assigned to employee
-    'in_progress',    -- Employee currently working
-    'completed',      -- Shift completed
-    'missed',         -- Employee didn't show up
-    'cancelled'       -- Assignment cancelled
-);
-
--- Shift swap request status
-CREATE TYPE public.shift_swap_status AS ENUM (
-    'pending',        -- Awaiting approval
-    'approved',       -- Approved by manager
-    'rejected',       -- Rejected
-    'cancelled',      -- Cancelled by requester
-    'completed'       -- Swap executed
-);
-
-
--- ============================================================================
--- PART 26: SHIFT MANAGEMENT TABLES
--- ============================================================================
-
--- Shifts table - defines available shifts
-CREATE TABLE public.shifts (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    tenant_id UUID NOT NULL REFERENCES public.client_tenants(id) ON DELETE CASCADE,
-    name TEXT NOT NULL,                                  -- e.g., "Morning Shift", "Night Shift"
-    code TEXT,                                           -- e.g., "MS", "NS"
-    description TEXT,
-    start_time TIME NOT NULL,                            -- Shift start time
-    end_time TIME NOT NULL,                              -- Shift end time
-    break_duration_minutes INTEGER DEFAULT 0,            -- Break duration in minutes
-    grace_period_minutes INTEGER DEFAULT 15,             -- Late arrival grace period
-    early_checkout_minutes INTEGER DEFAULT 15,           -- Early checkout allowed
-    is_overnight BOOLEAN DEFAULT false,                  -- Shift crosses midnight
-    is_flexible BOOLEAN DEFAULT false,                   -- Flexible timing allowed
-    min_hours DECIMAL(4,2),                              -- Minimum hours required
-    max_hours DECIMAL(4,2),                              -- Maximum hours allowed
-    color TEXT DEFAULT '#3B82F6',                        -- Display color for UI
-    applicable_days JSONB DEFAULT '["monday","tuesday","wednesday","thursday","friday"]',
-    status shift_status DEFAULT 'active',
-    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-    created_by UUID REFERENCES auth.users(id)
-);
-
--- Shift Assignments - assigns employees to shifts
-CREATE TABLE public.shift_assignments (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    tenant_id UUID NOT NULL REFERENCES public.client_tenants(id) ON DELETE CASCADE,
-    shift_id UUID NOT NULL REFERENCES public.shifts(id) ON DELETE CASCADE,
-    employee_id UUID NOT NULL REFERENCES public.employees(id) ON DELETE CASCADE,
-    assignment_date DATE NOT NULL,                       -- Date of assignment
-    actual_start_time TIMESTAMPTZ,                       -- When employee actually started
-    actual_end_time TIMESTAMPTZ,                         -- When employee actually ended
-    status shift_assignment_status DEFAULT 'scheduled',
-    hours_worked DECIMAL(5,2),                           -- Total hours worked
-    overtime_hours DECIMAL(5,2) DEFAULT 0,               -- Overtime hours
-    notes TEXT,
-    assigned_by UUID REFERENCES auth.users(id),
-    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-    UNIQUE(shift_id, employee_id, assignment_date)
-);
-
--- Shift Swap Requests - employee requests to swap shifts
-CREATE TABLE public.shift_swap_requests (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    tenant_id UUID NOT NULL REFERENCES public.client_tenants(id) ON DELETE CASCADE,
-    requester_id UUID NOT NULL REFERENCES public.employees(id) ON DELETE CASCADE,
-    requester_assignment_id UUID NOT NULL REFERENCES public.shift_assignments(id) ON DELETE CASCADE,
-    target_employee_id UUID REFERENCES public.employees(id),  -- Who to swap with (optional)
-    target_assignment_id UUID REFERENCES public.shift_assignments(id),  -- Their assignment to take
-    reason TEXT NOT NULL,
-    status shift_swap_status DEFAULT 'pending',
-    approved_by UUID REFERENCES auth.users(id),
-    approved_at TIMESTAMPTZ,
-    rejection_reason TEXT,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
-);
-
-
--- ============================================================================
--- PART 27: OVERTIME TRACKING TABLE
--- ============================================================================
-
--- Overtime type enum
-CREATE TYPE public.overtime_type AS ENUM (
-    'regular',        -- Standard 1.5x overtime
-    'double',         -- 2x overtime (holidays, etc.)
-    'special',        -- Special rates
-    'comp_off'        -- Compensatory off instead of payment
-);
-
--- Overtime Records table
-CREATE TABLE public.overtime_records (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    tenant_id UUID NOT NULL REFERENCES public.client_tenants(id) ON DELETE CASCADE,
-    employee_id UUID NOT NULL REFERENCES public.employees(id) ON DELETE CASCADE,
-    attendance_record_id UUID REFERENCES public.attendance_records(id),
-    shift_assignment_id UUID REFERENCES public.shift_assignments(id),
-    overtime_date DATE NOT NULL,
-    overtime_type overtime_type DEFAULT 'regular',
-    hours DECIMAL(5,2) NOT NULL,                         -- Overtime hours
-    rate_multiplier DECIMAL(3,2) DEFAULT 1.5,            -- Pay multiplier (1.5x, 2x, etc.)
-    pre_approved BOOLEAN DEFAULT false,                   -- Was overtime pre-approved?
-    approved_by UUID REFERENCES auth.users(id),
-    approved_at TIMESTAMPTZ,
-    status TEXT DEFAULT 'pending' CHECK (status IN ('pending', 'approved', 'rejected', 'processed')),
-    rejection_reason TEXT,
-    payroll_processed BOOLEAN DEFAULT false,              -- Added to payroll?
-    payroll_run_id UUID REFERENCES public.payroll_runs(id),
-    notes TEXT,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
-);
-
-
--- ============================================================================
--- PART 28: GEOFENCING TABLES
--- ============================================================================
-
--- Geofence zone type enum
-CREATE TYPE public.geofence_zone_type AS ENUM (
-    'office',         -- Main office location
-    'branch',         -- Branch office
-    'client_site',    -- Client location
-    'work_from_home', -- Registered WFH address
-    'field',          -- Field work zone
-    'restricted'      -- Restricted area
-);
-
--- Geofence Zones - defines geographic boundaries for attendance
-CREATE TABLE public.geofence_zones (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    tenant_id UUID NOT NULL REFERENCES public.client_tenants(id) ON DELETE CASCADE,
-    name TEXT NOT NULL,                                   -- Zone name
-    zone_type geofence_zone_type DEFAULT 'office',
-    address TEXT,                                         -- Physical address
-    latitude DECIMAL(10,8) NOT NULL,                      -- Center latitude
-    longitude DECIMAL(11,8) NOT NULL,                     -- Center longitude
-    radius_meters INTEGER NOT NULL DEFAULT 100,           -- Geofence radius in meters
-    polygon_coordinates JSONB,                            -- For complex polygon shapes
-    is_active BOOLEAN DEFAULT true,
-    is_primary BOOLEAN DEFAULT false,                     -- Primary office location
-    allowed_ip_ranges JSONB DEFAULT '[]',                 -- Allowed IP ranges for WiFi-based location
-    wifi_ssids JSONB DEFAULT '[]',                        -- Allowed WiFi network names
-    timezone TEXT DEFAULT 'Asia/Kolkata',
-    working_hours JSONB DEFAULT '{"start": "09:00", "end": "18:00"}',
-    applicable_departments JSONB DEFAULT '[]',            -- Empty means all departments
-    applicable_designations JSONB DEFAULT '[]',           -- Empty means all designations
-    metadata JSONB DEFAULT '{}',
-    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-    created_by UUID REFERENCES auth.users(id)
-);
-
--- Geofence Attendance Logs - records location-based attendance attempts
-CREATE TABLE public.geofence_attendance_logs (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    tenant_id UUID NOT NULL REFERENCES public.client_tenants(id) ON DELETE CASCADE,
-    employee_id UUID NOT NULL REFERENCES public.employees(id) ON DELETE CASCADE,
-    attendance_record_id UUID REFERENCES public.attendance_records(id),
-    geofence_zone_id UUID REFERENCES public.geofence_zones(id),
-    action_type TEXT NOT NULL CHECK (action_type IN ('check_in', 'check_out', 'location_update')),
-    latitude DECIMAL(10,8) NOT NULL,                      -- Employee's latitude
-    longitude DECIMAL(11,8) NOT NULL,                     -- Employee's longitude
-    accuracy_meters DECIMAL(8,2),                         -- GPS accuracy
-    altitude_meters DECIMAL(10,2),                        -- Altitude if available
-    is_within_geofence BOOLEAN NOT NULL DEFAULT false,    -- Was employee within allowed zone?
-    distance_from_zone_meters DECIMAL(10,2),              -- Distance from nearest zone center
-    matched_zone_id UUID REFERENCES public.geofence_zones(id),  -- Which zone matched (if any)
-    device_info JSONB DEFAULT '{}',                       -- Device details (model, OS, etc.)
-    ip_address INET,                                      -- IP address for WiFi validation
-    wifi_ssid TEXT,                                       -- Connected WiFi network
-    is_mocked_location BOOLEAN DEFAULT false,             -- Detected fake GPS?
-    verification_status TEXT DEFAULT 'verified' CHECK (verification_status IN ('verified', 'suspicious', 'rejected', 'manual_override')),
-    verification_notes TEXT,
-    photo_url TEXT,                                       -- Selfie photo for verification
-    created_at TIMESTAMPTZ NOT NULL DEFAULT now()
-);
-
-
--- ============================================================================
--- PART 29: SHIFT & GEOFENCING - ENABLE RLS
--- ============================================================================
-
-ALTER TABLE public.shifts ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.shift_assignments ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.shift_swap_requests ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.overtime_records ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.geofence_zones ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.geofence_attendance_logs ENABLE ROW LEVEL SECURITY;
-
--- Shifts Policies
-CREATE POLICY "Admins can manage shifts" ON public.shifts
-    FOR ALL USING (has_role(auth.uid(), 'admin'));
-
-CREATE POLICY "Employees can view shifts" ON public.shifts
-    FOR SELECT USING (tenant_id IN (
-        SELECT tenant_id FROM public.client_tenant_users WHERE user_id = auth.uid()
-    ));
-
-CREATE POLICY "Tenant admins can manage shifts" ON public.shifts
-    FOR ALL USING (tenant_id IN (
-        SELECT tenant_id FROM public.client_tenant_users 
-        WHERE user_id = auth.uid() AND role IN ('super_admin', 'admin')
-    ));
-
--- Shift Assignments Policies
-CREATE POLICY "Admins can manage shift assignments" ON public.shift_assignments
-    FOR ALL USING (has_role(auth.uid(), 'admin'));
-
-CREATE POLICY "Employees can view own assignments" ON public.shift_assignments
-    FOR SELECT USING (employee_id IN (
-        SELECT id FROM public.employees WHERE user_id = auth.uid()
-    ));
-
-CREATE POLICY "Tenant admins can manage assignments" ON public.shift_assignments
-    FOR ALL USING (tenant_id IN (
-        SELECT tenant_id FROM public.client_tenant_users 
-        WHERE user_id = auth.uid() AND role IN ('super_admin', 'admin')
-    ));
-
--- Shift Swap Requests Policies
-CREATE POLICY "Admins can manage swap requests" ON public.shift_swap_requests
-    FOR ALL USING (has_role(auth.uid(), 'admin'));
-
-CREATE POLICY "Employees can view own swap requests" ON public.shift_swap_requests
-    FOR SELECT USING (requester_id IN (
-        SELECT id FROM public.employees WHERE user_id = auth.uid()
-    ) OR target_employee_id IN (
-        SELECT id FROM public.employees WHERE user_id = auth.uid()
-    ));
-
-CREATE POLICY "Employees can create swap requests" ON public.shift_swap_requests
-    FOR INSERT WITH CHECK (requester_id IN (
-        SELECT id FROM public.employees WHERE user_id = auth.uid()
-    ));
-
-CREATE POLICY "Tenant admins can manage swap requests" ON public.shift_swap_requests
-    FOR ALL USING (tenant_id IN (
-        SELECT tenant_id FROM public.client_tenant_users 
-        WHERE user_id = auth.uid() AND role IN ('super_admin', 'admin')
-    ));
-
--- Overtime Records Policies
-CREATE POLICY "Admins can manage overtime" ON public.overtime_records
-    FOR ALL USING (has_role(auth.uid(), 'admin'));
-
-CREATE POLICY "Employees can view own overtime" ON public.overtime_records
-    FOR SELECT USING (employee_id IN (
-        SELECT id FROM public.employees WHERE user_id = auth.uid()
-    ));
-
-CREATE POLICY "Tenant admins can manage overtime" ON public.overtime_records
-    FOR ALL USING (tenant_id IN (
-        SELECT tenant_id FROM public.client_tenant_users 
-        WHERE user_id = auth.uid() AND role IN ('super_admin', 'admin')
-    ));
-
--- Geofence Zones Policies
-CREATE POLICY "Admins can manage geofence zones" ON public.geofence_zones
-    FOR ALL USING (has_role(auth.uid(), 'admin'));
-
-CREATE POLICY "Employees can view geofence zones" ON public.geofence_zones
-    FOR SELECT USING (is_active = true AND tenant_id IN (
-        SELECT tenant_id FROM public.client_tenant_users WHERE user_id = auth.uid()
-    ));
-
-CREATE POLICY "Tenant admins can manage zones" ON public.geofence_zones
-    FOR ALL USING (tenant_id IN (
-        SELECT tenant_id FROM public.client_tenant_users 
-        WHERE user_id = auth.uid() AND role IN ('super_admin', 'admin')
-    ));
-
--- Geofence Attendance Logs Policies
-CREATE POLICY "Admins can manage geofence logs" ON public.geofence_attendance_logs
-    FOR ALL USING (has_role(auth.uid(), 'admin'));
-
-CREATE POLICY "Employees can log attendance" ON public.geofence_attendance_logs
-    FOR INSERT WITH CHECK (employee_id IN (
-        SELECT id FROM public.employees WHERE user_id = auth.uid()
-    ));
-
-CREATE POLICY "Employees can view own geofence logs" ON public.geofence_attendance_logs
-    FOR SELECT USING (employee_id IN (
-        SELECT id FROM public.employees WHERE user_id = auth.uid()
-    ));
-
-CREATE POLICY "Tenant admins can view all logs" ON public.geofence_attendance_logs
-    FOR ALL USING (tenant_id IN (
-        SELECT tenant_id FROM public.client_tenant_users 
-        WHERE user_id = auth.uid() AND role IN ('super_admin', 'admin')
-    ));
-
-
--- ============================================================================
--- PART 30: SHIFT & GEOFENCING - INDEXES
--- ============================================================================
-
--- Shifts indexes
-CREATE INDEX idx_shifts_tenant ON public.shifts(tenant_id);
-CREATE INDEX idx_shifts_status ON public.shifts(status);
-CREATE INDEX idx_shifts_tenant_active ON public.shifts(tenant_id) WHERE status = 'active';
-
--- Shift Assignments indexes
-CREATE INDEX idx_shift_assignments_tenant ON public.shift_assignments(tenant_id);
-CREATE INDEX idx_shift_assignments_shift ON public.shift_assignments(shift_id);
-CREATE INDEX idx_shift_assignments_employee ON public.shift_assignments(employee_id);
-CREATE INDEX idx_shift_assignments_date ON public.shift_assignments(assignment_date);
-CREATE INDEX idx_shift_assignments_status ON public.shift_assignments(status);
-CREATE INDEX idx_shift_assignments_employee_date ON public.shift_assignments(employee_id, assignment_date);
-
--- Shift Swap Requests indexes
-CREATE INDEX idx_shift_swap_tenant ON public.shift_swap_requests(tenant_id);
-CREATE INDEX idx_shift_swap_requester ON public.shift_swap_requests(requester_id);
-CREATE INDEX idx_shift_swap_target ON public.shift_swap_requests(target_employee_id);
-CREATE INDEX idx_shift_swap_status ON public.shift_swap_requests(status);
-
--- Overtime Records indexes
-CREATE INDEX idx_overtime_tenant ON public.overtime_records(tenant_id);
-CREATE INDEX idx_overtime_employee ON public.overtime_records(employee_id);
-CREATE INDEX idx_overtime_date ON public.overtime_records(overtime_date);
-CREATE INDEX idx_overtime_status ON public.overtime_records(status);
-CREATE INDEX idx_overtime_payroll ON public.overtime_records(payroll_run_id);
-
--- Geofence Zones indexes
-CREATE INDEX idx_geofence_zones_tenant ON public.geofence_zones(tenant_id);
-CREATE INDEX idx_geofence_zones_active ON public.geofence_zones(tenant_id) WHERE is_active = true;
-CREATE INDEX idx_geofence_zones_location ON public.geofence_zones(latitude, longitude);
-
--- Geofence Attendance Logs indexes
-CREATE INDEX idx_geofence_logs_tenant ON public.geofence_attendance_logs(tenant_id);
-CREATE INDEX idx_geofence_logs_employee ON public.geofence_attendance_logs(employee_id);
-CREATE INDEX idx_geofence_logs_attendance ON public.geofence_attendance_logs(attendance_record_id);
-CREATE INDEX idx_geofence_logs_zone ON public.geofence_attendance_logs(geofence_zone_id);
-CREATE INDEX idx_geofence_logs_created ON public.geofence_attendance_logs(created_at);
-CREATE INDEX idx_geofence_logs_verification ON public.geofence_attendance_logs(verification_status);
-
-
--- ============================================================================
--- PART 31: ENABLE REALTIME FOR NEW TABLES
--- ============================================================================
-
-ALTER PUBLICATION supabase_realtime ADD TABLE public.shifts;
-ALTER PUBLICATION supabase_realtime ADD TABLE public.shift_assignments;
-ALTER PUBLICATION supabase_realtime ADD TABLE public.shift_swap_requests;
-ALTER PUBLICATION supabase_realtime ADD TABLE public.overtime_records;
-ALTER PUBLICATION supabase_realtime ADD TABLE public.geofence_zones;
-ALTER PUBLICATION supabase_realtime ADD TABLE public.geofence_attendance_logs;
-
-
--- ============================================================================
--- END OF ATLAS DATABASE SCHEMA
--- Last Updated: December 7, 2025 @ 16:45 UTC
--- Total Tables: 52 | Functions: 7 | Triggers: 2 | RLS Policies: 75+ | Indexes: 50+
+--
+-- SUMMARY:
+-- ✅ 60 Tables defined (35 live + 25 pending migration)
+-- ✅ 7 Database functions
+-- ✅ 2 Triggers
+-- ✅ 15 Enums/Types
+-- ✅ 75+ RLS policies
+-- ✅ 50+ Indexes
+-- ✅ Realtime enabled on key tables
+--
+-- NEXT STEPS:
+-- 1. Run migration for pending tables (Parts 13-19)
+-- 2. Deploy remaining edge functions
+-- 3. Configure additional secrets as needed
+--
 -- ============================================================================
