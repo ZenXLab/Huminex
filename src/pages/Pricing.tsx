@@ -85,9 +85,9 @@ const Pricing = () => {
       <div className="min-h-screen bg-background">
         <Header />
         
-        <main className="pt-20">
+        <main className="pt-16 lg:pt-18">
           {/* Hero Section */}
-          <section className="py-16 lg:py-24 bg-gradient-to-b from-primary/5 to-background">
+          <section className="py-12 lg:py-20 bg-gradient-to-b from-primary/5 to-background">
             <div className="container mx-auto px-4 text-center">
               <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary text-sm font-medium mb-6">
                 <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />

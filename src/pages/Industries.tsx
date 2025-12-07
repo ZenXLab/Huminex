@@ -138,9 +138,9 @@ const Industries = () => {
   return (
     <div className="min-h-screen bg-background">
       <Header />
-      
+      <main className="pt-16 lg:pt-18">
       {/* Hero Section */}
-      <section className="relative pt-32 pb-20 overflow-hidden">
+      <section className="relative pt-16 pb-20 overflow-hidden">
         <div className="absolute inset-0 opacity-30">
           <NetworkBackground />
         </div>
@@ -246,7 +246,7 @@ const Industries = () => {
           </div>
         </div>
       </section>
-
+      </main>
       <Footer />
     </div>
   );
