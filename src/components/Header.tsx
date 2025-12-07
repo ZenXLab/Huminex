@@ -1,8 +1,9 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { 
   Menu, 
   X, 
   ChevronDown, 
+  ChevronRight,
   User, 
   LayoutDashboard,
   Code,
@@ -21,14 +22,38 @@ import {
   Users,
   Handshake,
   Mail,
-  DollarSign,
   Sparkles,
   Sun,
   Moon,
+  Calendar,
+  Wallet,
+  UserPlus,
+  FolderKanban,
+  Receipt,
+  ShieldCheck,
+  KeyRound,
+  Package,
+  FileSearch,
+  TrendingUp,
+  Megaphone,
+  Zap,
+  ShoppingCart,
+  Utensils,
+  Heart,
+  GraduationCap,
+  Leaf,
+  Truck,
+  Home,
+  Plane,
+  Landmark,
+  Factory,
+  Cpu,
+  Music,
+  Scale,
   type LucideIcon
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import cropxonIcon from "@/assets/cropxon-icon.png";
 import { useAuth } from "@/hooks/useAuth";
 import { useTheme } from "@/hooks/useTheme";
@@ -55,6 +80,41 @@ const services: MenuItem[] = [
   { name: "Industry Solutions", href: "/services/industry-solutions", icon: LayoutGrid, description: "Vertical Expertise" },
 ];
 
+const modules: MenuItem[] = [
+  { name: "Workforce Management", href: "/modules/workforce-management", icon: Users, description: "Employee database & lifecycle" },
+  { name: "Attendance & Leave", href: "/modules/attendance-leave", icon: Calendar, description: "Biometric & shift scheduling" },
+  { name: "Payroll Engine", href: "/modules/payroll-engine", icon: Wallet, description: "100% compliant payroll" },
+  { name: "Recruitment & ATS", href: "/modules/recruitment-ats", icon: UserPlus, description: "End-to-end hiring" },
+  { name: "Projects & Tasks", href: "/modules/projects-tasks", icon: FolderKanban, description: "Project management" },
+  { name: "Finance & Expense", href: "/modules/finance-expense", icon: Receipt, description: "Expense management" },
+  { name: "Compliance & Risk", href: "/modules/compliance-risk", icon: ShieldCheck, description: "Zero compliance surprises" },
+  { name: "Identity & Access", href: "/modules/identity-access", icon: KeyRound, description: "SSO & RBAC" },
+  { name: "Assets & EMS", href: "/modules/assets-ems", icon: Package, description: "Asset lifecycle" },
+  { name: "BGV Suite", href: "/modules/bgv-suite", icon: FileSearch, description: "Background verification" },
+  { name: "Performance & OKRs", href: "/modules/performance-okrs", icon: TrendingUp, description: "Goal tracking" },
+  { name: "Announcements", href: "/modules/announcements", icon: Megaphone, description: "Internal communications" },
+  { name: "OpZenix Automation", href: "/modules/opzenix", icon: Zap, description: "Workflow automation" },
+  { name: "Proxima AI", href: "/modules/proxima-ai", icon: Sparkles, description: "AI-powered insights" },
+  { name: "Insurance & Claims", href: "/modules/insurance-claims", icon: Shield, description: "Employee insurance" },
+];
+
+const industries: MenuItem[] = [
+  { name: "Retail & E-Commerce", href: "/industries/retail", icon: ShoppingCart, description: "Retail workforce" },
+  { name: "FoodTech & Restaurants", href: "/industries/foodtech", icon: Utensils, description: "Kitchen to counter" },
+  { name: "Healthcare & Pharma", href: "/industries/healthcare", icon: Heart, description: "Care for caregivers" },
+  { name: "Education & EdTech", href: "/industries/education", icon: GraduationCap, description: "Empower educators" },
+  { name: "Agriculture & AgriTech", href: "/industries/agriculture", icon: Leaf, description: "Field to market" },
+  { name: "Logistics & Supply Chain", href: "/industries/logistics", icon: Truck, description: "Keep moving" },
+  { name: "Hospitality & Travel", href: "/industries/hospitality", icon: Building2, description: "Guest experiences" },
+  { name: "Real Estate & PropTech", href: "/industries/real-estate", icon: Home, description: "Property teams" },
+  { name: "Manufacturing", href: "/industries/manufacturing", icon: Factory, description: "Production workforce" },
+  { name: "Technology & IT", href: "/industries/technology", icon: Cpu, description: "Tech workforce" },
+  { name: "Finance & FinTech", href: "/industries/finance", icon: Landmark, description: "Secure & compliant" },
+  { name: "Media & Entertainment", href: "/industries/media", icon: Music, description: "Creative talent" },
+  { name: "Professional Services", href: "/industries/professional", icon: Briefcase, description: "Consultants & firms" },
+  { name: "Government & Public", href: "/industries/government", icon: Scale, description: "Public sector" },
+];
+
 const resources: MenuItem[] = [
   { name: "Blog", href: "#", icon: BookOpen, description: "Insights & Articles" },
   { name: "Documentation", href: "#", icon: FileText, description: "Guides & API Docs" },
@@ -71,8 +131,28 @@ const company: MenuItem[] = [
 export const Header = ({ onQuoteClick }: HeaderProps) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
+  const [mobileSubMenu, setMobileSubMenu] = useState<string | null>(null);
   const { user, signOut } = useAuth();
   const { theme, toggleTheme } = useTheme();
+  const location = useLocation();
+
+  // Close mobile menu on route change
+  useEffect(() => {
+    setMobileMenuOpen(false);
+    setMobileSubMenu(null);
+  }, [location.pathname]);
+
+  // Prevent body scroll when mobile menu is open
+  useEffect(() => {
+    if (mobileMenuOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [mobileMenuOpen]);
 
   const renderDropdownItem = (item: MenuItem, index: number) => {
     const Icon = item.icon;
@@ -126,6 +206,33 @@ export const Header = ({ onQuoteClick }: HeaderProps) => {
     );
   };
 
+  const renderMobileSection = (title: string, items: MenuItem[], sectionKey: string, icon: LucideIcon) => {
+    const Icon = icon;
+    const isOpen = mobileSubMenu === sectionKey;
+    
+    return (
+      <div className="border-b border-border/40 last:border-b-0">
+        <button
+          onClick={() => setMobileSubMenu(isOpen ? null : sectionKey)}
+          className="w-full flex items-center justify-between px-4 py-4 text-foreground font-medium"
+        >
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+              <Icon className="w-4 h-4 text-primary" />
+            </div>
+            <span>{title}</span>
+          </div>
+          <ChevronDown className={`w-4 h-4 transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`} />
+        </button>
+        <div className={`overflow-hidden transition-all duration-300 ${isOpen ? 'max-h-[1000px] opacity-100' : 'max-h-0 opacity-0'}`}>
+          <div className="px-2 pb-4 space-y-1">
+            {items.map(renderMobileMenuItem)}
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-card/90 backdrop-blur-xl border-b border-border/40 transition-all duration-300">
       <nav className="container mx-auto px-4 lg:px-8" aria-label="Main navigation">
@@ -154,6 +261,76 @@ export const Header = ({ onQuoteClick }: HeaderProps) => {
 
           {/* Desktop Navigation */}
           <div className="hidden lg:flex items-center gap-0.5" role="menubar">
+            {/* Features Dropdown */}
+            <div 
+              className="relative"
+              onMouseEnter={() => setActiveDropdown("features")}
+              onMouseLeave={() => setActiveDropdown(null)}
+              role="menuitem"
+              aria-haspopup="true"
+              aria-expanded={activeDropdown === "features"}
+            >
+              <button className="flex items-center gap-1.5 px-3 py-2 text-foreground/70 hover:text-foreground transition-all duration-200 font-medium text-sm rounded-lg hover:bg-muted/50">
+                <Sparkles className="w-4 h-4" />
+                Features 
+                <ChevronDown className={`h-3.5 w-3.5 transition-transform duration-200 ${activeDropdown === "features" ? "rotate-180" : ""}`} />
+              </button>
+              <div 
+                className={`absolute top-full left-0 pt-2 transition-all duration-200 ${activeDropdown === "features" ? "opacity-100 translate-y-0 pointer-events-auto" : "opacity-0 -translate-y-2 pointer-events-none"}`}
+                role="menu"
+              >
+                <div className="w-[600px] bg-card border border-border/60 rounded-xl shadow-2xl backdrop-blur-xl overflow-hidden">
+                  <div className="p-4 bg-muted/30 border-b border-border/40">
+                    <h3 className="font-heading font-semibold text-foreground">15 Powerful Modules</h3>
+                    <p className="text-xs text-muted-foreground">Everything you need to run your workforce</p>
+                  </div>
+                  <div className="p-3 grid grid-cols-2 gap-1 max-h-[400px] overflow-y-auto">
+                    {modules.map((module, index) => renderDropdownItem(module, index))}
+                  </div>
+                  <div className="p-3 bg-muted/30 border-t border-border/40">
+                    <Link to="/features" className="flex items-center gap-2 text-primary text-sm font-medium hover:underline">
+                      View all features <ChevronRight className="w-4 h-4" />
+                    </Link>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Industries Dropdown */}
+            <div 
+              className="relative"
+              onMouseEnter={() => setActiveDropdown("industries")}
+              onMouseLeave={() => setActiveDropdown(null)}
+              role="menuitem"
+              aria-haspopup="true"
+              aria-expanded={activeDropdown === "industries"}
+            >
+              <button className="flex items-center gap-1.5 px-3 py-2 text-foreground/70 hover:text-foreground transition-all duration-200 font-medium text-sm rounded-lg hover:bg-muted/50">
+                <Globe className="w-4 h-4" />
+                Industries 
+                <ChevronDown className={`h-3.5 w-3.5 transition-transform duration-200 ${activeDropdown === "industries" ? "rotate-180" : ""}`} />
+              </button>
+              <div 
+                className={`absolute top-full left-0 pt-2 transition-all duration-200 ${activeDropdown === "industries" ? "opacity-100 translate-y-0 pointer-events-auto" : "opacity-0 -translate-y-2 pointer-events-none"}`}
+                role="menu"
+              >
+                <div className="w-[600px] bg-card border border-border/60 rounded-xl shadow-2xl backdrop-blur-xl overflow-hidden">
+                  <div className="p-4 bg-muted/30 border-b border-border/40">
+                    <h3 className="font-heading font-semibold text-foreground">Industry Solutions</h3>
+                    <p className="text-xs text-muted-foreground">Tailored for your sector's unique needs</p>
+                  </div>
+                  <div className="p-3 grid grid-cols-2 gap-1 max-h-[400px] overflow-y-auto">
+                    {industries.map((industry, index) => renderDropdownItem(industry, index))}
+                  </div>
+                  <div className="p-3 bg-muted/30 border-t border-border/40">
+                    <Link to="/industries" className="flex items-center gap-2 text-primary text-sm font-medium hover:underline">
+                      View all industries <ChevronRight className="w-4 h-4" />
+                    </Link>
+                  </div>
+                </div>
+              </div>
+            </div>
+
             {/* Services Dropdown */}
             <div 
               className="relative"
@@ -178,24 +355,6 @@ export const Header = ({ onQuoteClick }: HeaderProps) => {
               </div>
             </div>
 
-            <Link 
-              to="/features" 
-              className="flex items-center gap-1.5 px-3 py-2 text-foreground/70 hover:text-foreground transition-all duration-200 font-medium text-sm rounded-lg hover:bg-muted/50"
-              role="menuitem"
-            >
-              <Sparkles className="w-4 h-4" />
-              Features
-            </Link>
-
-            <Link 
-              to="/industries" 
-              className="flex items-center gap-1.5 px-3 py-2 text-foreground/70 hover:text-foreground transition-all duration-200 font-medium text-sm rounded-lg hover:bg-muted/50"
-              role="menuitem"
-            >
-              <Globe className="w-4 h-4" />
-              Industries
-            </Link>
-
             {/* Resources Dropdown */}
             <div 
               className="relative"
@@ -219,15 +378,6 @@ export const Header = ({ onQuoteClick }: HeaderProps) => {
                 </div>
               </div>
             </div>
-
-            <a 
-              href="/#pricing" 
-              className="flex items-center gap-1.5 px-3 py-2 text-foreground/70 hover:text-foreground transition-all duration-200 font-medium text-sm rounded-lg hover:bg-muted/50"
-              role="menuitem"
-            >
-              <DollarSign className="w-4 h-4" />
-              Pricing
-            </a>
 
             {/* Company Dropdown */}
             <div 
@@ -314,127 +464,93 @@ export const Header = ({ onQuoteClick }: HeaderProps) => {
 
           {/* Mobile Menu Button */}
           <button
-            className="lg:hidden p-2 text-foreground hover:bg-muted/50 rounded-lg transition-colors"
+            className="lg:hidden p-2 text-foreground hover:bg-muted/50 rounded-lg transition-colors relative z-50"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             aria-label={mobileMenuOpen ? "Close menu" : "Open menu"}
             aria-expanded={mobileMenuOpen}
           >
-            {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+            <div className="relative w-6 h-6">
+              <span className={`absolute left-0 top-1 w-6 h-0.5 bg-foreground transition-all duration-300 ${mobileMenuOpen ? 'rotate-45 translate-y-1.5' : ''}`} />
+              <span className={`absolute left-0 top-3 w-6 h-0.5 bg-foreground transition-all duration-300 ${mobileMenuOpen ? 'opacity-0' : ''}`} />
+              <span className={`absolute left-0 top-5 w-6 h-0.5 bg-foreground transition-all duration-300 ${mobileMenuOpen ? '-rotate-45 -translate-y-1.5' : ''}`} />
+            </div>
           </button>
         </div>
+      </nav>
 
-        {/* Mobile Menu */}
+      {/* Mobile Menu Overlay */}
+      <div 
+        className={`lg:hidden fixed inset-0 top-16 z-40 transition-all duration-300 ${
+          mobileMenuOpen 
+            ? 'opacity-100 pointer-events-auto' 
+            : 'opacity-0 pointer-events-none'
+        }`}
+      >
+        {/* Backdrop */}
         <div 
-          className={`lg:hidden overflow-hidden transition-all duration-300 ${mobileMenuOpen ? "max-h-[800px] opacity-100" : "max-h-0 opacity-0"}`}
-          role="menu"
-          aria-hidden={!mobileMenuOpen}
+          className="absolute inset-0 bg-background/80 backdrop-blur-xl"
+          onClick={() => setMobileMenuOpen(false)}
+        />
+        
+        {/* Menu Content */}
+        <div 
+          className={`absolute top-0 right-0 w-full max-w-md h-[calc(100vh-4rem)] bg-card border-l border-border shadow-2xl overflow-y-auto transition-transform duration-500 ease-out ${
+            mobileMenuOpen ? 'translate-x-0' : 'translate-x-full'
+          }`}
         >
-          <div className="py-4 border-t border-border/40">
-            <div className="flex flex-col gap-1">
-              {/* Mobile Services */}
-              <div className="px-4 py-2 text-muted-foreground text-xs font-semibold uppercase tracking-wider flex items-center gap-2">
-                <Code className="w-3.5 h-3.5" />
-                Services
-              </div>
-              {services.map(renderMobileMenuItem)}
-              
-              <Link 
-                to="/features" 
-                className="flex items-center gap-3 px-4 py-3 text-foreground font-medium hover:bg-muted/50 rounded-xl transition-colors mt-2" 
-                onClick={() => setMobileMenuOpen(false)}
+          <div className="py-4">
+            {/* Mobile Sections */}
+            {renderMobileSection("Features", modules, "features", Sparkles)}
+            {renderMobileSection("Industries", industries, "industries", Globe)}
+            {renderMobileSection("Services", services, "services", Code)}
+            {renderMobileSection("Resources", resources, "resources", BookOpen)}
+            {renderMobileSection("Company", company, "company", Building2)}
+
+            {/* Theme Toggle */}
+            <div className="px-4 py-4 flex items-center justify-between border-t border-border/40">
+              <span className="text-sm font-medium text-foreground/70">Theme</span>
+              <button
+                onClick={toggleTheme}
+                className="relative flex items-center gap-2 px-4 py-2 rounded-xl bg-secondary/50 hover:bg-secondary transition-all duration-300"
+                aria-label={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}
               >
-                <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
-                  <Sparkles className="w-4 h-4 text-primary" />
+                <Sun className={`w-4 h-4 transition-all duration-300 ${theme === 'light' ? 'text-amber-500' : 'text-muted-foreground'}`} />
+                <div className={`w-10 h-5 rounded-full transition-colors duration-300 ${theme === 'dark' ? 'bg-primary' : 'bg-muted'} relative`}>
+                  <div className={`absolute top-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform duration-300 ${theme === 'dark' ? 'translate-x-5' : 'translate-x-0.5'}`} />
                 </div>
-                <span>Features</span>
-              </Link>
+                <Moon className={`w-4 h-4 transition-all duration-300 ${theme === 'dark' ? 'text-primary' : 'text-muted-foreground'}`} />
+              </button>
+            </div>
 
-              <Link 
-                to="/industries" 
-                className="flex items-center gap-3 px-4 py-3 text-foreground font-medium hover:bg-muted/50 rounded-xl transition-colors" 
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
-                  <Globe className="w-4 h-4 text-primary" />
-                </div>
-                <span>Industries</span>
-              </Link>
-
-              {/* Mobile Resources */}
-              <div className="px-4 py-2 text-muted-foreground text-xs font-semibold uppercase tracking-wider flex items-center gap-2 mt-2">
-                <BookOpen className="w-3.5 h-3.5" />
-                Resources
-              </div>
-              {resources.map(renderMobileMenuItem)}
-              
-              <a 
-                href="/#pricing" 
-                className="flex items-center gap-3 px-4 py-3 text-foreground font-medium hover:bg-muted/50 rounded-xl transition-colors mt-2" 
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
-                  <DollarSign className="w-4 h-4 text-primary" />
-                </div>
-                <span>Pricing</span>
-              </a>
-
-              {/* Mobile Company */}
-              <div className="px-4 py-2 text-muted-foreground text-xs font-semibold uppercase tracking-wider flex items-center gap-2 mt-2">
-                <Building2 className="w-3.5 h-3.5" />
-                Company
-              </div>
-              {company.map(renderMobileMenuItem)}
-
-              {/* Mobile Dark Mode Toggle */}
-              <div className="px-4 py-3 flex items-center justify-between border-t border-border/40 mt-4">
-                <span className="text-sm font-medium text-foreground/70">Theme</span>
-                <button
-                  onClick={toggleTheme}
-                  className="relative flex items-center gap-2 px-4 py-2 rounded-xl bg-secondary/50 hover:bg-secondary transition-all duration-300"
-                  aria-label={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}
-                >
-                  <Sun className={`w-4 h-4 transition-all duration-300 ${theme === 'light' ? 'text-amber-500' : 'text-muted-foreground'}`} />
-                  <div className={`w-10 h-5 rounded-full transition-colors duration-300 ${theme === 'dark' ? 'bg-primary' : 'bg-muted'} relative`}>
-                    <div className={`absolute top-0.5 w-4 h-4 rounded-full bg-white shadow-sm transition-transform duration-300 ${theme === 'dark' ? 'translate-x-5' : 'translate-x-0.5'}`} />
-                  </div>
-                  <Moon className={`w-4 h-4 transition-all duration-300 ${theme === 'dark' ? 'text-primary' : 'text-muted-foreground'}`} />
-                </button>
-              </div>
-
-              <div className="pt-4 px-4 space-y-2">
-                {user ? (
-                  <>
-                    <Link to="/dashboard" onClick={() => setMobileMenuOpen(false)}>
-                      <Button variant="outline" className="w-full gap-2 font-medium">
-                        <LayoutDashboard className="h-4 w-4" />
-                        Dashboard
-                      </Button>
-                    </Link>
-                    <Button variant="ghost" className="w-full font-medium" onClick={() => { signOut(); setMobileMenuOpen(false); }}>
-                      Sign Out
-                    </Button>
-                  </>
-                ) : (
-                  <Link to="/auth" onClick={() => setMobileMenuOpen(false)}>
-                    <Button variant="outline" className="w-full font-medium gap-2">
-                      <User className="h-4 w-4" />
-                      Sign In
+            {/* Auth Buttons */}
+            <div className="p-4 space-y-3 border-t border-border/40">
+              {user ? (
+                <>
+                  <Link to="/dashboard" onClick={() => setMobileMenuOpen(false)}>
+                    <Button variant="outline" className="w-full justify-center gap-2">
+                      <LayoutDashboard className="h-4 w-4" />
+                      Dashboard
                     </Button>
                   </Link>
-                )}
-                <Link to="/get-quote" onClick={() => setMobileMenuOpen(false)}>
-                  <Button 
-                    variant="default" 
-                    className="w-full font-semibold" 
-                  >
-                    Get a Quote
+                  <Button variant="ghost" className="w-full" onClick={signOut}>
+                    Sign Out
+                  </Button>
+                </>
+              ) : (
+                <Link to="/auth" onClick={() => setMobileMenuOpen(false)}>
+                  <Button variant="outline" className="w-full justify-center gap-2">
+                    <User className="h-4 w-4" />
+                    Sign In
                   </Button>
                 </Link>
-              </div>
+              )}
+              <Link to="/get-quote" onClick={() => setMobileMenuOpen(false)}>
+                <Button className="w-full">Get a Quote</Button>
+              </Link>
             </div>
           </div>
         </div>
-      </nav>
+      </div>
     </header>
   );
 };

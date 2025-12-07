@@ -11,6 +11,7 @@ import ModuleDetail from "./pages/modules/ModuleDetail";
 import About from "./pages/About";
 import Contact from "./pages/Contact";
 import Industries from "./pages/Industries";
+import IndustryDetail from "./pages/industries/IndustryDetail";
 import GetQuote from "./pages/GetQuote";
 import Auth from "./pages/Auth";
 import Onboarding from "./pages/Onboarding";
@@ -55,6 +56,7 @@ const App = () => (
             <Route path="/about" element={<About />} />
             <Route path="/contact" element={<Contact />} />
             <Route path="/industries" element={<Industries />} />
+            <Route path="/industries/:slug" element={<IndustryDetail />} />
             <Route path="/get-quote" element={<GetQuote />} />
             <Route path="/auth" element={<Auth />} />
             <Route path="/onboarding" element={<Onboarding />} />
