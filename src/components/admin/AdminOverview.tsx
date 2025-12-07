@@ -1,8 +1,7 @@
-import { useEffect, useState } from "react";
+import { useState, useMemo, memo, useCallback } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { supabase } from "@/integrations/supabase/client";
 import { 
   FileText, Receipt, Users, TrendingUp, Clock, UserPlus, Building2, ArrowRight,
   Activity, Server, Shield, Zap, RefreshCw, CheckCircle2, AlertCircle, XCircle
@@ -10,6 +9,14 @@ import {
 import { Link } from "react-router-dom";
 import { format } from "date-fns";
 import { ClickstreamSummaryWidget } from "./modules/clickstream/ClickstreamSummaryWidget";
+import { 
+  useAdminStats, 
+  useRecentQuotes, 
+  usePendingOnboardings, 
+  useRecentTenants,
+  useAdminRealtime 
+} from "@/hooks/useAdminData";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface OnboardingSession {
   id: string;
@@ -32,137 +39,61 @@ interface Tenant {
   updated_at: string;
 }
 
+// Memoized stat card component
+const StatCard = memo(({ title, value, icon: Icon, color, bg }: {
+  title: string;
+  value: string | number;
+  icon: any;
+  color: string;
+  bg: string;
+}) => (
+  <Card className="relative overflow-hidden group hover:shadow-lg transition-all duration-300">
+    <CardContent className="pt-6">
+      <div className="flex items-center gap-4">
+        <div className={`p-3 rounded-xl ${bg} transition-transform group-hover:scale-110`}>
+          <Icon className={`h-6 w-6 ${color}`} />
+        </div>
+        <div>
+          <p className="text-2xl font-bold text-foreground">{value}</p>
+          <p className="text-sm text-muted-foreground">{title}</p>
+        </div>
+      </div>
+    </CardContent>
+    <div className="absolute top-0 right-0 w-20 h-20 bg-gradient-to-br from-primary/5 to-transparent rounded-bl-full" />
+  </Card>
+));
+
+StatCard.displayName = "StatCard";
+
 export const AdminOverview = () => {
-  const [stats, setStats] = useState({
-    totalQuotes: 0,
-    pendingQuotes: 0,
-    totalInvoices: 0,
-    totalRevenue: 0,
-    totalUsers: 0,
-    totalInquiries: 0,
-    pendingOnboarding: 0,
-    activeTenants: 0,
-  });
-  const [recentQuotes, setRecentQuotes] = useState<any[]>([]);
-  const [pendingOnboardings, setPendingOnboardings] = useState<OnboardingSession[]>([]);
-  const [recentTenants, setRecentTenants] = useState<Tenant[]>([]);
-  const [loading, setLoading] = useState(true);
   const [lastUpdated, setLastUpdated] = useState(new Date());
+  const queryClient = useQueryClient();
 
-  const fetchStats = async () => {
-    try {
-      // Fetch quotes
-      const { data: quotes } = await supabase.from('quotes').select('*');
-      const pendingQuotes = quotes?.filter(q => q.status === 'pending') || [];
+  // Use optimized hooks with React Query
+  const { data: stats, isLoading: statsLoading, refetch: refetchStats } = useAdminStats();
+  const { data: recentQuotes, isLoading: quotesLoading } = useRecentQuotes(5);
+  const { data: pendingOnboardings, isLoading: onboardingsLoading } = usePendingOnboardings(5);
+  const { data: recentTenants, isLoading: tenantsLoading } = useRecentTenants(5);
 
-      // Fetch invoices
-      const { data: invoices } = await supabase.from('invoices').select('*');
-      const paidInvoices = invoices?.filter(i => i.status === 'paid') || [];
-      const totalRevenue = paidInvoices.reduce((sum, i) => sum + Number(i.total_amount), 0);
+  // Set up real-time subscriptions
+  useAdminRealtime(["quotes", "client_tenants", "onboarding_sessions", "invoices"]);
 
-      // Fetch users
-      const { data: users } = await supabase.from('profiles').select('id');
+  const handleRefresh = useCallback(async () => {
+    await queryClient.invalidateQueries({ queryKey: ["admin"] });
+    await refetchStats();
+    setLastUpdated(new Date());
+  }, [queryClient, refetchStats]);
 
-      // Fetch inquiries
-      const { data: inquiries } = await supabase.from('inquiries').select('id');
+  const loading = statsLoading || quotesLoading || onboardingsLoading || tenantsLoading;
 
-      // Recent quotes
-      const { data: recent } = await supabase
-        .from('quotes')
-        .select('*')
-        .order('created_at', { ascending: false })
-        .limit(5);
-
-      // Fetch pending onboarding sessions
-      const { data: onboardings } = await supabase
-        .from('onboarding_sessions')
-        .select('*')
-        .in('status', ['new', 'pending', 'pending_approval', 'verified'])
-        .order('created_at', { ascending: false })
-        .limit(5);
-
-      // Fetch recent tenants
-      const { data: tenants } = await supabase
-        .from('client_tenants')
-        .select('*')
-        .order('updated_at', { ascending: false })
-        .limit(5);
-
-      // Count active tenants
-      const { data: allActiveTenants } = await supabase
-        .from('client_tenants')
-        .select('id')
-        .eq('status', 'active');
-
-      setStats({
-        totalQuotes: quotes?.length || 0,
-        pendingQuotes: pendingQuotes.length,
-        totalInvoices: invoices?.length || 0,
-        totalRevenue,
-        totalUsers: users?.length || 0,
-        totalInquiries: inquiries?.length || 0,
-        pendingOnboarding: onboardings?.length || 0,
-        activeTenants: allActiveTenants?.length || 0,
-      });
-      setRecentQuotes(recent || []);
-      setPendingOnboardings(onboardings || []);
-      setRecentTenants(tenants || []);
-      setLastUpdated(new Date());
-    } catch (error) {
-      console.error('Error fetching stats:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchStats();
-
-    // Set up real-time subscriptions
-    const quotesChannel = supabase
-      .channel('admin-quotes-changes')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'quotes' }, () => {
-        fetchStats();
-      })
-      .subscribe();
-
-    const tenantsChannel = supabase
-      .channel('admin-tenants-changes')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'client_tenants' }, () => {
-        fetchStats();
-      })
-      .subscribe();
-
-    const onboardingChannel = supabase
-      .channel('admin-onboarding-changes')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'onboarding_sessions' }, () => {
-        fetchStats();
-      })
-      .subscribe();
-
-    const invoicesChannel = supabase
-      .channel('admin-invoices-changes')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'invoices' }, () => {
-        fetchStats();
-      })
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(quotesChannel);
-      supabase.removeChannel(tenantsChannel);
-      supabase.removeChannel(onboardingChannel);
-      supabase.removeChannel(invoicesChannel);
-    };
-  }, []);
-
-  const statCards = [
-    { title: "Total Quotes", value: stats.totalQuotes, icon: FileText, color: "text-primary", bg: "bg-primary/10" },
-    { title: "Pending Quotes", value: stats.pendingQuotes, icon: Clock, color: "text-yellow-600", bg: "bg-yellow-500/10" },
-    { title: "Pending Onboarding", value: stats.pendingOnboarding, icon: UserPlus, color: "text-orange-600", bg: "bg-orange-500/10" },
-    { title: "Active Tenants", value: stats.activeTenants, icon: Building2, color: "text-cyan-600", bg: "bg-cyan-500/10" },
-    { title: "Total Revenue", value: `₹${stats.totalRevenue.toLocaleString()}`, icon: TrendingUp, color: "text-green-600", bg: "bg-green-500/10" },
-    { title: "Total Users", value: stats.totalUsers, icon: Users, color: "text-purple-600", bg: "bg-purple-500/10" },
-  ];
+  const statCards = useMemo(() => [
+    { title: "Total Quotes", value: stats?.totalQuotes || 0, icon: FileText, color: "text-primary", bg: "bg-primary/10" },
+    { title: "Pending Quotes", value: stats?.pendingQuotes || 0, icon: Clock, color: "text-yellow-600", bg: "bg-yellow-500/10" },
+    { title: "Pending Onboarding", value: stats?.pendingOnboarding || 0, icon: UserPlus, color: "text-orange-600", bg: "bg-orange-500/10" },
+    { title: "Active Tenants", value: stats?.activeTenants || 0, icon: Building2, color: "text-cyan-600", bg: "bg-cyan-500/10" },
+    { title: "Total Revenue", value: `₹${(stats?.totalRevenue || 0).toLocaleString()}`, icon: TrendingUp, color: "text-green-600", bg: "bg-green-500/10" },
+    { title: "Total Users", value: stats?.totalUsers || 0, icon: Users, color: "text-purple-600", bg: "bg-purple-500/10" },
+  ], [stats]);
 
   const systemHealthItems = [
     { name: "Database", status: "healthy", latency: "12ms" },
@@ -211,30 +142,17 @@ export const AdminOverview = () => {
             <span>Live</span>
             <span className="text-xs">Updated {format(lastUpdated, 'HH:mm:ss')}</span>
           </div>
-          <Button variant="outline" size="sm" onClick={fetchStats} className="gap-2">
+          <Button variant="outline" size="sm" onClick={handleRefresh} className="gap-2">
             <RefreshCw className="h-4 w-4" />
             Refresh
           </Button>
         </div>
       </div>
 
-      {/* Stats Grid */}
+      {/* Stats Grid - Using memoized component */}
       <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {statCards.map((stat) => (
-          <Card key={stat.title} className="relative overflow-hidden group hover:shadow-lg transition-all duration-300">
-            <CardContent className="pt-6">
-              <div className="flex items-center gap-4">
-                <div className={`p-3 rounded-xl ${stat.bg} transition-transform group-hover:scale-110`}>
-                  <stat.icon className={`h-6 w-6 ${stat.color}`} />
-                </div>
-                <div>
-                  <p className="text-2xl font-bold text-foreground">{stat.value}</p>
-                  <p className="text-sm text-muted-foreground">{stat.title}</p>
-                </div>
-              </div>
-            </CardContent>
-            <div className="absolute top-0 right-0 w-20 h-20 bg-gradient-to-br from-primary/5 to-transparent rounded-bl-full" />
-          </Card>
+          <StatCard key={stat.title} {...stat} />
         ))}
       </div>
 
@@ -288,11 +206,11 @@ export const AdminOverview = () => {
             </Link>
           </CardHeader>
           <CardContent>
-            {pendingOnboardings.length === 0 ? (
+            {(!pendingOnboardings || pendingOnboardings.length === 0) ? (
               <p className="text-muted-foreground text-center py-8">No pending onboarding requests</p>
             ) : (
               <div className="space-y-3">
-                {pendingOnboardings.map((session) => (
+                {(pendingOnboardings || []).map((session) => (
                   <div key={session.id} className="flex items-center justify-between p-3 bg-muted/30 rounded-lg hover:bg-muted/50 transition-colors">
                     <div className="flex-1 min-w-0">
                       <p className="font-medium text-foreground truncate">{session.full_name}</p>
@@ -327,11 +245,11 @@ export const AdminOverview = () => {
             </Link>
           </CardHeader>
           <CardContent>
-            {recentTenants.length === 0 ? (
+            {(!recentTenants || recentTenants.length === 0) ? (
               <p className="text-muted-foreground text-center py-8">No tenants yet</p>
             ) : (
               <div className="space-y-3">
-                {recentTenants.map((tenant) => (
+                {(recentTenants || []).map((tenant) => (
                   <div key={tenant.id} className="flex items-center justify-between p-3 bg-muted/30 rounded-lg hover:bg-muted/50 transition-colors">
                     <div className="flex-1 min-w-0">
                       <p className="font-medium text-foreground truncate">{tenant.name}</p>
@@ -367,11 +285,11 @@ export const AdminOverview = () => {
           </Link>
         </CardHeader>
         <CardContent>
-          {recentQuotes.length === 0 ? (
+          {(!recentQuotes || recentQuotes.length === 0) ? (
             <p className="text-muted-foreground text-center py-8">No quotes yet</p>
           ) : (
             <div className="space-y-3">
-              {recentQuotes.map((quote) => (
+              {(recentQuotes || []).map((quote) => (
                 <div key={quote.id} className="flex items-center justify-between p-4 bg-muted/30 rounded-lg hover:bg-muted/50 transition-colors">
                   <div>
                     <p className="font-medium text-foreground">{quote.quote_number}</p>
