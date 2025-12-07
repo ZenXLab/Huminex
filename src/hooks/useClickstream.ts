@@ -14,15 +14,24 @@ export const useClickstream = () => {
   const { user } = useAuth();
   const sessionId = generateSessionId();
 
+  // Only use user.id if it's a valid UUID (not dev mode)
+  const isValidUUID = (id: string) => {
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+    return uuidRegex.test(id);
+  };
+
   const trackEvent = useCallback(async (
     eventType: string,
     metadata?: Record<string, any>,
     element?: HTMLElement
   ) => {
     try {
+      // Only pass user_id if it's a valid UUID, otherwise use null
+      const userId = user?.id && isValidUUID(user.id) ? user.id : null;
+      
       await supabase.from("clickstream_events").insert({
         session_id: sessionId,
-        user_id: user?.id || null,
+        user_id: userId,
         event_type: eventType,
         page_url: window.location.pathname,
         element_id: element?.id || null,
