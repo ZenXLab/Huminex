@@ -63,12 +63,6 @@ export const ExportModal = ({ open, onOpenChange, events, stats }: ExportModalPr
         exportCSV();
         setExportComplete(true);
       }
-      } else {
-        // Email delivery - would need edge function
-        toast.info("Email export feature coming soon. Using download instead.");
-        exportCSV();
-        setExportComplete(true);
-      }
     } catch (error) {
       toast.error("Export failed");
     } finally {
@@ -183,7 +177,7 @@ export const ExportModal = ({ open, onOpenChange, events, stats }: ExportModalPr
             <div>
               <h3 className="font-semibold text-lg">Export Complete!</h3>
               <p className="text-sm text-muted-foreground">
-                Your {format.toUpperCase()} file has been downloaded
+                Your {exportFormat.toUpperCase()} file has been downloaded
               </p>
             </div>
             <Button onClick={() => onOpenChange(false)}>Close</Button>
@@ -195,14 +189,14 @@ export const ExportModal = ({ open, onOpenChange, events, stats }: ExportModalPr
               <div className="space-y-3">
                 <Label className="text-sm font-medium">Export Format</Label>
                 <RadioGroup 
-                  value={format} 
-                  onValueChange={(v) => setFormat(v as ExportFormat)}
+                  value={exportFormat} 
+                  onValueChange={(v) => setExportFormat(v as ExportFormat)}
                   className="grid grid-cols-3 gap-3"
                 >
                   <Label 
                     htmlFor="csv" 
                     className={`flex flex-col items-center gap-2 p-4 rounded-lg border-2 cursor-pointer transition-all ${
-                      format === "csv" ? "border-primary bg-primary/5" : "border-border hover:border-primary/50"
+                      exportFormat === "csv" ? "border-primary bg-primary/5" : "border-border hover:border-primary/50"
                     }`}
                   >
                     <RadioGroupItem value="csv" id="csv" className="sr-only" />
@@ -212,7 +206,7 @@ export const ExportModal = ({ open, onOpenChange, events, stats }: ExportModalPr
                   <Label 
                     htmlFor="json" 
                     className={`flex flex-col items-center gap-2 p-4 rounded-lg border-2 cursor-pointer transition-all ${
-                      format === "json" ? "border-primary bg-primary/5" : "border-border hover:border-primary/50"
+                      exportFormat === "json" ? "border-primary bg-primary/5" : "border-border hover:border-primary/50"
                     }`}
                   >
                     <RadioGroupItem value="json" id="json" className="sr-only" />
@@ -222,7 +216,7 @@ export const ExportModal = ({ open, onOpenChange, events, stats }: ExportModalPr
                   <Label 
                     htmlFor="xlsx" 
                     className={`flex flex-col items-center gap-2 p-4 rounded-lg border-2 cursor-pointer transition-all ${
-                      format === "xlsx" ? "border-primary bg-primary/5" : "border-border hover:border-primary/50"
+                      exportFormat === "xlsx" ? "border-primary bg-primary/5" : "border-border hover:border-primary/50"
                     }`}
                   >
                     <RadioGroupItem value="xlsx" id="xlsx" className="sr-only" />
