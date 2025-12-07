@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react';
+import { useState, useMemo, useCallback, memo } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -9,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { toast } from 'sonner';
-import { Building2, Plus, Users, Server, Edit, Trash2, RefreshCw, Search, Eye } from 'lucide-react';
+import { Building2, Plus, Users, Server, Edit, Trash2, RefreshCw, Search, Eye, Loader2 } from 'lucide-react';
 
 interface Tenant {
   id: string;
@@ -31,14 +32,26 @@ interface TenantUser {
   created_at: string;
 }
 
+// Memoized stat card
+const StatCard = memo(({ title, value, color }: { title: string; value: number; color?: string }) => (
+  <Card>
+    <CardHeader className="pb-2">
+      <CardTitle className="text-sm font-medium text-muted-foreground">{title}</CardTitle>
+    </CardHeader>
+    <CardContent>
+      <p className={`text-3xl font-bold ${color || ''}`}>{value}</p>
+    </CardContent>
+  </Card>
+));
+
+StatCard.displayName = "StatCard";
+
 const AdminTenantManagement = () => {
-  const [tenants, setTenants] = useState<Tenant[]>([]);
-  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [selectedTenant, setSelectedTenant] = useState<Tenant | null>(null);
-  const [tenantUsers, setTenantUsers] = useState<TenantUser[]>([]);
   const [viewUsersDialogOpen, setViewUsersDialogOpen] = useState(false);
+  const queryClient = useQueryClient();
   
   const [newTenant, setNewTenant] = useState({
     name: '',
@@ -49,139 +62,126 @@ const AdminTenantManagement = () => {
     address: '',
   });
 
-  useEffect(() => {
-    fetchTenants();
-  }, []);
-
-  const fetchTenants = async () => {
-    setLoading(true);
-    try {
+  // Optimized data fetching with React Query
+  const { data: tenants = [], isLoading: loading, refetch } = useQuery({
+    queryKey: ['admin-all-tenants'],
+    queryFn: async () => {
       const { data, error } = await supabase
         .from('client_tenants')
         .select('*')
         .order('created_at', { ascending: false });
-
       if (error) throw error;
-      setTenants(data || []);
-    } catch (error) {
-      console.error('Error fetching tenants:', error);
-      toast.error('Failed to load tenants');
-    } finally {
-      setLoading(false);
-    }
-  };
+      return data || [];
+    },
+    staleTime: 30000,
+    gcTime: 5 * 60 * 1000,
+  });
 
-  const fetchTenantUsers = async (tenantId: string) => {
-    try {
+  const { data: tenantUsers = [] } = useQuery({
+    queryKey: ['tenant-users', selectedTenant?.id],
+    queryFn: async () => {
+      if (!selectedTenant?.id) return [];
       const { data, error } = await supabase
         .from('client_tenant_users')
         .select('*')
-        .eq('tenant_id', tenantId);
-
+        .eq('tenant_id', selectedTenant.id);
       if (error) throw error;
-      setTenantUsers(data || []);
-    } catch (error) {
-      console.error('Error fetching tenant users:', error);
-      toast.error('Failed to load tenant users');
-    }
-  };
+      return data || [];
+    },
+    enabled: !!selectedTenant?.id && viewUsersDialogOpen,
+    staleTime: 30000,
+  });
 
-  const handleCreateTenant = async () => {
+  // Mutations for CRUD operations
+  const createMutation = useMutation({
+    mutationFn: async (tenant: typeof newTenant) => {
+      const slug = tenant.slug || tenant.name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+      const { error } = await supabase.from('client_tenants').insert({ ...tenant, slug, status: 'active' });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success('Tenant created successfully');
+      setCreateDialogOpen(false);
+      setNewTenant({ name: '', slug: '', tenant_type: 'individual', contact_email: '', contact_phone: '', address: '' });
+      queryClient.invalidateQueries({ queryKey: ['admin-all-tenants'] });
+    },
+    onError: () => toast.error('Failed to create tenant'),
+  });
+
+  const updateStatusMutation = useMutation({
+    mutationFn: async ({ tenantId, status }: { tenantId: string; status: string }) => {
+      const { error } = await supabase.from('client_tenants').update({ status }).eq('id', tenantId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success('Tenant status updated');
+      queryClient.invalidateQueries({ queryKey: ['admin-all-tenants'] });
+    },
+    onError: () => toast.error('Failed to update tenant'),
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async (tenantId: string) => {
+      const { error } = await supabase.from('client_tenants').delete().eq('id', tenantId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success('Tenant deleted');
+      queryClient.invalidateQueries({ queryKey: ['admin-all-tenants'] });
+    },
+    onError: () => toast.error('Failed to delete tenant'),
+  });
+
+  const handleCreateTenant = useCallback(() => {
     if (!newTenant.name || !newTenant.contact_email) {
       toast.error('Name and email are required');
       return;
     }
+    createMutation.mutate(newTenant);
+  }, [newTenant, createMutation]);
 
-    try {
-      const slug = newTenant.slug || newTenant.name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
-      
-      const { error } = await supabase
-        .from('client_tenants')
-        .insert({
-          ...newTenant,
-          slug,
-          status: 'active',
-        });
+  const handleUpdateStatus = useCallback((tenantId: string, status: string) => {
+    updateStatusMutation.mutate({ tenantId, status });
+  }, [updateStatusMutation]);
 
-      if (error) throw error;
-
-      toast.success('Tenant created successfully');
-      setCreateDialogOpen(false);
-      setNewTenant({
-        name: '',
-        slug: '',
-        tenant_type: 'individual',
-        contact_email: '',
-        contact_phone: '',
-        address: '',
-      });
-      fetchTenants();
-    } catch (error) {
-      console.error('Error creating tenant:', error);
-      toast.error('Failed to create tenant');
-    }
-  };
-
-  const handleUpdateStatus = async (tenantId: string, status: string) => {
-    try {
-      const { error } = await supabase
-        .from('client_tenants')
-        .update({ status })
-        .eq('id', tenantId);
-
-      if (error) throw error;
-
-      toast.success('Tenant status updated');
-      fetchTenants();
-    } catch (error) {
-      console.error('Error updating tenant:', error);
-      toast.error('Failed to update tenant');
-    }
-  };
-
-  const handleDeleteTenant = async (tenantId: string) => {
+  const handleDeleteTenant = useCallback((tenantId: string) => {
     if (!confirm('Are you sure you want to delete this tenant?')) return;
+    deleteMutation.mutate(tenantId);
+  }, [deleteMutation]);
 
-    try {
-      const { error } = await supabase
-        .from('client_tenants')
-        .delete()
-        .eq('id', tenantId);
-
-      if (error) throw error;
-
-      toast.success('Tenant deleted');
-      fetchTenants();
-    } catch (error) {
-      console.error('Error deleting tenant:', error);
-      toast.error('Failed to delete tenant');
-    }
-  };
-
-  const handleViewUsers = async (tenant: Tenant) => {
+  const handleViewUsers = useCallback((tenant: Tenant) => {
     setSelectedTenant(tenant);
-    await fetchTenantUsers(tenant.id);
     setViewUsersDialogOpen(true);
-  };
+  }, []);
 
-  const filteredTenants = tenants.filter(t => 
-    t.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    t.contact_email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    t.slug.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  // Memoized filtered tenants
+  const filteredTenants = useMemo(() => 
+    tenants.filter(t => 
+      t.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      t.contact_email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      t.slug.toLowerCase().includes(searchTerm.toLowerCase())
+    ), [tenants, searchTerm]);
 
-  const statusColors: Record<string, string> = {
+  // Memoized stats
+  const stats = useMemo(() => ({
+    total: tenants.length,
+    active: tenants.filter(t => t.status === 'active').length,
+    pending: tenants.filter(t => t.status === 'pending').length,
+    enterprise: tenants.filter(t => t.tenant_type === 'enterprise').length,
+  }), [tenants]);
+
+  const statusColors: Record<string, string> = useMemo(() => ({
     active: 'bg-green-500/10 text-green-500 border-green-500/20',
     pending: 'bg-yellow-500/10 text-yellow-500 border-yellow-500/20',
     suspended: 'bg-red-500/10 text-red-500 border-red-500/20',
     inactive: 'bg-gray-500/10 text-gray-500 border-gray-500/20',
-  };
+  }), []);
 
-  const typeColors: Record<string, string> = {
+  const typeColors: Record<string, string> = useMemo(() => ({
     individual: 'bg-blue-500/10 text-blue-500 border-blue-500/20',
     business: 'bg-purple-500/10 text-purple-500 border-purple-500/20',
     enterprise: 'bg-primary/10 text-primary border-primary/20',
-  };
+  }), []);
 
   return (
     <div className="space-y-6">
@@ -195,8 +195,8 @@ const AdminTenantManagement = () => {
           <p className="text-muted-foreground">Manage client organizations and their users</p>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" onClick={fetchTenants}>
-            <RefreshCw className="w-4 h-4 mr-2" />
+          <Button variant="outline" onClick={() => refetch()} disabled={loading}>
+            <RefreshCw className={`w-4 h-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
             Refresh
           </Button>
           <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
@@ -211,6 +211,7 @@ const AdminTenantManagement = () => {
                 <DialogTitle>Create New Tenant</DialogTitle>
               </DialogHeader>
               <div className="space-y-4 py-4">
+                {/* ... existing form fields ... */}
                 <div>
                   <Label>Organization Name *</Label>
                   <Input
@@ -268,7 +269,8 @@ const AdminTenantManagement = () => {
                     placeholder="Enter address"
                   />
                 </div>
-                <Button onClick={handleCreateTenant} className="w-full">
+                <Button onClick={handleCreateTenant} className="w-full" disabled={createMutation.isPending}>
+                  {createMutation.isPending ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
                   Create Tenant
                 </Button>
               </div>
@@ -277,46 +279,12 @@ const AdminTenantManagement = () => {
         </div>
       </div>
 
-      {/* Stats Cards */}
+      {/* Stats Cards - Using memoized values */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Total Tenants</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-3xl font-bold">{tenants.length}</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Active</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-3xl font-bold text-green-500">
-              {tenants.filter(t => t.status === 'active').length}
-            </p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Pending</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-3xl font-bold text-yellow-500">
-              {tenants.filter(t => t.status === 'pending').length}
-            </p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Enterprise</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-3xl font-bold text-primary">
-              {tenants.filter(t => t.tenant_type === 'enterprise').length}
-            </p>
-          </CardContent>
-        </Card>
+        <StatCard title="Total Tenants" value={stats.total} />
+        <StatCard title="Active" value={stats.active} color="text-green-500" />
+        <StatCard title="Pending" value={stats.pending} color="text-yellow-500" />
+        <StatCard title="Enterprise" value={stats.enterprise} color="text-primary" />
       </div>
 
       {/* Search */}
