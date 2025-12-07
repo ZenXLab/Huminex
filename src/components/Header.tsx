@@ -481,7 +481,7 @@ export const Header = ({ onQuoteClick }: HeaderProps) => {
                         </div>
                         <div className="flex-1">
                           <span className="text-sm font-medium block">Employee Portal</span>
-                          <span className="text-xs text-muted-foreground">Access for employees & managers</span>
+                          <span className="text-xs text-muted-foreground">For all employees, HR, managers & staff</span>
                         </div>
                       </Link>
                       <Link
@@ -492,8 +492,8 @@ export const Header = ({ onQuoteClick }: HeaderProps) => {
                           <Building2 className="w-5 h-5 text-purple-500" />
                         </div>
                         <div className="flex-1">
-                          <span className="text-sm font-medium block">Organization Admin</span>
-                          <span className="text-xs text-muted-foreground">HR & Super Admin access</span>
+                          <span className="text-sm font-medium block">Owner / Super Admin</span>
+                          <span className="text-xs text-muted-foreground">CEO, Director, VP or Company Owner only</span>
                         </div>
                       </Link>
                     </div>

@@ -265,7 +265,7 @@ export const PricingSection = () => {
           </div>
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <Clock className="w-4 h-4 text-primary" />
-            90-Day Free Trial
+            30-Day Free Trial
           </div>
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <TrendingUp className="w-4 h-4 text-primary" />
@@ -332,7 +332,7 @@ export const PricingSection = () => {
           </h3>
           <p className="text-muted-foreground text-lg mb-8 max-w-2xl mx-auto">
             Join thousands of companies using ATLAS to automate HR, payroll, and compliance. 
-            Start your 90-day free trial today.
+            Start your 30-day free trial today.
           </p>
           <div className="flex flex-wrap items-center justify-center gap-4">
             <Button 

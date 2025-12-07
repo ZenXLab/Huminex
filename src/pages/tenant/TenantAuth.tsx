@@ -138,7 +138,7 @@ const TenantAuth = () => {
               <div className="flex items-center justify-center gap-2 mt-1">
                 <span className="text-[#005EEB] font-semibold text-sm">ATLAS</span>
                 <span className="h-4 w-px bg-[#E5E7EB]" />
-                <span className="text-[#6B7280] text-xs uppercase tracking-wider">Organization Admin</span>
+                <span className="text-[#6B7280] text-xs uppercase tracking-wider">Owner / Super Admin</span>
               </div>
             </div>
           </Link>
@@ -154,10 +154,10 @@ const TenantAuth = () => {
               <Building2 className="w-7 h-7 text-[#005EEB]" />
             </div>
             <h1 className="text-2xl font-bold text-[#0F1E3A] mb-2">
-              Organization Admin Console
+              Owner / Super Admin Console
             </h1>
             <p className="text-[#6B7280] text-sm">
-              Sign in to configure your ATLAS workspace
+              For CEO, Director, VP or Company Owner only
             </p>
           </div>
 

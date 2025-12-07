@@ -162,7 +162,7 @@ export const PricingTierCard = ({
         {/* Trust Badge */}
         {price !== null && (
           <p className="text-center text-xs text-muted-foreground mt-4">
-            ✓ 90-day free trial • No credit card required
+            ✓ 30-day free trial • No credit card required
           </p>
         )}
       </div>

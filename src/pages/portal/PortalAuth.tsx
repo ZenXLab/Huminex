@@ -121,10 +121,10 @@ const PortalAuth = () => {
         <div className="bg-card border border-border rounded-2xl p-8 shadow-card">
           <div className="text-center mb-8">
             <h1 className="text-2xl font-heading font-bold text-foreground mb-2">
-              Welcome Back
+              Employee Portal
             </h1>
             <p className="text-muted-foreground text-sm">
-              Sign in to access your client portal
+              For all employees, HR, managers & staff
             </p>
           </div>
 

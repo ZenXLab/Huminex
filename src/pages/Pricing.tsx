@@ -102,7 +102,7 @@ const Pricing = () => {
               <div className="flex flex-wrap items-center justify-center gap-4 text-sm text-muted-foreground mb-8">
                 <span className="flex items-center gap-2">
                   <div className="w-2 h-2 rounded-full bg-green-500" />
-                  90-Day Free Trial
+                  30-Day Free Trial
                 </span>
                 <span className="flex items-center gap-2">
                   <div className="w-2 h-2 rounded-full bg-green-500" />

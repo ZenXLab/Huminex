@@ -210,7 +210,7 @@ export const DemoVideoSection = () => {
         <div className={`grid grid-cols-2 md:grid-cols-4 gap-4 mt-16 max-w-4xl mx-auto transition-all duration-700 delay-500 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
           {[
             { label: "Setup Time", value: "< 5 mins", icon: "⚡" },
-            { label: "Free Trial", value: "14 Days", icon: "🎁" },
+            { label: "Free Trial", value: "30 Days", icon: "🎁" },
             { label: "Support", value: "24/7", icon: "💬" },
             { label: "Data Import", value: "1-Click", icon: "📥" },
           ].map((item, index) => (
