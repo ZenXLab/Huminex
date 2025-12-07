@@ -744,6 +744,1180 @@ serve(async (req: Request) => {
 
 ---
 
+## Payroll Functions
+
+### 5. run-payroll
+
+**Purpose**: Processes payroll for a tenant, calculates salaries, deductions, and generates payslips.
+
+**Endpoint**: `POST /functions/v1/run-payroll`
+
+**File**: `supabase/functions/run-payroll/index.ts`
+
+#### Required Secrets
+
+| Secret | Description |
+|--------|-------------|
+| `SUPABASE_URL` | Auto-provided |
+| `SUPABASE_SERVICE_ROLE_KEY` | Auto-provided |
+
+#### Request Payload
+
+```typescript
+interface RunPayrollPayload {
+  tenant_id: string;          // Tenant UUID
+  payroll_month: string;      // Format: YYYY-MM
+  employee_ids?: string[];    // Optional: specific employees (null = all)
+  include_bonuses?: boolean;  // Include bonus calculations
+  include_deductions?: boolean; // Include statutory deductions
+  dry_run?: boolean;          // Preview without saving
+}
+```
+
+#### Response
+
+```typescript
+interface PayrollResponse {
+  success: boolean;
+  payroll_run_id?: string;
+  summary: {
+    total_employees: number;
+    total_gross: number;
+    total_deductions: number;
+    total_net: number;
+    processing_time_ms: number;
+  };
+  errors?: Array<{ employee_id: string; error: string }>;
+}
+```
+
+#### Complete Implementation
+
+```typescript
+// supabase/functions/run-payroll/index.ts
+
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+};
+
+interface RunPayrollPayload {
+  tenant_id: string;
+  payroll_month: string;
+  employee_ids?: string[];
+  include_bonuses?: boolean;
+  include_deductions?: boolean;
+  dry_run?: boolean;
+}
+
+interface Employee {
+  id: string;
+  name: string;
+  email: string;
+  base_salary: number;
+  department: string;
+}
+
+interface PayrollCalculation {
+  employee_id: string;
+  gross_salary: number;
+  pf_deduction: number;      // 12% of basic
+  esi_deduction: number;     // 0.75% if applicable
+  professional_tax: number;  // State-based
+  tds_deduction: number;     // Based on tax slab
+  other_deductions: number;
+  bonuses: number;
+  net_salary: number;
+}
+
+serve(async (req: Request) => {
+  if (req.method === 'OPTIONS') {
+    return new Response(null, { headers: corsHeaders });
+  }
+
+  const startTime = Date.now();
+
+  try {
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    const supabase = createClient(supabaseUrl, supabaseKey);
+
+    const payload: RunPayrollPayload = await req.json();
+
+    // Validate required fields
+    if (!payload.tenant_id || !payload.payroll_month) {
+      throw new Error('Missing required fields: tenant_id, payroll_month');
+    }
+
+    // Validate month format
+    if (!/^\d{4}-\d{2}$/.test(payload.payroll_month)) {
+      throw new Error('Invalid payroll_month format. Use YYYY-MM');
+    }
+
+    console.log('[run-payroll] Starting payroll run:', {
+      tenant_id: payload.tenant_id,
+      month: payload.payroll_month,
+      dry_run: payload.dry_run
+    });
+
+    // Fetch employees for this tenant
+    let employeeQuery = supabase
+      .from('employees')
+      .select('id, name, email, base_salary, department')
+      .eq('tenant_id', payload.tenant_id)
+      .eq('status', 'active');
+
+    if (payload.employee_ids && payload.employee_ids.length > 0) {
+      employeeQuery = employeeQuery.in('id', payload.employee_ids);
+    }
+
+    const { data: employees, error: empError } = await employeeQuery;
+
+    if (empError) throw empError;
+    if (!employees || employees.length === 0) {
+      throw new Error('No active employees found for this tenant');
+    }
+
+    console.log('[run-payroll] Processing', employees.length, 'employees');
+
+    // Calculate payroll for each employee
+    const calculations: PayrollCalculation[] = [];
+    const errors: Array<{ employee_id: string; error: string }> = [];
+
+    for (const emp of employees) {
+      try {
+        const calc = calculatePayroll(emp as Employee, payload);
+        calculations.push(calc);
+      } catch (calcError) {
+        errors.push({
+          employee_id: emp.id,
+          error: calcError.message
+        });
+      }
+    }
+
+    // Calculate summary
+    const summary = {
+      total_employees: calculations.length,
+      total_gross: calculations.reduce((sum, c) => sum + c.gross_salary, 0),
+      total_deductions: calculations.reduce((sum, c) => 
+        sum + c.pf_deduction + c.esi_deduction + c.professional_tax + c.tds_deduction + c.other_deductions, 0),
+      total_net: calculations.reduce((sum, c) => sum + c.net_salary, 0),
+      processing_time_ms: Date.now() - startTime
+    };
+
+    let payroll_run_id = null;
+
+    // Save payroll run if not a dry run
+    if (!payload.dry_run) {
+      // Create payroll run record
+      const { data: payrollRun, error: runError } = await supabase
+        .from('payroll_runs')
+        .insert({
+          tenant_id: payload.tenant_id,
+          payroll_month: payload.payroll_month,
+          status: 'completed',
+          total_employees: summary.total_employees,
+          total_gross: summary.total_gross,
+          total_deductions: summary.total_deductions,
+          total_net: summary.total_net,
+          processed_at: new Date().toISOString()
+        })
+        .select()
+        .single();
+
+      if (runError) throw runError;
+      payroll_run_id = payrollRun.id;
+
+      // Insert individual payslips
+      const payslips = calculations.map(calc => ({
+        payroll_run_id: payroll_run_id,
+        employee_id: calc.employee_id,
+        tenant_id: payload.tenant_id,
+        payroll_month: payload.payroll_month,
+        gross_salary: calc.gross_salary,
+        pf_deduction: calc.pf_deduction,
+        esi_deduction: calc.esi_deduction,
+        professional_tax: calc.professional_tax,
+        tds_deduction: calc.tds_deduction,
+        other_deductions: calc.other_deductions,
+        bonuses: calc.bonuses,
+        net_salary: calc.net_salary
+      }));
+
+      const { error: payslipError } = await supabase
+        .from('payslips')
+        .insert(payslips);
+
+      if (payslipError) {
+        console.error('[run-payroll] Payslip insert error:', payslipError);
+      }
+
+      console.log('[run-payroll] Payroll run completed:', payroll_run_id);
+    }
+
+    return new Response(
+      JSON.stringify({
+        success: true,
+        payroll_run_id,
+        dry_run: payload.dry_run || false,
+        summary,
+        errors: errors.length > 0 ? errors : undefined
+      }),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
+
+  } catch (error) {
+    console.error('[run-payroll] Error:', error);
+    return new Response(
+      JSON.stringify({ 
+        success: false, 
+        error: error.message,
+        processing_time_ms: Date.now() - startTime
+      }),
+      { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
+  }
+});
+
+// Calculate payroll for single employee
+function calculatePayroll(
+  employee: Employee, 
+  options: RunPayrollPayload
+): PayrollCalculation {
+  const grossSalary = employee.base_salary;
+  const basic = grossSalary * 0.5; // 50% of gross is basic
+
+  // PF: 12% of basic (capped at ₹15,000 basic)
+  const pfBasic = Math.min(basic, 15000);
+  const pfDeduction = pfBasic * 0.12;
+
+  // ESI: 0.75% if gross <= ₹21,000
+  const esiDeduction = grossSalary <= 21000 ? grossSalary * 0.0075 : 0;
+
+  // Professional Tax (varies by state, using common ₹200/month)
+  const professionalTax = grossSalary > 15000 ? 200 : 0;
+
+  // TDS: Simplified calculation based on annual income
+  const annualIncome = grossSalary * 12;
+  let tdsDeduction = 0;
+  if (annualIncome > 1000000) {
+    tdsDeduction = grossSalary * 0.30; // 30% for > 10L
+  } else if (annualIncome > 500000) {
+    tdsDeduction = grossSalary * 0.20; // 20% for 5-10L
+  } else if (annualIncome > 250000) {
+    tdsDeduction = grossSalary * 0.05; // 5% for 2.5-5L
+  }
+
+  // Bonuses (if enabled)
+  const bonuses = options.include_bonuses ? 0 : 0; // Placeholder for bonus logic
+
+  // Calculate net
+  const totalDeductions = pfDeduction + esiDeduction + professionalTax + tdsDeduction;
+  const netSalary = grossSalary + bonuses - totalDeductions;
+
+  return {
+    employee_id: employee.id,
+    gross_salary: Math.round(grossSalary * 100) / 100,
+    pf_deduction: Math.round(pfDeduction * 100) / 100,
+    esi_deduction: Math.round(esiDeduction * 100) / 100,
+    professional_tax: professionalTax,
+    tds_deduction: Math.round(tdsDeduction * 100) / 100,
+    other_deductions: 0,
+    bonuses,
+    net_salary: Math.round(netSalary * 100) / 100
+  };
+}
+```
+
+#### Usage Examples
+
+```typescript
+// Run payroll for all employees
+await supabase.functions.invoke('run-payroll', {
+  body: {
+    tenant_id: 'tenant-uuid',
+    payroll_month: '2024-12',
+    include_deductions: true
+  }
+});
+
+// Dry run to preview calculations
+await supabase.functions.invoke('run-payroll', {
+  body: {
+    tenant_id: 'tenant-uuid',
+    payroll_month: '2024-12',
+    dry_run: true
+  }
+});
+
+// Run for specific employees
+await supabase.functions.invoke('run-payroll', {
+  body: {
+    tenant_id: 'tenant-uuid',
+    payroll_month: '2024-12',
+    employee_ids: ['emp-1', 'emp-2', 'emp-3']
+  }
+});
+```
+
+---
+
+## BGV (Background Verification) Functions
+
+### 6. initiate-bgv
+
+**Purpose**: Initiates background verification for an employee through third-party BGV provider.
+
+**Endpoint**: `POST /functions/v1/initiate-bgv`
+
+**File**: `supabase/functions/initiate-bgv/index.ts`
+
+#### Required Secrets
+
+| Secret | Description |
+|--------|-------------|
+| `BGV_PROVIDER_API_KEY` | API key for BGV provider (AuthBridge, IDFY, etc.) |
+| `BGV_PROVIDER_URL` | BGV provider API endpoint |
+
+#### Request Payload
+
+```typescript
+interface InitiateBGVPayload {
+  tenant_id: string;
+  employee_id: string;
+  verification_types: Array<
+    'identity' | 'address' | 'education' | 'employment' | 
+    'criminal' | 'credit' | 'drug_test' | 'reference'
+  >;
+  priority?: 'normal' | 'urgent';
+  documents?: {
+    aadhaar?: string;       // Masked Aadhaar number
+    pan?: string;           // PAN number
+    passport?: string;      // Passport number
+  };
+  callback_url?: string;    // Webhook for status updates
+}
+```
+
+#### Response
+
+```typescript
+interface BGVResponse {
+  success: boolean;
+  request_id: string;
+  verification_id: string;
+  status: 'initiated' | 'pending' | 'in_progress';
+  estimated_completion: string; // ISO date
+  verifications: Array<{
+    type: string;
+    status: string;
+  }>;
+}
+```
+
+#### Complete Implementation
+
+```typescript
+// supabase/functions/initiate-bgv/index.ts
+
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+};
+
+interface InitiateBGVPayload {
+  tenant_id: string;
+  employee_id: string;
+  verification_types: string[];
+  priority?: 'normal' | 'urgent';
+  documents?: {
+    aadhaar?: string;
+    pan?: string;
+    passport?: string;
+  };
+  callback_url?: string;
+}
+
+serve(async (req: Request) => {
+  if (req.method === 'OPTIONS') {
+    return new Response(null, { headers: corsHeaders });
+  }
+
+  try {
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    const bgvApiKey = Deno.env.get('BGV_PROVIDER_API_KEY');
+    const bgvProviderUrl = Deno.env.get('BGV_PROVIDER_URL') || 'https://api.bgv-provider.com/v1';
+    
+    const supabase = createClient(supabaseUrl, supabaseKey);
+    const payload: InitiateBGVPayload = await req.json();
+
+    // Validate required fields
+    if (!payload.tenant_id || !payload.employee_id || !payload.verification_types?.length) {
+      throw new Error('Missing required fields: tenant_id, employee_id, verification_types');
+    }
+
+    console.log('[initiate-bgv] Starting BGV for employee:', payload.employee_id);
+
+    // Fetch employee details
+    const { data: employee, error: empError } = await supabase
+      .from('employees')
+      .select('id, name, email, phone, date_of_birth')
+      .eq('id', payload.employee_id)
+      .eq('tenant_id', payload.tenant_id)
+      .single();
+
+    if (empError || !employee) {
+      throw new Error('Employee not found');
+    }
+
+    // Generate unique verification ID
+    const verificationId = `BGV-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+
+    // Create BGV request record
+    const { data: bgvRequest, error: insertError } = await supabase
+      .from('bgv_requests')
+      .insert({
+        tenant_id: payload.tenant_id,
+        employee_id: payload.employee_id,
+        verification_id: verificationId,
+        verification_types: payload.verification_types,
+        status: 'initiated',
+        priority: payload.priority || 'normal',
+        documents_submitted: payload.documents || {},
+        initiated_at: new Date().toISOString()
+      })
+      .select()
+      .single();
+
+    if (insertError) throw insertError;
+
+    // Call external BGV provider (if configured)
+    let providerResponse = null;
+    if (bgvApiKey) {
+      try {
+        const externalResponse = await fetch(`${bgvProviderUrl}/verifications`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${bgvApiKey}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            reference_id: verificationId,
+            candidate: {
+              name: employee.name,
+              email: employee.email,
+              phone: employee.phone,
+              dob: employee.date_of_birth
+            },
+            checks: payload.verification_types.map(type => ({
+              type,
+              priority: payload.priority || 'normal'
+            })),
+            callback_url: payload.callback_url
+          })
+        });
+
+        providerResponse = await externalResponse.json();
+        
+        // Update with provider reference
+        if (providerResponse.id) {
+          await supabase
+            .from('bgv_requests')
+            .update({
+              provider_reference_id: providerResponse.id,
+              status: 'pending'
+            })
+            .eq('id', bgvRequest.id);
+        }
+
+        console.log('[initiate-bgv] Provider response:', providerResponse);
+      } catch (providerError) {
+        console.error('[initiate-bgv] Provider call failed:', providerError);
+        // Continue with local tracking even if provider fails
+      }
+    }
+
+    // Calculate estimated completion
+    const estimatedDays = payload.priority === 'urgent' ? 2 : 5;
+    const estimatedCompletion = new Date();
+    estimatedCompletion.setDate(estimatedCompletion.getDate() + estimatedDays);
+
+    return new Response(
+      JSON.stringify({
+        success: true,
+        request_id: bgvRequest.id,
+        verification_id: verificationId,
+        status: providerResponse ? 'pending' : 'initiated',
+        estimated_completion: estimatedCompletion.toISOString(),
+        verifications: payload.verification_types.map(type => ({
+          type,
+          status: 'pending'
+        })),
+        provider_reference: providerResponse?.id
+      }),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
+
+  } catch (error) {
+    console.error('[initiate-bgv] Error:', error);
+    return new Response(
+      JSON.stringify({ success: false, error: error.message }),
+      { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
+  }
+});
+```
+
+### 7. bgv-webhook
+
+**Purpose**: Receives status updates from BGV provider and updates verification status.
+
+**Endpoint**: `POST /functions/v1/bgv-webhook`
+
+**File**: `supabase/functions/bgv-webhook/index.ts`
+
+```typescript
+// supabase/functions/bgv-webhook/index.ts
+
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-webhook-signature',
+};
+
+interface BGVWebhookPayload {
+  reference_id: string;       // Our verification_id
+  provider_id: string;        // Provider's ID
+  event_type: 'status_update' | 'check_completed' | 'verification_completed';
+  status: 'in_progress' | 'completed' | 'failed' | 'requires_action';
+  checks?: Array<{
+    type: string;
+    status: string;
+    result?: 'clear' | 'discrepancy' | 'unable_to_verify';
+    details?: Record<string, unknown>;
+  }>;
+  completed_at?: string;
+  report_url?: string;
+}
+
+serve(async (req: Request) => {
+  if (req.method === 'OPTIONS') {
+    return new Response(null, { headers: corsHeaders });
+  }
+
+  try {
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    const supabase = createClient(supabaseUrl, supabaseKey);
+
+    // Verify webhook signature (provider-specific)
+    const signature = req.headers.get('x-webhook-signature');
+    // Add signature verification logic here based on your BGV provider
+
+    const payload: BGVWebhookPayload = await req.json();
+
+    console.log('[bgv-webhook] Received:', {
+      reference_id: payload.reference_id,
+      event_type: payload.event_type,
+      status: payload.status
+    });
+
+    // Find BGV request by verification_id
+    const { data: bgvRequest, error: findError } = await supabase
+      .from('bgv_requests')
+      .select('*')
+      .eq('verification_id', payload.reference_id)
+      .single();
+
+    if (findError || !bgvRequest) {
+      throw new Error('BGV request not found: ' + payload.reference_id);
+    }
+
+    // Update BGV request status
+    const updateData: Record<string, unknown> = {
+      status: payload.status,
+      last_updated_at: new Date().toISOString()
+    };
+
+    if (payload.checks) {
+      updateData.verification_results = payload.checks;
+    }
+
+    if (payload.completed_at) {
+      updateData.completed_at = payload.completed_at;
+    }
+
+    if (payload.report_url) {
+      updateData.report_url = payload.report_url;
+    }
+
+    const { error: updateError } = await supabase
+      .from('bgv_requests')
+      .update(updateData)
+      .eq('id', bgvRequest.id);
+
+    if (updateError) throw updateError;
+
+    // Send notification if verification completed
+    if (payload.event_type === 'verification_completed') {
+      const hasDiscrepancy = payload.checks?.some(c => c.result === 'discrepancy');
+      
+      await supabase.functions.invoke('send-notification', {
+        body: {
+          title: `BGV ${hasDiscrepancy ? 'Completed with Issues' : 'Completed'}`,
+          message: `Background verification for employee completed. ${hasDiscrepancy ? 'Review required.' : 'All clear.'}`,
+          notification_type: hasDiscrepancy ? 'warning' : 'success',
+          category: 'users',
+          action_url: `/tenant/bgv/${bgvRequest.id}`
+        }
+      });
+    }
+
+    console.log('[bgv-webhook] Updated BGV request:', bgvRequest.id);
+
+    return new Response(
+      JSON.stringify({ success: true, received: true }),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
+
+  } catch (error) {
+    console.error('[bgv-webhook] Error:', error);
+    return new Response(
+      JSON.stringify({ success: false, error: error.message }),
+      { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
+  }
+});
+```
+
+#### Usage Examples
+
+```typescript
+// Initiate comprehensive BGV
+await supabase.functions.invoke('initiate-bgv', {
+  body: {
+    tenant_id: 'tenant-uuid',
+    employee_id: 'employee-uuid',
+    verification_types: ['identity', 'address', 'education', 'employment', 'criminal'],
+    priority: 'normal',
+    documents: {
+      aadhaar: 'XXXX-XXXX-1234',
+      pan: 'ABCDE1234F'
+    }
+  }
+});
+
+// Initiate urgent BGV for senior hire
+await supabase.functions.invoke('initiate-bgv', {
+  body: {
+    tenant_id: 'tenant-uuid',
+    employee_id: 'employee-uuid',
+    verification_types: ['identity', 'employment', 'education', 'reference', 'credit'],
+    priority: 'urgent',
+    callback_url: 'https://your-domain.com/api/bgv-callback'
+  }
+});
+```
+
+---
+
+## SSO Authentication Functions
+
+### 8. sso-initiate
+
+**Purpose**: Initiates SSO authentication flow for Google, Microsoft, or SAML providers.
+
+**Endpoint**: `POST /functions/v1/sso-initiate`
+
+**File**: `supabase/functions/sso-initiate/index.ts`
+
+#### Required Secrets
+
+| Secret | Description |
+|--------|-------------|
+| `GOOGLE_CLIENT_ID` | Google OAuth Client ID |
+| `GOOGLE_CLIENT_SECRET` | Google OAuth Client Secret |
+| `MICROSOFT_CLIENT_ID` | Microsoft/Entra ID Client ID |
+| `MICROSOFT_CLIENT_SECRET` | Microsoft Client Secret |
+| `SAML_IDP_METADATA_URL` | SAML Identity Provider metadata URL |
+
+#### Request Payload
+
+```typescript
+interface SSOInitiatePayload {
+  tenant_id: string;
+  provider: 'google' | 'microsoft' | 'okta' | 'saml';
+  redirect_uri: string;
+  state?: string;           // CSRF protection
+  login_hint?: string;      // Pre-fill email
+}
+```
+
+#### Response
+
+```typescript
+interface SSOInitiateResponse {
+  success: boolean;
+  auth_url: string;         // Redirect user to this URL
+  state: string;            // Store for verification
+  expires_in: number;       // Seconds until state expires
+}
+```
+
+#### Complete Implementation
+
+```typescript
+// supabase/functions/sso-initiate/index.ts
+
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+};
+
+interface SSOInitiatePayload {
+  tenant_id: string;
+  provider: 'google' | 'microsoft' | 'okta' | 'saml';
+  redirect_uri: string;
+  state?: string;
+  login_hint?: string;
+}
+
+serve(async (req: Request) => {
+  if (req.method === 'OPTIONS') {
+    return new Response(null, { headers: corsHeaders });
+  }
+
+  try {
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    const supabase = createClient(supabaseUrl, supabaseKey);
+
+    const payload: SSOInitiatePayload = await req.json();
+
+    if (!payload.tenant_id || !payload.provider || !payload.redirect_uri) {
+      throw new Error('Missing required fields: tenant_id, provider, redirect_uri');
+    }
+
+    console.log('[sso-initiate] Starting SSO flow:', {
+      tenant_id: payload.tenant_id,
+      provider: payload.provider
+    });
+
+    // Fetch tenant SSO configuration
+    const { data: tenant, error: tenantError } = await supabase
+      .from('client_tenants')
+      .select('id, name, settings')
+      .eq('id', payload.tenant_id)
+      .single();
+
+    if (tenantError || !tenant) {
+      throw new Error('Tenant not found');
+    }
+
+    // Generate state for CSRF protection
+    const state = payload.state || crypto.randomUUID();
+    const stateData = {
+      tenant_id: payload.tenant_id,
+      provider: payload.provider,
+      redirect_uri: payload.redirect_uri,
+      created_at: Date.now()
+    };
+
+    // Store state in database for verification
+    await supabase
+      .from('sso_states')
+      .insert({
+        state,
+        data: stateData,
+        expires_at: new Date(Date.now() + 10 * 60 * 1000).toISOString() // 10 min
+      });
+
+    let authUrl: string;
+
+    switch (payload.provider) {
+      case 'google': {
+        const clientId = Deno.env.get('GOOGLE_CLIENT_ID');
+        if (!clientId) throw new Error('Google SSO not configured');
+
+        const params = new URLSearchParams({
+          client_id: clientId,
+          redirect_uri: payload.redirect_uri,
+          response_type: 'code',
+          scope: 'openid email profile',
+          state,
+          access_type: 'offline',
+          prompt: 'select_account'
+        });
+
+        if (payload.login_hint) {
+          params.set('login_hint', payload.login_hint);
+        }
+
+        authUrl = `https://accounts.google.com/o/oauth2/v2/auth?${params}`;
+        break;
+      }
+
+      case 'microsoft': {
+        const clientId = Deno.env.get('MICROSOFT_CLIENT_ID');
+        if (!clientId) throw new Error('Microsoft SSO not configured');
+
+        const tenantSettings = tenant.settings as Record<string, unknown> || {};
+        const azureTenant = tenantSettings.azure_tenant_id || 'common';
+
+        const params = new URLSearchParams({
+          client_id: clientId,
+          redirect_uri: payload.redirect_uri,
+          response_type: 'code',
+          scope: 'openid email profile User.Read',
+          state,
+          response_mode: 'query'
+        });
+
+        if (payload.login_hint) {
+          params.set('login_hint', payload.login_hint);
+        }
+
+        authUrl = `https://login.microsoftonline.com/${azureTenant}/oauth2/v2.0/authorize?${params}`;
+        break;
+      }
+
+      case 'okta': {
+        const tenantSettings = tenant.settings as Record<string, unknown> || {};
+        const oktaDomain = tenantSettings.okta_domain;
+        const oktaClientId = tenantSettings.okta_client_id;
+
+        if (!oktaDomain || !oktaClientId) {
+          throw new Error('Okta SSO not configured for this tenant');
+        }
+
+        const params = new URLSearchParams({
+          client_id: oktaClientId as string,
+          redirect_uri: payload.redirect_uri,
+          response_type: 'code',
+          scope: 'openid email profile',
+          state
+        });
+
+        authUrl = `https://${oktaDomain}/oauth2/default/v1/authorize?${params}`;
+        break;
+      }
+
+      case 'saml': {
+        // SAML requires different flow - redirect to SAML IDP
+        const tenantSettings = tenant.settings as Record<string, unknown> || {};
+        const samlIdpUrl = tenantSettings.saml_sso_url;
+
+        if (!samlIdpUrl) {
+          throw new Error('SAML SSO not configured for this tenant');
+        }
+
+        // Generate SAML AuthnRequest (simplified)
+        const samlRequest = btoa(JSON.stringify({
+          issuer: `https://atlas.cropxon.com/sso/metadata/${payload.tenant_id}`,
+          destination: samlIdpUrl,
+          id: state,
+          issue_instant: new Date().toISOString()
+        }));
+
+        authUrl = `${samlIdpUrl}?SAMLRequest=${encodeURIComponent(samlRequest)}&RelayState=${state}`;
+        break;
+      }
+
+      default:
+        throw new Error('Unsupported SSO provider');
+    }
+
+    console.log('[sso-initiate] Generated auth URL for:', payload.provider);
+
+    return new Response(
+      JSON.stringify({
+        success: true,
+        auth_url: authUrl,
+        state,
+        expires_in: 600 // 10 minutes
+      }),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
+
+  } catch (error) {
+    console.error('[sso-initiate] Error:', error);
+    return new Response(
+      JSON.stringify({ success: false, error: error.message }),
+      { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
+  }
+});
+```
+
+### 9. sso-callback
+
+**Purpose**: Handles OAuth/SAML callback, exchanges code for tokens, and creates/updates user session.
+
+**Endpoint**: `POST /functions/v1/sso-callback`
+
+**File**: `supabase/functions/sso-callback/index.ts`
+
+```typescript
+// supabase/functions/sso-callback/index.ts
+
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+};
+
+interface SSOCallbackPayload {
+  code: string;              // Authorization code from provider
+  state: string;             // State for verification
+  provider: 'google' | 'microsoft' | 'okta' | 'saml';
+}
+
+serve(async (req: Request) => {
+  if (req.method === 'OPTIONS') {
+    return new Response(null, { headers: corsHeaders });
+  }
+
+  try {
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    const supabase = createClient(supabaseUrl, supabaseKey);
+
+    const payload: SSOCallbackPayload = await req.json();
+
+    if (!payload.code || !payload.state) {
+      throw new Error('Missing required fields: code, state');
+    }
+
+    console.log('[sso-callback] Processing callback:', {
+      provider: payload.provider,
+      state: payload.state.substring(0, 8) + '...'
+    });
+
+    // Verify state
+    const { data: stateRecord, error: stateError } = await supabase
+      .from('sso_states')
+      .select('*')
+      .eq('state', payload.state)
+      .single();
+
+    if (stateError || !stateRecord) {
+      throw new Error('Invalid or expired state');
+    }
+
+    // Check expiry
+    if (new Date(stateRecord.expires_at) < new Date()) {
+      throw new Error('State expired');
+    }
+
+    const stateData = stateRecord.data;
+    let userInfo: { email: string; name: string; picture?: string };
+
+    // Exchange code for tokens based on provider
+    switch (payload.provider) {
+      case 'google': {
+        const clientId = Deno.env.get('GOOGLE_CLIENT_ID')!;
+        const clientSecret = Deno.env.get('GOOGLE_CLIENT_SECRET')!;
+
+        // Exchange code for tokens
+        const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: new URLSearchParams({
+            code: payload.code,
+            client_id: clientId,
+            client_secret: clientSecret,
+            redirect_uri: stateData.redirect_uri,
+            grant_type: 'authorization_code'
+          })
+        });
+
+        const tokens = await tokenResponse.json();
+        if (tokens.error) throw new Error(tokens.error_description || tokens.error);
+
+        // Get user info
+        const userResponse = await fetch('https://www.googleapis.com/oauth2/v2/userinfo', {
+          headers: { 'Authorization': `Bearer ${tokens.access_token}` }
+        });
+
+        userInfo = await userResponse.json();
+        break;
+      }
+
+      case 'microsoft': {
+        const clientId = Deno.env.get('MICROSOFT_CLIENT_ID')!;
+        const clientSecret = Deno.env.get('MICROSOFT_CLIENT_SECRET')!;
+
+        const tokenResponse = await fetch('https://login.microsoftonline.com/common/oauth2/v2.0/token', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: new URLSearchParams({
+            code: payload.code,
+            client_id: clientId,
+            client_secret: clientSecret,
+            redirect_uri: stateData.redirect_uri,
+            grant_type: 'authorization_code',
+            scope: 'openid email profile User.Read'
+          })
+        });
+
+        const tokens = await tokenResponse.json();
+        if (tokens.error) throw new Error(tokens.error_description || tokens.error);
+
+        // Get user info from Microsoft Graph
+        const userResponse = await fetch('https://graph.microsoft.com/v1.0/me', {
+          headers: { 'Authorization': `Bearer ${tokens.access_token}` }
+        });
+
+        const msUser = await userResponse.json();
+        userInfo = {
+          email: msUser.mail || msUser.userPrincipalName,
+          name: msUser.displayName,
+          picture: undefined
+        };
+        break;
+      }
+
+      default:
+        throw new Error('SSO callback not implemented for: ' + payload.provider);
+    }
+
+    console.log('[sso-callback] User authenticated:', userInfo.email);
+
+    // Check if user exists in tenant
+    const { data: existingUser, error: userError } = await supabase
+      .from('client_tenant_users')
+      .select('*, profiles!inner(*)')
+      .eq('tenant_id', stateData.tenant_id)
+      .eq('profiles.email', userInfo.email)
+      .single();
+
+    let userId: string;
+    let isNewUser = false;
+
+    if (existingUser) {
+      userId = existingUser.user_id;
+    } else {
+      // Create new user via Supabase Auth
+      const { data: authUser, error: authError } = await supabase.auth.admin.createUser({
+        email: userInfo.email,
+        email_confirm: true,
+        user_metadata: {
+          full_name: userInfo.name,
+          avatar_url: userInfo.picture,
+          sso_provider: payload.provider
+        }
+      });
+
+      if (authError) throw authError;
+      userId = authUser.user!.id;
+      isNewUser = true;
+
+      // Add to tenant
+      await supabase.from('client_tenant_users').insert({
+        tenant_id: stateData.tenant_id,
+        user_id: userId,
+        role: 'employee'
+      });
+
+      // Create profile
+      await supabase.from('profiles').insert({
+        id: userId,
+        email: userInfo.email,
+        full_name: userInfo.name,
+        tenant_id: stateData.tenant_id
+      });
+    }
+
+    // Generate session
+    const { data: session, error: sessionError } = await supabase.auth.admin.generateLink({
+      type: 'magiclink',
+      email: userInfo.email
+    });
+
+    if (sessionError) throw sessionError;
+
+    // Delete used state
+    await supabase.from('sso_states').delete().eq('state', payload.state);
+
+    console.log('[sso-callback] Session created for:', userInfo.email);
+
+    return new Response(
+      JSON.stringify({
+        success: true,
+        user: {
+          id: userId,
+          email: userInfo.email,
+          name: userInfo.name,
+          is_new: isNewUser
+        },
+        login_url: session.properties?.action_link,
+        redirect_uri: stateData.redirect_uri
+      }),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
+
+  } catch (error) {
+    console.error('[sso-callback] Error:', error);
+    return new Response(
+      JSON.stringify({ success: false, error: error.message }),
+      { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
+  }
+});
+```
+
+#### Usage Examples
+
+```typescript
+// Initiate Google SSO
+const { data } = await supabase.functions.invoke('sso-initiate', {
+  body: {
+    tenant_id: 'tenant-uuid',
+    provider: 'google',
+    redirect_uri: 'https://atlas.cropxon.com/auth/callback'
+  }
+});
+
+// Redirect user
+window.location.href = data.auth_url;
+
+// In callback page, handle the response
+const { data: session } = await supabase.functions.invoke('sso-callback', {
+  body: {
+    code: urlParams.get('code'),
+    state: urlParams.get('state'),
+    provider: 'google'
+  }
+});
+
+// Microsoft SSO for enterprise tenant
+const { data } = await supabase.functions.invoke('sso-initiate', {
+  body: {
+    tenant_id: 'enterprise-tenant-uuid',
+    provider: 'microsoft',
+    redirect_uri: 'https://atlas.cropxon.com/auth/callback',
+    login_hint: 'user@company.com'
+  }
+});
+```
+
+---
+
 ## Notification Categories & Types
 
 ### Categories
