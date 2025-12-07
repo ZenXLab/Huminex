@@ -1,18 +1,31 @@
 # ATLAS Setup & Deployment Guide
 
-> **Version**: 2.0.0  
-> **Last Updated**: December 2024  
+> **Version**: 3.0.0  
+> **Last Updated**: December 7, 2025  
 > **Author**: CropXon ATLAS Team
 
 ## Overview
 
 This guide covers the complete setup and deployment of the ATLAS Workforce Operating System, including:
 - Supabase project configuration
-- Database schema deployment
-- Edge function deployment
+- Database schema deployment (42 tables, 7 functions, 2 triggers)
+- Edge function deployment (6 deployed, 15 documented)
 - Environment variables
 - Authentication setup
 - Storage configuration
+
+### Component Summary
+
+| Component | Count |
+|-----------|-------|
+| Database Tables | 42 |
+| Database Functions | 7 |
+| Database Triggers | 2 |
+| Edge Functions | 15 |
+| Storage Buckets | 1 |
+| Secrets | 6 |
+| Enums/Types | 10 |
+| RLS Policies | 50+ |
 
 ---
 

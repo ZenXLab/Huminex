@@ -5,8 +5,8 @@
 -- PURPOSE: Complete database schema for ATLAS Workforce Operating System
 --          including all tables, functions, triggers, enums, and RLS policies
 --
--- VERSION: 2.0.0
--- LAST UPDATED: December 2024
+-- VERSION: 3.0.0
+-- LAST UPDATED: December 7, 2025
 --
 -- CONTENTS:
 --   Part 1: Enums & Types
@@ -26,6 +26,24 @@
 --   Part 15: Triggers
 --   Part 16: Row Level Security (RLS) Policies
 --   Part 17: Multi-Tenancy Schema (Advanced)
+--
+-- ============================================================================
+
+
+-- ============================================================================
+-- ATLAS DATABASE SCHEMA STATISTICS (Updated: December 7, 2025)
+-- ============================================================================
+-- 
+-- COMPONENT COUNTS:
+--   Database Tables: 42 (35 existing + 7 new operational tables)
+--   Database Functions: 7
+--   Database Triggers: 2
+--   Edge Functions: 15 (6 deployed + 9 documented)
+--   Storage Buckets: 1
+--   Secrets Configured: 6
+--   Enums/Types: 10
+--   RLS Policies: 50+
+--   Indexes: 23
 --
 -- ============================================================================
 
@@ -850,7 +868,300 @@ CREATE TABLE public.feature_unlock_log (
 
 
 -- ============================================================================
--- PART 14: DATABASE FUNCTIONS
+-- PART 14: PAYROLL & HR OPERATIONS TABLES
+-- ============================================================================
+
+-- 14.1 Payroll Runs
+CREATE TABLE public.payroll_runs (
+    id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+    tenant_id uuid NOT NULL REFERENCES public.client_tenants(id) ON DELETE CASCADE,
+    run_number text NOT NULL,               -- Format: PAY-YYYYMM-XXXX
+    pay_period_start date NOT NULL,
+    pay_period_end date NOT NULL,
+    status text DEFAULT 'pending',          -- pending/processing/completed/failed
+    total_employees integer DEFAULT 0,
+    total_gross_pay numeric(15,2) DEFAULT 0,
+    total_deductions numeric(15,2) DEFAULT 0,
+    total_net_pay numeric(15,2) DEFAULT 0,
+    total_employer_contributions numeric(15,2) DEFAULT 0,
+    currency text DEFAULT 'INR',
+    processed_at timestamptz,
+    processed_by uuid,
+    approved_at timestamptz,
+    approved_by uuid,
+    notes text,
+    metadata jsonb DEFAULT '{}',
+    created_at timestamptz DEFAULT now(),
+    updated_at timestamptz DEFAULT now()
+);
+
+COMMENT ON TABLE public.payroll_runs IS 'Monthly/weekly payroll processing runs for tenant organizations';
+
+-- 14.2 Payslips
+CREATE TABLE public.payslips (
+    id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+    payroll_run_id uuid NOT NULL REFERENCES public.payroll_runs(id) ON DELETE CASCADE,
+    tenant_id uuid NOT NULL REFERENCES public.client_tenants(id) ON DELETE CASCADE,
+    employee_id uuid NOT NULL,
+    user_id uuid,
+    
+    -- Employee Details (snapshot at time of payslip)
+    employee_name text NOT NULL,
+    employee_email text,
+    employee_code text,
+    department text,
+    designation text,
+    
+    -- Pay Period
+    pay_period_start date NOT NULL,
+    pay_period_end date NOT NULL,
+    
+    -- Earnings
+    basic_salary numeric(12,2) DEFAULT 0,
+    hra numeric(12,2) DEFAULT 0,
+    conveyance numeric(12,2) DEFAULT 0,
+    medical_allowance numeric(12,2) DEFAULT 0,
+    special_allowance numeric(12,2) DEFAULT 0,
+    other_earnings numeric(12,2) DEFAULT 0,
+    overtime_pay numeric(12,2) DEFAULT 0,
+    bonus numeric(12,2) DEFAULT 0,
+    gross_pay numeric(12,2) NOT NULL,
+    
+    -- Deductions
+    pf_employee numeric(12,2) DEFAULT 0,    -- Provident Fund (Employee)
+    pf_employer numeric(12,2) DEFAULT 0,    -- Provident Fund (Employer)
+    esic_employee numeric(12,2) DEFAULT 0,  -- ESI (Employee)
+    esic_employer numeric(12,2) DEFAULT 0,  -- ESI (Employer)
+    professional_tax numeric(12,2) DEFAULT 0,
+    tds numeric(12,2) DEFAULT 0,            -- Tax Deducted at Source
+    loan_deduction numeric(12,2) DEFAULT 0,
+    other_deductions numeric(12,2) DEFAULT 0,
+    total_deductions numeric(12,2) NOT NULL,
+    
+    -- Net Pay
+    net_pay numeric(12,2) NOT NULL,
+    
+    -- Payment Details
+    payment_mode text DEFAULT 'bank_transfer', -- bank_transfer/cheque/cash
+    bank_name text,
+    bank_account_last4 text,
+    payment_reference text,
+    paid_at timestamptz,
+    
+    -- Status
+    status text DEFAULT 'generated',        -- generated/sent/viewed/disputed
+    sent_at timestamptz,
+    viewed_at timestamptz,
+    
+    -- PDF
+    pdf_url text,
+    
+    created_at timestamptz DEFAULT now(),
+    updated_at timestamptz DEFAULT now()
+);
+
+COMMENT ON TABLE public.payslips IS 'Individual employee payslips generated from payroll runs';
+
+-- 14.3 BGV Requests (Background Verification)
+CREATE TABLE public.bgv_requests (
+    id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+    request_number text NOT NULL,           -- Format: BGV-YYYYMMDD-XXXX
+    tenant_id uuid NOT NULL REFERENCES public.client_tenants(id) ON DELETE CASCADE,
+    employee_id uuid NOT NULL,
+    user_id uuid,
+    
+    -- Employee Info
+    employee_name text NOT NULL,
+    employee_email text NOT NULL,
+    
+    -- Verification Types Requested
+    verification_types jsonb DEFAULT '[]',  -- ["identity", "address", "education", "employment", "criminal"]
+    
+    -- Provider Info
+    provider_name text,                     -- e.g., "AuthBridge", "HireRight"
+    provider_request_id text,
+    provider_status text,
+    
+    -- Status
+    status text DEFAULT 'pending',          -- pending/in_progress/completed/failed
+    overall_result text,                    -- clear/adverse/pending
+    
+    -- Results (per verification type)
+    results jsonb DEFAULT '{}',
+    
+    -- Timestamps
+    initiated_at timestamptz DEFAULT now(),
+    initiated_by uuid,
+    submitted_at timestamptz,
+    completed_at timestamptz,
+    
+    -- Cost
+    cost numeric(10,2),
+    currency text DEFAULT 'INR',
+    
+    -- Documents
+    documents jsonb DEFAULT '[]',
+    
+    notes text,
+    created_at timestamptz DEFAULT now(),
+    updated_at timestamptz DEFAULT now()
+);
+
+COMMENT ON TABLE public.bgv_requests IS 'Background verification requests for employees via third-party providers';
+
+-- 14.4 SSO States (OAuth/SAML state management)
+CREATE TABLE public.sso_states (
+    id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+    state_token text UNIQUE NOT NULL,
+    tenant_id uuid REFERENCES public.client_tenants(id) ON DELETE CASCADE,
+    provider text NOT NULL,                 -- google/microsoft/okta/saml
+    redirect_url text,
+    code_verifier text,                     -- For PKCE
+    nonce text,
+    metadata jsonb DEFAULT '{}',
+    expires_at timestamptz NOT NULL,
+    used_at timestamptz,
+    created_at timestamptz DEFAULT now()
+);
+
+COMMENT ON TABLE public.sso_states IS 'Temporary state storage for SSO authentication flows (auto-cleanup after use)';
+
+-- 14.5 Insurance Claims
+CREATE TABLE public.insurance_claims (
+    id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+    claim_number text NOT NULL,             -- Format: CLM-YYYYMMDD-XXXX
+    tenant_id uuid NOT NULL REFERENCES public.client_tenants(id) ON DELETE CASCADE,
+    employee_id uuid NOT NULL,
+    user_id uuid,
+    
+    -- Employee Info
+    employee_name text NOT NULL,
+    employee_email text,
+    
+    -- Claim Details
+    claim_type text NOT NULL,               -- medical/dental/vision/life/disability
+    policy_number text,
+    policy_provider text,
+    
+    -- Amounts
+    claim_amount numeric(12,2) NOT NULL,
+    approved_amount numeric(12,2),
+    currency text DEFAULT 'INR',
+    
+    -- Status
+    status text DEFAULT 'submitted',        -- submitted/under_review/approved/rejected/paid
+    rejection_reason text,
+    
+    -- Dates
+    incident_date date,
+    submission_date date DEFAULT CURRENT_DATE,
+    review_started_at timestamptz,
+    decision_date timestamptz,
+    payment_date timestamptz,
+    
+    -- Provider
+    provider_claim_id text,
+    provider_status text,
+    
+    -- Documents
+    documents jsonb DEFAULT '[]',           -- Array of document URLs/IDs
+    
+    -- Processing
+    processed_by uuid,
+    processed_at timestamptz,
+    
+    notes text,
+    metadata jsonb DEFAULT '{}',
+    created_at timestamptz DEFAULT now(),
+    updated_at timestamptz DEFAULT now()
+);
+
+COMMENT ON TABLE public.insurance_claims IS 'Employee insurance claims (medical, dental, vision, life, disability)';
+
+-- 14.6 Document Verifications
+CREATE TABLE public.document_verifications (
+    id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+    verification_number text NOT NULL,      -- Format: VER-YYYYMMDD-XXXX
+    tenant_id uuid REFERENCES public.client_tenants(id) ON DELETE CASCADE,
+    
+    -- Document Info
+    document_type text NOT NULL,            -- aadhaar/pan/passport/license/voter_id/bank_statement
+    document_number text,
+    document_name text,
+    document_url text,
+    
+    -- Owner Info
+    owner_id uuid,
+    owner_type text,                        -- employee/candidate/vendor
+    owner_name text,
+    
+    -- Verification
+    verification_method text,               -- api/manual/ocr
+    provider_name text,
+    provider_request_id text,
+    
+    -- Status & Results
+    status text DEFAULT 'pending',          -- pending/processing/verified/failed/invalid
+    is_valid boolean,
+    confidence_score numeric(5,2),          -- 0-100%
+    verification_result jsonb DEFAULT '{}',
+    failure_reason text,
+    
+    -- Timestamps
+    submitted_at timestamptz DEFAULT now(),
+    verified_at timestamptz,
+    expires_at timestamptz,
+    
+    metadata jsonb DEFAULT '{}',
+    created_at timestamptz DEFAULT now(),
+    updated_at timestamptz DEFAULT now()
+);
+
+COMMENT ON TABLE public.document_verifications IS 'KYC and document verification requests with API/OCR integration';
+
+-- 14.7 Document Extractions (OCR)
+CREATE TABLE public.document_extractions (
+    id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+    extraction_number text NOT NULL,        -- Format: EXT-YYYYMMDD-XXXX
+    tenant_id uuid REFERENCES public.client_tenants(id) ON DELETE CASCADE,
+    verification_id uuid REFERENCES public.document_verifications(id),
+    
+    -- Document Info
+    document_url text NOT NULL,
+    document_type text,
+    file_name text,
+    file_size bigint,
+    mime_type text,
+    
+    -- Extraction Results
+    status text DEFAULT 'pending',          -- pending/processing/completed/failed
+    extracted_data jsonb DEFAULT '{}',      -- All extracted fields
+    
+    -- Specific Extracted Fields (common)
+    extracted_name text,
+    extracted_dob date,
+    extracted_address text,
+    extracted_id_number text,
+    
+    -- OCR Details
+    ocr_provider text,                      -- google_vision/aws_textract/azure
+    ocr_confidence numeric(5,2),
+    raw_ocr_response jsonb,
+    
+    -- Processing
+    processing_time_ms integer,
+    error_message text,
+    
+    processed_at timestamptz,
+    created_at timestamptz DEFAULT now(),
+    updated_at timestamptz DEFAULT now()
+);
+
+COMMENT ON TABLE public.document_extractions IS 'OCR document data extraction results from verification documents';
+
+
+-- ============================================================================
+-- PART 15: DATABASE FUNCTIONS
 -- ============================================================================
 
 -- 14.1 Generate Quote Number (ATL-YYYY-XXXX)
@@ -1298,6 +1609,132 @@ ALTER PUBLICATION supabase_realtime ADD TABLE public.employee_notifications;
 -- Enable realtime for MSP monitoring
 ALTER PUBLICATION supabase_realtime ADD TABLE public.client_msp_alerts;
 ALTER PUBLICATION supabase_realtime ADD TABLE public.client_msp_metrics;
+
+
+-- ============================================================================
+-- PART 19: NEW TABLES - ENABLE RLS
+-- ============================================================================
+
+ALTER TABLE public.payroll_runs ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.payslips ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.bgv_requests ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.sso_states ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.insurance_claims ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.document_verifications ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.document_extractions ENABLE ROW LEVEL SECURITY;
+
+-- Payroll Runs Policies
+CREATE POLICY "Admins can manage payroll runs" ON public.payroll_runs
+    FOR ALL USING (has_role(auth.uid(), 'admin'));
+
+CREATE POLICY "Tenant admins can manage own payroll runs" ON public.payroll_runs
+    FOR ALL USING (tenant_id IN (
+        SELECT tenant_id FROM public.client_tenant_users 
+        WHERE user_id = auth.uid() AND role IN ('super_admin', 'admin')
+    ));
+
+-- Payslips Policies
+CREATE POLICY "Admins can manage payslips" ON public.payslips
+    FOR ALL USING (has_role(auth.uid(), 'admin'));
+
+CREATE POLICY "Employees can view own payslips" ON public.payslips
+    FOR SELECT USING (user_id = auth.uid());
+
+CREATE POLICY "Tenant admins can manage payslips" ON public.payslips
+    FOR ALL USING (tenant_id IN (
+        SELECT tenant_id FROM public.client_tenant_users 
+        WHERE user_id = auth.uid() AND role IN ('super_admin', 'admin')
+    ));
+
+-- BGV Requests Policies
+CREATE POLICY "Admins can manage BGV requests" ON public.bgv_requests
+    FOR ALL USING (has_role(auth.uid(), 'admin'));
+
+CREATE POLICY "Tenant admins can manage BGV" ON public.bgv_requests
+    FOR ALL USING (tenant_id IN (
+        SELECT tenant_id FROM public.client_tenant_users 
+        WHERE user_id = auth.uid() AND role IN ('super_admin', 'admin')
+    ));
+
+-- SSO States Policies (service role only typically)
+CREATE POLICY "System can manage SSO states" ON public.sso_states
+    FOR ALL USING (true);
+
+-- Insurance Claims Policies
+CREATE POLICY "Admins can manage insurance claims" ON public.insurance_claims
+    FOR ALL USING (has_role(auth.uid(), 'admin'));
+
+CREATE POLICY "Employees can view own claims" ON public.insurance_claims
+    FOR SELECT USING (user_id = auth.uid());
+
+CREATE POLICY "Employees can submit claims" ON public.insurance_claims
+    FOR INSERT WITH CHECK (user_id = auth.uid());
+
+CREATE POLICY "Tenant admins can manage claims" ON public.insurance_claims
+    FOR ALL USING (tenant_id IN (
+        SELECT tenant_id FROM public.client_tenant_users 
+        WHERE user_id = auth.uid() AND role IN ('super_admin', 'admin')
+    ));
+
+-- Document Verifications Policies
+CREATE POLICY "Admins can manage verifications" ON public.document_verifications
+    FOR ALL USING (has_role(auth.uid(), 'admin'));
+
+CREATE POLICY "Tenant admins can manage verifications" ON public.document_verifications
+    FOR ALL USING (tenant_id IN (
+        SELECT tenant_id FROM public.client_tenant_users 
+        WHERE user_id = auth.uid() AND role IN ('super_admin', 'admin')
+    ));
+
+-- Document Extractions Policies
+CREATE POLICY "Admins can manage extractions" ON public.document_extractions
+    FOR ALL USING (has_role(auth.uid(), 'admin'));
+
+CREATE POLICY "Tenant admins can manage extractions" ON public.document_extractions
+    FOR ALL USING (tenant_id IN (
+        SELECT tenant_id FROM public.client_tenant_users 
+        WHERE user_id = auth.uid() AND role IN ('super_admin', 'admin')
+    ));
+
+
+-- ============================================================================
+-- PART 20: NEW TABLES - INDEXES
+-- ============================================================================
+
+CREATE INDEX idx_payroll_runs_tenant ON public.payroll_runs(tenant_id);
+CREATE INDEX idx_payroll_runs_status ON public.payroll_runs(status);
+CREATE INDEX idx_payroll_runs_period ON public.payroll_runs(pay_period_start, pay_period_end);
+
+CREATE INDEX idx_payslips_payroll_run ON public.payslips(payroll_run_id);
+CREATE INDEX idx_payslips_tenant ON public.payslips(tenant_id);
+CREATE INDEX idx_payslips_employee ON public.payslips(employee_id);
+CREATE INDEX idx_payslips_user ON public.payslips(user_id);
+
+CREATE INDEX idx_bgv_requests_tenant ON public.bgv_requests(tenant_id);
+CREATE INDEX idx_bgv_requests_employee ON public.bgv_requests(employee_id);
+CREATE INDEX idx_bgv_requests_status ON public.bgv_requests(status);
+
+CREATE INDEX idx_sso_states_token ON public.sso_states(state_token);
+CREATE INDEX idx_sso_states_expires ON public.sso_states(expires_at);
+
+CREATE INDEX idx_insurance_claims_tenant ON public.insurance_claims(tenant_id);
+CREATE INDEX idx_insurance_claims_employee ON public.insurance_claims(employee_id);
+CREATE INDEX idx_insurance_claims_status ON public.insurance_claims(status);
+
+CREATE INDEX idx_document_verifications_tenant ON public.document_verifications(tenant_id);
+CREATE INDEX idx_document_verifications_status ON public.document_verifications(status);
+
+CREATE INDEX idx_document_extractions_verification ON public.document_extractions(verification_id);
+CREATE INDEX idx_document_extractions_status ON public.document_extractions(status);
+
+
+-- ============================================================================
+-- PART 21: ENABLE REALTIME FOR NEW TABLES
+-- ============================================================================
+
+ALTER PUBLICATION supabase_realtime ADD TABLE public.payroll_runs;
+ALTER PUBLICATION supabase_realtime ADD TABLE public.bgv_requests;
+ALTER PUBLICATION supabase_realtime ADD TABLE public.insurance_claims;
 
 
 -- ============================================================================

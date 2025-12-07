@@ -8,14 +8,18 @@
 
 ## Summary Statistics
 
-| Component | Count |
-|-----------|-------|
-| **Database Tables** | 35 |
-| **Database Functions** | 6 |
-| **Database Triggers** | 0 |
-| **Edge Functions (Documented)** | 15 |
-| **Storage Buckets** | 1 |
-| **Secrets Configured** | 6 |
+| Component | Count | Details |
+|-----------|-------|---------|
+| **Database Tables** | 42 | 35 core + 7 operational (payroll, BGV, SSO, insurance, docs) |
+| **Database Functions** | 7 | 6 generators + 1 feature check |
+| **Database Triggers** | 2 | Profile creation + feature unlock notification |
+| **Edge Functions (Deployed)** | 6 | Notifications, emails, PDF generation |
+| **Edge Functions (Documented)** | 15 | Including payroll, BGV, SSO, insurance, document verification |
+| **Storage Buckets** | 1 | client-files |
+| **Secrets Configured** | 6 | SUPABASE_URL, SUPABASE_ANON_KEY, SUPABASE_SERVICE_ROLE_KEY, RESEND_API_KEY, SUPABASE_DB_URL, SUPABASE_PUBLISHABLE_KEY |
+| **Enums/Types** | 10 | app_role, quote_status, invoice_status, feature_category, feature_tier, tenant_role, notification_type, notification_channel, notification_priority |
+| **RLS Policies** | 50+ | Comprehensive row-level security across all tables |
+| **Database Indexes** | 30+ | Performance optimization indexes |
 
 ---
 
