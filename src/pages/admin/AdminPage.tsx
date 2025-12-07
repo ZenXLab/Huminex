@@ -12,6 +12,7 @@ import { AdminSettings } from "@/components/admin/AdminSettings";
 import { AdminAnalytics } from "@/components/admin/modules/AdminAnalytics";
 import { AdminAnalyticsDashboard } from "@/components/admin/modules/AdminAnalyticsDashboard";
 import { AdminABTesting } from "@/components/admin/modules/AdminABTesting";
+import { AdminABResults } from "@/components/admin/modules/AdminABResults";
 import { AdminPredictiveAnalytics } from "@/components/admin/modules/AdminPredictiveAnalytics";
 import { AdminOnboardingApprovals } from "@/components/admin/modules/AdminOnboardingApprovals";
 import { AdminAuditLogs } from "@/components/admin/modules/AdminAuditLogs";
@@ -126,7 +127,8 @@ const AdminPage = () => {
     if (path.startsWith("/admin/lead-scoring")) return <AdminLeadScoring />;
     if (path.startsWith("/admin/email-campaigns")) return <AdminEmailCampaigns />;
     if (path.startsWith("/admin/funnels")) return <AdminConversionFunnels />;
-    if (path.startsWith("/admin/ab-testing")) return <AdminABTesting />;
+    if (path.match(/^\/admin\/ab-testing\/[^/]+$/)) return <AdminABResults />;
+    if (path === "/admin/ab-testing") return <AdminABTesting />;
     if (path.startsWith("/admin/predictive")) return <AdminPredictiveAnalytics />;
     
     // Operations & Projects

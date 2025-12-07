@@ -1,4 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
+import { useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -8,87 +11,206 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Progress } from "@/components/ui/progress";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { 
-  BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend
-} from "recharts";
+import { Textarea } from "@/components/ui/textarea";
 import { 
   FlaskConical, Plus, Play, Pause, CheckCircle, XCircle, TrendingUp, TrendingDown,
-  Users, Target, Percent, Clock, ArrowRight, BarChart3, RefreshCw, Download
+  Users, Target, Clock, BarChart3, RefreshCw, Download, Radio, Eye
 } from "lucide-react";
-
-// Mock experiment data
-const experiments = [
-  {
-    id: "exp-001",
-    name: "Pricing Page CTA Color",
-    status: "running",
-    startDate: "2024-12-01",
-    variants: [
-      { name: "Control (Blue)", visitors: 4520, conversions: 312, conversionRate: 6.9 },
-      { name: "Variant A (Green)", visitors: 4480, conversions: 358, conversionRate: 8.0 },
-    ],
-    improvement: 15.9,
-    significance: 94.2,
-    targetMetric: "Quote Submissions",
-  },
-  {
-    id: "exp-002", 
-    name: "Homepage Hero Copy",
-    status: "running",
-    startDate: "2024-11-28",
-    variants: [
-      { name: "Control", visitors: 8920, conversions: 624, conversionRate: 7.0 },
-      { name: "Variant A", visitors: 8850, conversions: 708, conversionRate: 8.0 },
-      { name: "Variant B", visitors: 8780, conversions: 659, conversionRate: 7.5 },
-    ],
-    improvement: 14.3,
-    significance: 96.8,
-    targetMetric: "Page Engagement",
-  },
-  {
-    id: "exp-003",
-    name: "Onboarding Flow Steps",
-    status: "completed",
-    startDate: "2024-11-15",
-    endDate: "2024-11-30",
-    variants: [
-      { name: "4-Step Flow", visitors: 1240, conversions: 892, conversionRate: 71.9 },
-      { name: "6-Step Flow", visitors: 1260, conversions: 756, conversionRate: 60.0 },
-    ],
-    improvement: -16.5,
-    significance: 99.2,
-    targetMetric: "Onboarding Completion",
-    winner: "4-Step Flow",
-  },
-  {
-    id: "exp-004",
-    name: "Quote Form Fields",
-    status: "paused",
-    startDate: "2024-12-03",
-    variants: [
-      { name: "Short Form (5 fields)", visitors: 890, conversions: 445, conversionRate: 50.0 },
-      { name: "Long Form (10 fields)", visitors: 880, conversions: 352, conversionRate: 40.0 },
-    ],
-    improvement: 20.0,
-    significance: 78.5,
-    targetMetric: "Form Submissions",
-  },
-];
-
-const timeSeriesData = [
-  { date: "Dec 1", control: 6.2, variantA: 7.1 },
-  { date: "Dec 2", control: 6.5, variantA: 7.8 },
-  { date: "Dec 3", control: 6.8, variantA: 8.2 },
-  { date: "Dec 4", control: 6.4, variantA: 7.9 },
-  { date: "Dec 5", control: 7.0, variantA: 8.5 },
-  { date: "Dec 6", control: 6.9, variantA: 8.0 },
-  { date: "Dec 7", control: 7.2, variantA: 8.3 },
-];
+import { format } from "date-fns";
+import { toast } from "sonner";
+import { calculateStatisticalSignificance } from "@/hooks/useABTest";
 
 export const AdminABTesting = () => {
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState("active");
   const [showNewExperiment, setShowNewExperiment] = useState(false);
-  const [selectedExperiment, setSelectedExperiment] = useState<string | null>(null);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  
+  // Form state for new experiment
+  const [newExperiment, setNewExperiment] = useState({
+    name: "",
+    description: "",
+    hypothesis: "",
+    primary_metric: "conversions",
+    traffic_allocation: 100,
+    variant_a_name: "Control",
+    variant_b_name: "Variant A",
+  });
+
+  // Fetch experiments from database
+  const { data: experiments, isLoading, refetch } = useQuery({
+    queryKey: ["ab-experiments"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("ab_experiments")
+        .select(`
+          *,
+          ab_variants (*),
+          ab_user_assignments (*)
+        `)
+        .order("created_at", { ascending: false });
+      
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  // Real-time subscription
+  useEffect(() => {
+    const channel = supabase
+      .channel("ab-experiments-realtime")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "ab_experiments" },
+        () => queryClient.invalidateQueries({ queryKey: ["ab-experiments"] })
+      )
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "ab_user_assignments" },
+        () => queryClient.invalidateQueries({ queryKey: ["ab-experiments"] })
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [queryClient]);
+
+  // Create experiment mutation
+  const createExperiment = useMutation({
+    mutationFn: async () => {
+      // Create experiment
+      const { data: experiment, error: expError } = await supabase
+        .from("ab_experiments")
+        .insert({
+          name: newExperiment.name,
+          description: newExperiment.description,
+          hypothesis: newExperiment.hypothesis,
+          primary_metric: newExperiment.primary_metric,
+          traffic_allocation: newExperiment.traffic_allocation,
+          status: "running",
+          start_date: new Date().toISOString(),
+        })
+        .select()
+        .single();
+
+      if (expError) throw expError;
+
+      // Create variants
+      const { error: varError } = await supabase
+        .from("ab_variants")
+        .insert([
+          {
+            experiment_id: experiment.id,
+            name: newExperiment.variant_a_name,
+            is_control: true,
+            traffic_weight: 50,
+          },
+          {
+            experiment_id: experiment.id,
+            name: newExperiment.variant_b_name,
+            is_control: false,
+            traffic_weight: 50,
+          },
+        ]);
+
+      if (varError) throw varError;
+      return experiment;
+    },
+    onSuccess: () => {
+      toast.success("Experiment created successfully");
+      setShowNewExperiment(false);
+      setNewExperiment({
+        name: "",
+        description: "",
+        hypothesis: "",
+        primary_metric: "conversions",
+        traffic_allocation: 100,
+        variant_a_name: "Control",
+        variant_b_name: "Variant A",
+      });
+      queryClient.invalidateQueries({ queryKey: ["ab-experiments"] });
+    },
+    onError: (error) => {
+      toast.error("Failed to create experiment: " + (error as Error).message);
+    },
+  });
+
+  // Update experiment status mutation
+  const updateStatus = useMutation({
+    mutationFn: async ({ id, status }: { id: string; status: string }) => {
+      const { error } = await supabase
+        .from("ab_experiments")
+        .update({ 
+          status, 
+          ...(status === "completed" ? { end_date: new Date().toISOString() } : {})
+        })
+        .eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Status updated");
+      queryClient.invalidateQueries({ queryKey: ["ab-experiments"] });
+    },
+  });
+
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    try {
+      await refetch();
+      toast.success("Data refreshed");
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
+
+  // Process experiments data
+  const processedExperiments = experiments?.map((exp) => {
+    const variants = exp.ab_variants || [];
+    const assignments = exp.ab_user_assignments || [];
+    
+    const variantStats = variants.map((v: any) => {
+      const varAssignments = assignments.filter((a: any) => a.variant_id === v.id);
+      const conversions = varAssignments.filter((a: any) => a.converted);
+      return {
+        ...v,
+        visitors: varAssignments.length,
+        conversions: conversions.length,
+        conversionRate: varAssignments.length > 0 
+          ? (conversions.length / varAssignments.length) * 100 
+          : 0,
+      };
+    });
+
+    const control = variantStats.find((v: any) => v.is_control) || variantStats[0];
+    const bestVariant = variantStats.reduce((best: any, curr: any) => 
+      curr.conversionRate > (best?.conversionRate || 0) ? curr : best
+    , null);
+
+    const significance = control && bestVariant && control.id !== bestVariant?.id
+      ? calculateStatisticalSignificance(
+          control.conversions, control.visitors,
+          bestVariant.conversions, bestVariant.visitors
+        )
+      : 0;
+
+    const improvement = control && bestVariant
+      ? ((bestVariant.conversionRate - control.conversionRate) / (control.conversionRate || 1)) * 100
+      : 0;
+
+    return {
+      ...exp,
+      variants: variantStats,
+      totalVisitors: variantStats.reduce((sum: number, v: any) => sum + v.visitors, 0),
+      significance,
+      improvement,
+    };
+  }) || [];
+
+  const activeExperiments = processedExperiments.filter((e) => e.status === "running");
+  const completedExperiments = processedExperiments.filter((e) => e.status === "completed");
+  const pausedExperiments = processedExperiments.filter((e) => e.status === "paused");
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -108,8 +230,12 @@ export const AdminABTesting = () => {
     }
   };
 
-  const activeExperiments = experiments.filter(e => e.status === "running");
-  const completedExperiments = experiments.filter(e => e.status === "completed");
+  // Stats
+  const totalVisitors = processedExperiments.reduce((sum, e) => sum + e.totalVisitors, 0);
+  const avgImprovement = activeExperiments.length > 0
+    ? activeExperiments.reduce((sum, e) => sum + e.improvement, 0) / activeExperiments.length
+    : 0;
+  const significantCount = processedExperiments.filter((e) => e.significance >= 95).length;
 
   return (
     <div className="space-y-6">
@@ -120,11 +246,21 @@ export const AdminABTesting = () => {
             <FlaskConical className="h-6 w-6 text-primary" />
           </div>
           <div>
-            <h1 className="text-2xl font-heading font-bold text-foreground">A/B Testing</h1>
+            <div className="flex items-center gap-2">
+              <h1 className="text-2xl font-heading font-bold text-foreground">A/B Testing</h1>
+              <Badge variant="outline" className="bg-emerald-500/10 text-emerald-600 border-emerald-500/30">
+                <Radio className="h-3 w-3 mr-1 animate-pulse" />
+                Live
+              </Badge>
+            </div>
             <p className="text-muted-foreground">Experiment with variants and track conversions</p>
           </div>
         </div>
         <div className="flex gap-2">
+          <Button variant="outline" size="sm" onClick={handleRefresh} disabled={isRefreshing}>
+            <RefreshCw className={`h-4 w-4 mr-2 ${isRefreshing ? "animate-spin" : ""}`} />
+            Refresh
+          </Button>
           <Button variant="outline" size="sm">
             <Download className="h-4 w-4 mr-2" />
             Export
@@ -142,14 +278,45 @@ export const AdminABTesting = () => {
               </DialogHeader>
               <div className="space-y-4 py-4">
                 <div className="space-y-2">
-                  <Label>Experiment Name</Label>
-                  <Input placeholder="e.g., Homepage CTA Button Color" />
+                  <Label>Experiment Name *</Label>
+                  <Input 
+                    placeholder="e.g., Homepage CTA Button Color"
+                    value={newExperiment.name}
+                    onChange={(e) => setNewExperiment(prev => ({ ...prev, name: e.target.value }))}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Hypothesis</Label>
+                  <Textarea 
+                    placeholder="e.g., Changing the CTA color to green will increase conversions"
+                    value={newExperiment.hypothesis}
+                    onChange={(e) => setNewExperiment(prev => ({ ...prev, hypothesis: e.target.value }))}
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>Control Name</Label>
+                    <Input 
+                      value={newExperiment.variant_a_name}
+                      onChange={(e) => setNewExperiment(prev => ({ ...prev, variant_a_name: e.target.value }))}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Variant Name</Label>
+                    <Input 
+                      value={newExperiment.variant_b_name}
+                      onChange={(e) => setNewExperiment(prev => ({ ...prev, variant_b_name: e.target.value }))}
+                    />
+                  </div>
                 </div>
                 <div className="space-y-2">
                   <Label>Target Metric</Label>
-                  <Select>
+                  <Select 
+                    value={newExperiment.primary_metric}
+                    onValueChange={(v) => setNewExperiment(prev => ({ ...prev, primary_metric: v }))}
+                  >
                     <SelectTrigger>
-                      <SelectValue placeholder="Select metric" />
+                      <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="conversions">Conversions</SelectItem>
@@ -159,26 +326,14 @@ export const AdminABTesting = () => {
                     </SelectContent>
                   </Select>
                 </div>
-                <div className="space-y-2">
-                  <Label>Traffic Split</Label>
-                  <Select defaultValue="50-50">
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="50-50">50/50 Split</SelectItem>
-                      <SelectItem value="70-30">70/30 Split</SelectItem>
-                      <SelectItem value="80-20">80/20 Split</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label>Minimum Sample Size</Label>
-                  <Input type="number" placeholder="1000" defaultValue="1000" />
-                </div>
                 <div className="flex justify-end gap-2 mt-6">
                   <Button variant="outline" onClick={() => setShowNewExperiment(false)}>Cancel</Button>
-                  <Button onClick={() => setShowNewExperiment(false)}>Create Experiment</Button>
+                  <Button 
+                    onClick={() => createExperiment.mutate()}
+                    disabled={!newExperiment.name || createExperiment.isPending}
+                  >
+                    {createExperiment.isPending ? "Creating..." : "Create Experiment"}
+                  </Button>
                 </div>
               </div>
             </DialogContent>
@@ -205,8 +360,8 @@ export const AdminABTesting = () => {
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-muted-foreground">Total Visitors Tested</p>
-                <p className="text-3xl font-bold">45.2K</p>
+                <p className="text-sm text-muted-foreground">Total Visitors</p>
+                <p className="text-3xl font-bold">{totalVisitors.toLocaleString()}</p>
               </div>
               <div className="p-3 rounded-full bg-blue-500/10">
                 <Users className="h-5 w-5 text-blue-500" />
@@ -219,7 +374,9 @@ export const AdminABTesting = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-muted-foreground">Avg. Improvement</p>
-                <p className="text-3xl font-bold text-emerald-500">+12.4%</p>
+                <p className={`text-3xl font-bold ${avgImprovement > 0 ? "text-emerald-500" : avgImprovement < 0 ? "text-red-500" : ""}`}>
+                  {avgImprovement > 0 ? "+" : ""}{avgImprovement.toFixed(1)}%
+                </p>
               </div>
               <div className="p-3 rounded-full bg-emerald-500/10">
                 <TrendingUp className="h-5 w-5 text-emerald-500" />
@@ -231,8 +388,8 @@ export const AdminABTesting = () => {
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-muted-foreground">Significance Rate</p>
-                <p className="text-3xl font-bold">92%</p>
+                <p className="text-sm text-muted-foreground">Significant Results</p>
+                <p className="text-3xl font-bold">{significantCount}</p>
               </div>
               <div className="p-3 rounded-full bg-purple-500/10">
                 <Target className="h-5 w-5 text-purple-500" />
@@ -247,146 +404,185 @@ export const AdminABTesting = () => {
         <TabsList>
           <TabsTrigger value="active">Active ({activeExperiments.length})</TabsTrigger>
           <TabsTrigger value="completed">Completed ({completedExperiments.length})</TabsTrigger>
-          <TabsTrigger value="all">All Experiments</TabsTrigger>
+          <TabsTrigger value="all">All Experiments ({processedExperiments.length})</TabsTrigger>
         </TabsList>
 
         <TabsContent value="active" className="space-y-4 mt-4">
-          {activeExperiments.map((experiment) => (
-            <Card key={experiment.id} className="hover:shadow-md transition-shadow">
-              <CardHeader className="pb-3">
-                <div className="flex items-start justify-between">
-                  <div>
-                    <CardTitle className="text-lg flex items-center gap-2">
-                      {experiment.name}
-                      <Badge variant="outline" className={getStatusColor(experiment.status)}>
-                        {getStatusIcon(experiment.status)}
-                        <span className="ml-1 capitalize">{experiment.status}</span>
-                      </Badge>
-                    </CardTitle>
-                    <CardDescription className="flex items-center gap-4 mt-1">
-                      <span className="flex items-center gap-1">
-                        <Clock className="h-3 w-3" />
-                        Started {experiment.startDate}
-                      </span>
-                      <span className="flex items-center gap-1">
-                        <Target className="h-3 w-3" />
-                        {experiment.targetMetric}
-                      </span>
-                    </CardDescription>
-                  </div>
-                  <div className="flex gap-2">
-                    <Button variant="outline" size="sm">
-                      <Pause className="h-4 w-4" />
-                    </Button>
-                    <Button variant="outline" size="sm">
-                      <BarChart3 className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {/* Variants */}
-                  <div className="grid gap-3">
-                    {experiment.variants.map((variant, idx) => (
-                      <div key={idx} className="flex items-center gap-4 p-3 bg-muted/30 rounded-lg">
-                        <div className="flex-1">
-                          <div className="flex items-center justify-between mb-2">
-                            <span className="font-medium text-sm">{variant.name}</span>
-                            <span className="text-sm font-semibold">
-                              {variant.conversionRate.toFixed(1)}%
-                            </span>
-                          </div>
-                          <Progress value={variant.conversionRate * 10} className="h-2" />
-                        </div>
-                        <div className="text-right text-xs text-muted-foreground">
-                          <div>{variant.visitors.toLocaleString()} visitors</div>
-                          <div>{variant.conversions.toLocaleString()} conversions</div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-
-                  {/* Stats */}
-                  <div className="flex items-center justify-between pt-3 border-t border-border">
-                    <div className="flex items-center gap-6">
-                      <div>
-                        <span className="text-xs text-muted-foreground">Improvement</span>
-                        <p className={`font-semibold flex items-center gap-1 ${experiment.improvement > 0 ? 'text-emerald-500' : 'text-red-500'}`}>
-                          {experiment.improvement > 0 ? <TrendingUp className="h-4 w-4" /> : <TrendingDown className="h-4 w-4" />}
-                          {experiment.improvement > 0 ? '+' : ''}{experiment.improvement.toFixed(1)}%
-                        </p>
-                      </div>
-                      <div>
-                        <span className="text-xs text-muted-foreground">Significance</span>
-                        <p className={`font-semibold ${experiment.significance >= 95 ? 'text-emerald-500' : experiment.significance >= 90 ? 'text-amber-500' : 'text-muted-foreground'}`}>
-                          {experiment.significance.toFixed(1)}%
-                        </p>
-                      </div>
-                    </div>
-                    <Button variant="default" size="sm" disabled={experiment.significance < 95}>
-                      {experiment.significance >= 95 ? 'Declare Winner' : 'Needs More Data'}
-                    </Button>
-                  </div>
-                </div>
+          {isLoading ? (
+            <div className="text-center py-8 text-muted-foreground">Loading experiments...</div>
+          ) : activeExperiments.length === 0 ? (
+            <Card>
+              <CardContent className="py-12 text-center">
+                <FlaskConical className="h-12 w-12 mx-auto text-muted-foreground/50 mb-4" />
+                <p className="text-muted-foreground">No active experiments</p>
+                <Button className="mt-4" onClick={() => setShowNewExperiment(true)}>
+                  <Plus className="h-4 w-4 mr-2" />
+                  Create Your First Experiment
+                </Button>
               </CardContent>
             </Card>
-          ))}
+          ) : (
+            activeExperiments.map((experiment) => (
+              <Card key={experiment.id} className="hover:shadow-md transition-shadow">
+                <CardHeader className="pb-3">
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <CardTitle className="text-lg flex items-center gap-2">
+                        {experiment.name}
+                        <Badge variant="outline" className={getStatusColor(experiment.status)}>
+                          {getStatusIcon(experiment.status)}
+                          <span className="ml-1 capitalize">{experiment.status}</span>
+                        </Badge>
+                      </CardTitle>
+                      <CardDescription className="flex items-center gap-4 mt-1">
+                        <span className="flex items-center gap-1">
+                          <Clock className="h-3 w-3" />
+                          Started {experiment.start_date ? format(new Date(experiment.start_date), "MMM d, yyyy") : "N/A"}
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <Target className="h-3 w-3" />
+                          {experiment.primary_metric}
+                        </span>
+                      </CardDescription>
+                    </div>
+                    <div className="flex gap-2">
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => updateStatus.mutate({ id: experiment.id, status: "paused" })}
+                      >
+                        <Pause className="h-4 w-4" />
+                      </Button>
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => navigate(`/admin/ab-testing/${experiment.id}`)}
+                      >
+                        <Eye className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    {/* Variants */}
+                    <div className="grid gap-3">
+                      {experiment.variants.map((variant: any) => (
+                        <div key={variant.id} className="flex items-center gap-4 p-3 bg-muted/30 rounded-lg">
+                          <div className="flex-1">
+                            <div className="flex items-center justify-between mb-2">
+                              <span className="font-medium text-sm flex items-center gap-2">
+                                {variant.name}
+                                {variant.is_control && <Badge variant="secondary" className="text-[10px]">Control</Badge>}
+                              </span>
+                              <span className="text-sm font-semibold">
+                                {variant.conversionRate.toFixed(1)}%
+                              </span>
+                            </div>
+                            <Progress value={variant.conversionRate * 10} className="h-2" />
+                          </div>
+                          <div className="text-right text-xs text-muted-foreground">
+                            <div>{variant.visitors.toLocaleString()} visitors</div>
+                            <div>{variant.conversions.toLocaleString()} conversions</div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Stats */}
+                    <div className="flex items-center justify-between pt-3 border-t border-border">
+                      <div className="flex items-center gap-6">
+                        <div>
+                          <span className="text-xs text-muted-foreground">Improvement</span>
+                          <p className={`font-semibold flex items-center gap-1 ${experiment.improvement > 0 ? 'text-emerald-500' : 'text-red-500'}`}>
+                            {experiment.improvement > 0 ? <TrendingUp className="h-4 w-4" /> : <TrendingDown className="h-4 w-4" />}
+                            {experiment.improvement > 0 ? '+' : ''}{experiment.improvement.toFixed(1)}%
+                          </p>
+                        </div>
+                        <div>
+                          <span className="text-xs text-muted-foreground">Significance</span>
+                          <p className={`font-semibold ${experiment.significance >= 95 ? 'text-emerald-500' : experiment.significance >= 90 ? 'text-amber-500' : 'text-muted-foreground'}`}>
+                            {experiment.significance.toFixed(1)}%
+                          </p>
+                        </div>
+                      </div>
+                      <Button 
+                        variant="default" 
+                        size="sm" 
+                        disabled={experiment.significance < 95}
+                        onClick={() => updateStatus.mutate({ id: experiment.id, status: "completed" })}
+                      >
+                        {experiment.significance >= 95 ? 'Declare Winner' : 'Needs More Data'}
+                      </Button>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))
+          )}
         </TabsContent>
 
         <TabsContent value="completed" className="space-y-4 mt-4">
-          {completedExperiments.map((experiment) => (
-            <Card key={experiment.id}>
-              <CardHeader className="pb-3">
-                <div className="flex items-start justify-between">
-                  <div>
-                    <CardTitle className="text-lg flex items-center gap-2">
-                      {experiment.name}
-                      <Badge variant="outline" className={getStatusColor(experiment.status)}>
-                        {getStatusIcon(experiment.status)}
-                        <span className="ml-1 capitalize">{experiment.status}</span>
-                      </Badge>
-                      {experiment.winner && (
-                        <Badge className="bg-emerald-500/20 text-emerald-500 border-emerald-500/30">
-                          Winner: {experiment.winner}
-                        </Badge>
-                      )}
-                    </CardTitle>
-                    <CardDescription>
-                      {experiment.startDate} — {experiment.endDate}
-                    </CardDescription>
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="grid gap-3">
-                  {experiment.variants.map((variant, idx) => (
-                    <div 
-                      key={idx} 
-                      className={`flex items-center gap-4 p-3 rounded-lg ${
-                        experiment.winner === variant.name 
-                          ? 'bg-emerald-500/10 border border-emerald-500/30' 
-                          : 'bg-muted/30'
-                      }`}
-                    >
-                      <div className="flex-1">
-                        <div className="flex items-center justify-between mb-2">
-                          <span className="font-medium text-sm flex items-center gap-2">
-                            {variant.name}
-                            {experiment.winner === variant.name && (
-                              <CheckCircle className="h-4 w-4 text-emerald-500" />
-                            )}
-                          </span>
-                          <span className="text-sm font-semibold">{variant.conversionRate.toFixed(1)}%</span>
-                        </div>
-                        <Progress value={variant.conversionRate} className="h-2" />
-                      </div>
-                    </div>
-                  ))}
-                </div>
+          {completedExperiments.length === 0 ? (
+            <Card>
+              <CardContent className="py-12 text-center text-muted-foreground">
+                No completed experiments yet
               </CardContent>
             </Card>
-          ))}
+          ) : (
+            completedExperiments.map((experiment) => (
+              <Card key={experiment.id} className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => navigate(`/admin/ab-testing/${experiment.id}`)}>
+                <CardHeader className="pb-3">
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <CardTitle className="text-lg flex items-center gap-2">
+                        {experiment.name}
+                        <Badge variant="outline" className={getStatusColor(experiment.status)}>
+                          {getStatusIcon(experiment.status)}
+                          <span className="ml-1 capitalize">{experiment.status}</span>
+                        </Badge>
+                      </CardTitle>
+                      <CardDescription>
+                        {experiment.start_date && format(new Date(experiment.start_date), "MMM d")} — {experiment.end_date ? format(new Date(experiment.end_date), "MMM d, yyyy") : "Ongoing"}
+                      </CardDescription>
+                    </div>
+                    <Button variant="outline" size="sm">
+                      <Eye className="h-4 w-4 mr-2" />
+                      View Results
+                    </Button>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid gap-3">
+                    {experiment.variants.map((variant: any) => {
+                      const isWinner = experiment.significance >= 95 && 
+                        variant.conversionRate === Math.max(...experiment.variants.map((v: any) => v.conversionRate));
+                      
+                      return (
+                        <div 
+                          key={variant.id} 
+                          className={`flex items-center gap-4 p-3 rounded-lg ${
+                            isWinner ? 'bg-emerald-500/10 border border-emerald-500/30' : 'bg-muted/30'
+                          }`}
+                        >
+                          <div className="flex-1">
+                            <div className="flex items-center justify-between mb-2">
+                              <span className="font-medium text-sm flex items-center gap-2">
+                                {variant.name}
+                                {isWinner && <CheckCircle className="h-4 w-4 text-emerald-500" />}
+                              </span>
+                              <span className="text-sm font-semibold">{variant.conversionRate.toFixed(1)}%</span>
+                            </div>
+                            <Progress value={variant.conversionRate} className="h-2" />
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </CardContent>
+              </Card>
+            ))
+          )}
         </TabsContent>
 
         <TabsContent value="all" className="mt-4">
@@ -395,74 +591,56 @@ export const AdminABTesting = () => {
               <CardTitle>All Experiments</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="border-b border-border">
-                      <th className="text-left py-3 px-4 font-medium text-muted-foreground">Experiment</th>
-                      <th className="text-left py-3 px-4 font-medium text-muted-foreground">Status</th>
-                      <th className="text-right py-3 px-4 font-medium text-muted-foreground">Visitors</th>
-                      <th className="text-right py-3 px-4 font-medium text-muted-foreground">Improvement</th>
-                      <th className="text-right py-3 px-4 font-medium text-muted-foreground">Significance</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {experiments.map((exp) => (
-                      <tr key={exp.id} className="border-b border-border/50 hover:bg-muted/30">
-                        <td className="py-3 px-4 font-medium">{exp.name}</td>
-                        <td className="py-3 px-4">
-                          <Badge variant="outline" className={getStatusColor(exp.status)}>
-                            {exp.status}
-                          </Badge>
-                        </td>
-                        <td className="py-3 px-4 text-right">
-                          {exp.variants.reduce((sum, v) => sum + v.visitors, 0).toLocaleString()}
-                        </td>
-                        <td className="py-3 px-4 text-right">
-                          <span className={exp.improvement > 0 ? 'text-emerald-500' : 'text-red-500'}>
-                            {exp.improvement > 0 ? '+' : ''}{exp.improvement.toFixed(1)}%
-                          </span>
-                        </td>
-                        <td className="py-3 px-4 text-right">{exp.significance.toFixed(1)}%</td>
+              {isLoading ? (
+                <div className="text-center py-8 text-muted-foreground">Loading...</div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="border-b border-border">
+                        <th className="text-left py-3 px-4 font-medium text-muted-foreground">Experiment</th>
+                        <th className="text-left py-3 px-4 font-medium text-muted-foreground">Status</th>
+                        <th className="text-right py-3 px-4 font-medium text-muted-foreground">Visitors</th>
+                        <th className="text-right py-3 px-4 font-medium text-muted-foreground">Improvement</th>
+                        <th className="text-right py-3 px-4 font-medium text-muted-foreground">Significance</th>
+                        <th className="text-center py-3 px-4 font-medium text-muted-foreground">Action</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+                    </thead>
+                    <tbody>
+                      {processedExperiments.map((experiment) => (
+                        <tr key={experiment.id} className="border-b border-border hover:bg-muted/30">
+                          <td className="py-3 px-4 font-medium">{experiment.name}</td>
+                          <td className="py-3 px-4">
+                            <Badge variant="outline" className={getStatusColor(experiment.status)}>
+                              {experiment.status}
+                            </Badge>
+                          </td>
+                          <td className="text-right py-3 px-4">{experiment.totalVisitors.toLocaleString()}</td>
+                          <td className={`text-right py-3 px-4 ${experiment.improvement > 0 ? 'text-emerald-500' : experiment.improvement < 0 ? 'text-red-500' : ''}`}>
+                            {experiment.improvement > 0 ? '+' : ''}{experiment.improvement.toFixed(1)}%
+                          </td>
+                          <td className={`text-right py-3 px-4 ${experiment.significance >= 95 ? 'text-emerald-500' : ''}`}>
+                            {experiment.significance.toFixed(1)}%
+                          </td>
+                          <td className="text-center py-3 px-4">
+                            <Button 
+                              variant="ghost" 
+                              size="sm"
+                              onClick={() => navigate(`/admin/ab-testing/${experiment.id}`)}
+                            >
+                              <Eye className="h-4 w-4" />
+                            </Button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
       </Tabs>
-
-      {/* Conversion Over Time Chart */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Conversion Rate Over Time</CardTitle>
-          <CardDescription>Daily conversion comparison for active experiment</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <ResponsiveContainer width="100%" height={300}>
-            <LineChart data={timeSeriesData}>
-              <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-              <XAxis dataKey="date" className="text-xs" />
-              <YAxis className="text-xs" tickFormatter={(v) => `${v}%`} />
-              <Tooltip 
-                contentStyle={{ 
-                  backgroundColor: 'hsl(var(--card))', 
-                  border: '1px solid hsl(var(--border))',
-                  borderRadius: '8px'
-                }}
-                formatter={(value: number) => [`${value.toFixed(1)}%`]}
-              />
-              <Legend />
-              <Line type="monotone" dataKey="control" stroke="hsl(var(--muted-foreground))" strokeWidth={2} name="Control" dot={{ r: 4 }} />
-              <Line type="monotone" dataKey="variantA" stroke="hsl(160, 84%, 39%)" strokeWidth={2} name="Variant A" dot={{ r: 4 }} />
-            </LineChart>
-          </ResponsiveContainer>
-        </CardContent>
-      </Card>
     </div>
   );
 };
-
-export default AdminABTesting;
