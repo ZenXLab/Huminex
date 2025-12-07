@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import { HelmetProvider } from "react-helmet-async";
 import { AnimatePresence, motion } from "framer-motion";
 import { ClickstreamTracker } from "@/components/ClickstreamTracker";
+import { useScrollToTop } from "@/hooks/useScrollToTop";
 import Index from "./pages/Index";
 import Features from "./pages/Features";
 import ModuleDetail from "./pages/modules/ModuleDetail";
@@ -58,6 +59,9 @@ const pageTransition = {
 // Animated Routes wrapper component
 const AnimatedRoutes = () => {
   const location = useLocation();
+  
+  // Scroll to top on route change
+  useScrollToTop();
   
   return (
     <AnimatePresence mode="wait">
