@@ -1,6 +1,6 @@
 import { memo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Pencil, Check, RotateCcw, Layout, Eye, EyeOff } from "lucide-react";
+import { Pencil, Check, RotateCcw, Layout, EyeOff, Plus, Library } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -17,6 +17,7 @@ interface DashboardEditControlsProps {
   onToggleEditMode: () => void;
   onResetLayout: () => void;
   onToggleWidget: (id: string) => void;
+  onOpenLibrary: () => void;
 }
 
 export const DashboardEditControls = memo(({
@@ -25,6 +26,7 @@ export const DashboardEditControls = memo(({
   onToggleEditMode,
   onResetLayout,
   onToggleWidget,
+  onOpenLibrary,
 }: DashboardEditControlsProps) => {
   const hiddenCount = widgets.filter((w) => !w.visible).length;
 
@@ -47,6 +49,24 @@ export const DashboardEditControls = memo(({
                 </Badge>
               )}
 
+              {/* Widget Library button */}
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={onOpenLibrary}
+                    className="gap-2"
+                  >
+                    <Library className="h-4 w-4" />
+                    <span className="hidden sm:inline">Widgets</span>
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Browse widget library</p>
+                </TooltipContent>
+              </Tooltip>
+
               {/* Reset button */}
               <Tooltip>
                 <TooltipTrigger asChild>
@@ -57,7 +77,7 @@ export const DashboardEditControls = memo(({
                     className="gap-2"
                   >
                     <RotateCcw className="h-4 w-4" />
-                    Reset
+                    <span className="hidden sm:inline">Reset</span>
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent>

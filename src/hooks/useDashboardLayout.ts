@@ -7,14 +7,47 @@ export interface WidgetConfig {
   visible: boolean;
 }
 
+export interface WidgetMeta {
+  id: string;
+  name: string;
+  description: string;
+  icon: string;
+  category: "overview" | "analytics" | "operations" | "system";
+  defaultSize: WidgetConfig["size"];
+}
+
+export interface DashboardPreset {
+  id: string;
+  name: string;
+  description: string;
+  icon: string;
+  widgets: WidgetConfig[];
+}
+
 interface DashboardLayout {
   widgets: WidgetConfig[];
+  activePreset: string | null;
   lastUpdated: string;
 }
 
 const STORAGE_KEY = "admin-dashboard-layout";
 
-const defaultLayout: WidgetConfig[] = [
+// Widget catalog - all available widgets
+export const widgetCatalog: WidgetMeta[] = [
+  { id: "stats", name: "Statistics Overview", description: "Key platform metrics at a glance", icon: "BarChart3", category: "overview", defaultSize: "full" },
+  { id: "system-health", name: "System Health", description: "Real-time system status monitoring", icon: "Activity", category: "system", defaultSize: "full" },
+  { id: "clickstream", name: "Clickstream Analytics", description: "User behavior and engagement tracking", icon: "MousePointer", category: "analytics", defaultSize: "full" },
+  { id: "onboarding", name: "Pending Onboarding", description: "Client onboarding requests queue", icon: "UserPlus", category: "operations", defaultSize: "medium" },
+  { id: "tenants", name: "Recent Tenants", description: "Latest tenant activity", icon: "Building2", category: "operations", defaultSize: "medium" },
+  { id: "quotes", name: "Recent Quotes", description: "Latest quote requests", icon: "FileText", category: "operations", defaultSize: "full" },
+  { id: "quick-actions", name: "Quick Actions", description: "Fast access to all admin modules", icon: "Zap", category: "overview", defaultSize: "full" },
+  { id: "revenue-chart", name: "Revenue Chart", description: "Monthly revenue trends", icon: "TrendingUp", category: "analytics", defaultSize: "large" },
+  { id: "user-activity", name: "User Activity", description: "Active users and sessions", icon: "Users", category: "analytics", defaultSize: "medium" },
+  { id: "alerts", name: "System Alerts", description: "Critical alerts and notifications", icon: "Bell", category: "system", defaultSize: "medium" },
+];
+
+// Default layout
+const defaultWidgets: WidgetConfig[] = [
   { id: "stats", order: 0, size: "full", visible: true },
   { id: "system-health", order: 1, size: "full", visible: true },
   { id: "clickstream", order: 2, size: "full", visible: true },
@@ -24,10 +57,71 @@ const defaultLayout: WidgetConfig[] = [
   { id: "quick-actions", order: 6, size: "full", visible: true },
 ];
 
+// Presets
+export const dashboardPresets: DashboardPreset[] = [
+  {
+    id: "minimal",
+    name: "Minimal",
+    description: "Essential widgets only for a clean overview",
+    icon: "Minimize2",
+    widgets: [
+      { id: "stats", order: 0, size: "full", visible: true },
+      { id: "quick-actions", order: 1, size: "full", visible: true },
+      { id: "system-health", order: 2, size: "full", visible: false },
+      { id: "clickstream", order: 3, size: "full", visible: false },
+      { id: "onboarding", order: 4, size: "medium", visible: false },
+      { id: "tenants", order: 5, size: "medium", visible: false },
+      { id: "quotes", order: 6, size: "full", visible: false },
+    ],
+  },
+  {
+    id: "standard",
+    name: "Standard",
+    description: "Balanced view with all key widgets",
+    icon: "LayoutGrid",
+    widgets: defaultWidgets,
+  },
+  {
+    id: "analytics",
+    name: "Analytics Focus",
+    description: "Detailed analytics and tracking widgets",
+    icon: "LineChart",
+    widgets: [
+      { id: "stats", order: 0, size: "full", visible: true },
+      { id: "clickstream", order: 1, size: "full", visible: true },
+      { id: "system-health", order: 2, size: "full", visible: true },
+      { id: "revenue-chart", order: 3, size: "large", visible: true },
+      { id: "user-activity", order: 4, size: "medium", visible: true },
+      { id: "onboarding", order: 5, size: "medium", visible: false },
+      { id: "tenants", order: 6, size: "medium", visible: false },
+      { id: "quotes", order: 7, size: "full", visible: false },
+      { id: "quick-actions", order: 8, size: "full", visible: true },
+    ],
+  },
+  {
+    id: "operations",
+    name: "Operations",
+    description: "Focus on client and tenant management",
+    icon: "Briefcase",
+    widgets: [
+      { id: "stats", order: 0, size: "full", visible: true },
+      { id: "onboarding", order: 1, size: "large", visible: true },
+      { id: "tenants", order: 2, size: "large", visible: true },
+      { id: "quotes", order: 3, size: "full", visible: true },
+      { id: "alerts", order: 4, size: "medium", visible: true },
+      { id: "system-health", order: 5, size: "full", visible: true },
+      { id: "quick-actions", order: 6, size: "full", visible: true },
+      { id: "clickstream", order: 7, size: "full", visible: false },
+    ],
+  },
+];
+
 export const useDashboardLayout = () => {
-  const [widgets, setWidgets] = useState<WidgetConfig[]>(defaultLayout);
+  const [widgets, setWidgets] = useState<WidgetConfig[]>(defaultWidgets);
+  const [activePreset, setActivePreset] = useState<string | null>("standard");
   const [isEditMode, setIsEditMode] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
+  const [isLibraryOpen, setIsLibraryOpen] = useState(false);
 
   // Load layout from localStorage on mount
   useEffect(() => {
@@ -35,12 +129,8 @@ export const useDashboardLayout = () => {
       const saved = localStorage.getItem(STORAGE_KEY);
       if (saved) {
         const layout: DashboardLayout = JSON.parse(saved);
-        // Merge with default to handle new widgets
-        const mergedWidgets = defaultLayout.map((defaultWidget) => {
-          const savedWidget = layout.widgets.find((w) => w.id === defaultWidget.id);
-          return savedWidget || defaultWidget;
-        });
-        setWidgets(mergedWidgets.sort((a, b) => a.order - b.order));
+        setWidgets(layout.widgets.sort((a, b) => a.order - b.order));
+        setActivePreset(layout.activePreset);
       }
     } catch (e) {
       console.error("Failed to load dashboard layout:", e);
@@ -48,9 +138,10 @@ export const useDashboardLayout = () => {
   }, []);
 
   // Save layout to localStorage
-  const saveLayout = useCallback((newWidgets: WidgetConfig[]) => {
+  const saveLayout = useCallback((newWidgets: WidgetConfig[], preset: string | null = null) => {
     const layout: DashboardLayout = {
       widgets: newWidgets,
+      activePreset: preset,
       lastUpdated: new Date().toISOString(),
     };
     localStorage.setItem(STORAGE_KEY, JSON.stringify(layout));
@@ -69,9 +160,9 @@ export const useDashboardLayout = () => {
         const [removed] = newWidgets.splice(sourceIndex, 1);
         newWidgets.splice(targetIndex, 0, removed);
 
-        // Update order values
         const reordered = newWidgets.map((w, i) => ({ ...w, order: i }));
-        saveLayout(reordered);
+        saveLayout(reordered, null);
+        setActivePreset(null);
         return reordered;
       });
     },
@@ -85,7 +176,8 @@ export const useDashboardLayout = () => {
         const newWidgets = prev.map((w) =>
           w.id === id ? { ...w, size } : w
         );
-        saveLayout(newWidgets);
+        saveLayout(newWidgets, null);
+        setActivePreset(null);
         return newWidgets;
       });
     },
@@ -99,28 +191,81 @@ export const useDashboardLayout = () => {
         const newWidgets = prev.map((w) =>
           w.id === id ? { ...w, visible: !w.visible } : w
         );
-        saveLayout(newWidgets);
+        saveLayout(newWidgets, null);
+        setActivePreset(null);
         return newWidgets;
       });
     },
     [saveLayout]
   );
 
+  // Add widget from library
+  const addWidget = useCallback(
+    (widgetId: string) => {
+      const meta = widgetCatalog.find((w) => w.id === widgetId);
+      if (!meta) return;
+
+      setWidgets((prev) => {
+        const exists = prev.find((w) => w.id === widgetId);
+        if (exists) {
+          // Just make it visible
+          const newWidgets = prev.map((w) =>
+            w.id === widgetId ? { ...w, visible: true } : w
+          );
+          saveLayout(newWidgets, null);
+          setActivePreset(null);
+          return newWidgets;
+        }
+
+        const newWidget: WidgetConfig = {
+          id: widgetId,
+          order: prev.length,
+          size: meta.defaultSize,
+          visible: true,
+        };
+        const newWidgets = [...prev, newWidget];
+        saveLayout(newWidgets, null);
+        setActivePreset(null);
+        return newWidgets;
+      });
+    },
+    [saveLayout]
+  );
+
+  // Apply preset
+  const applyPreset = useCallback(
+    (presetId: string) => {
+      const preset = dashboardPresets.find((p) => p.id === presetId);
+      if (!preset) return;
+
+      setWidgets(preset.widgets);
+      setActivePreset(presetId);
+      saveLayout(preset.widgets, presetId);
+    },
+    [saveLayout]
+  );
+
   // Reset to default layout
   const resetLayout = useCallback(() => {
-    setWidgets(defaultLayout);
+    setWidgets(defaultWidgets);
+    setActivePreset("standard");
     localStorage.removeItem(STORAGE_KEY);
   }, []);
 
   return {
     widgets,
+    activePreset,
     isEditMode,
     isDragging,
+    isLibraryOpen,
     setIsEditMode,
     setIsDragging,
+    setIsLibraryOpen,
     reorderWidgets,
     resizeWidget,
     toggleWidget,
+    addWidget,
+    applyPreset,
     resetLayout,
   };
 };

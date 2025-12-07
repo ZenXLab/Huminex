@@ -16,6 +16,8 @@ import { ClickstreamSummaryWidget } from "./modules/clickstream/ClickstreamSumma
 import { AdminCardSkeleton } from "./AdminCardSkeleton";
 import { DraggableWidget } from "./DraggableWidget";
 import { DashboardEditControls } from "./DashboardEditControls";
+import { DashboardPresets } from "./DashboardPresets";
+import { WidgetLibrary } from "./WidgetLibrary";
 import { useDashboardLayout, WidgetConfig } from "@/hooks/useDashboardLayout";
 import { 
   useAdminStats, 
@@ -81,12 +83,17 @@ export const AdminOverview = () => {
   // Dashboard layout management
   const {
     widgets,
+    activePreset,
     isEditMode,
+    isLibraryOpen,
     setIsEditMode,
     setIsDragging,
+    setIsLibraryOpen,
     reorderWidgets,
     resizeWidget,
     toggleWidget,
+    addWidget,
+    applyPreset,
     resetLayout,
   } = useDashboardLayout();
 
@@ -471,6 +478,89 @@ export const AdminOverview = () => {
               </CardContent>
             </Card>
           );
+        case "revenue-chart":
+          return (
+            <Card className="h-full">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <TrendingUp className="h-5 w-5 text-green-600" />
+                  Revenue Trends
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="h-48 flex items-center justify-center bg-muted/30 rounded-lg">
+                  <div className="text-center">
+                    <TrendingUp className="h-12 w-12 text-green-600/50 mx-auto mb-2" />
+                    <p className="text-sm text-muted-foreground">Revenue chart visualization</p>
+                    <Link to="/admin/revenue">
+                      <Button variant="link" size="sm" className="mt-2">
+                        View Full Analytics <ArrowRight className="h-3 w-3 ml-1" />
+                      </Button>
+                    </Link>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          );
+        case "user-activity":
+          return (
+            <Card className="h-full">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Users className="h-5 w-5 text-purple-600" />
+                  User Activity
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between p-3 bg-muted/30 rounded-lg">
+                    <span className="text-sm text-muted-foreground">Active Sessions</span>
+                    <Badge variant="secondary" className="bg-green-500/10 text-green-600">
+                      {Math.floor(Math.random() * 50) + 10} online
+                    </Badge>
+                  </div>
+                  <div className="flex items-center justify-between p-3 bg-muted/30 rounded-lg">
+                    <span className="text-sm text-muted-foreground">Today's Logins</span>
+                    <span className="font-medium">{Math.floor(Math.random() * 200) + 50}</span>
+                  </div>
+                  <div className="flex items-center justify-between p-3 bg-muted/30 rounded-lg">
+                    <span className="text-sm text-muted-foreground">Avg. Session Duration</span>
+                    <span className="font-medium">{Math.floor(Math.random() * 30) + 5}m</span>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          );
+        case "alerts":
+          return (
+            <Card className="h-full">
+              <CardHeader className="flex flex-row items-center justify-between">
+                <CardTitle className="flex items-center gap-2">
+                  <Bell className="h-5 w-5 text-orange-600" />
+                  System Alerts
+                </CardTitle>
+                <Badge variant="outline" className="text-green-600 border-green-500/30">
+                  All Clear
+                </Badge>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  <div className="flex items-center gap-3 p-3 bg-green-500/10 rounded-lg border border-green-500/20">
+                    <CheckCircle2 className="h-5 w-5 text-green-600" />
+                    <div>
+                      <p className="text-sm font-medium text-foreground">No critical alerts</p>
+                      <p className="text-xs text-muted-foreground">All systems operating normally</p>
+                    </div>
+                  </div>
+                  <Link to="/admin/threats">
+                    <Button variant="ghost" size="sm" className="w-full gap-1">
+                      View Alert History <ArrowRight className="h-4 w-4" />
+                    </Button>
+                  </Link>
+                </div>
+              </CardContent>
+            </Card>
+          );
         default:
           return null;
       }
@@ -511,12 +601,17 @@ export const AdminOverview = () => {
             <RefreshCw className="h-4 w-4" />
             Refresh
           </Button>
+          <DashboardPresets
+            activePreset={activePreset}
+            onApplyPreset={applyPreset}
+          />
           <DashboardEditControls
             isEditMode={isEditMode}
             widgets={widgets}
             onToggleEditMode={() => setIsEditMode(!isEditMode)}
             onResetLayout={resetLayout}
             onToggleWidget={toggleWidget}
+            onOpenLibrary={() => setIsLibraryOpen(true)}
           />
         </div>
       </div>
@@ -530,7 +625,7 @@ export const AdminOverview = () => {
             exit={{ opacity: 0, height: 0 }}
             className="overflow-hidden"
           >
-            <div className="flex items-center gap-3 p-4 bg-primary/10 border border-primary/20 rounded-lg">
+            <div className="flex items-center gap-3 p-4 bg-primary/10 border border-primary/20 rounded-lg flex-wrap">
               <div className="flex items-center gap-2">
                 <motion.div
                   animate={{ rotate: [0, 10, -10, 0] }}
@@ -541,7 +636,7 @@ export const AdminOverview = () => {
                 <span className="font-medium text-primary">Edit Mode Active</span>
               </div>
               <span className="text-sm text-muted-foreground">
-                Drag widgets to reorder • Click size icons to resize • Click eye icon to hide/show
+                Drag widgets to reorder • Click size icons to resize • Click eye icon to hide/show • Use presets for quick layouts
               </span>
             </div>
           </motion.div>
@@ -557,6 +652,14 @@ export const AdminOverview = () => {
             .map((widget) => renderWidget(widget.id))}
         </AnimatePresence>
       </div>
+
+      {/* Widget Library Panel */}
+      <WidgetLibrary
+        isOpen={isLibraryOpen}
+        onClose={() => setIsLibraryOpen(false)}
+        widgets={widgets}
+        onAddWidget={addWidget}
+      />
     </div>
   );
 };
