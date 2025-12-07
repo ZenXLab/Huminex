@@ -129,20 +129,20 @@ const AdminPage = () => {
     
     // Support & Communication
     if (path.startsWith("/admin/tickets")) return <AdminTickets />;
-    if (path.startsWith("/admin/chat")) return <AdminPlaceholderPage title="Live Chat" description="Real-time chat support system" icon={Phone} features={["Chat inbox", "Canned responses"]} />;
+    if (path.startsWith("/admin/chat")) return <AdminLiveChat />;
     if (path.startsWith("/admin/meetings")) return <AdminMeetings />;
     if (path.startsWith("/admin/video-calls")) return <AdminVideoConference />;
     if (path.startsWith("/admin/inquiries")) return <AdminInquiries />;
     
     // AI & Intelligence
     if (path.startsWith("/admin/ai")) return <AdminAIDashboard />;
-    if (path.startsWith("/admin/ai-usage")) return <AdminPlaceholderPage title="AI Usage & Costs" description="Track AI feature usage and costs" icon={Wallet} features={["Usage metrics", "Cost tracking"]} />;
-    if (path.startsWith("/admin/ai-models")) return <AdminPlaceholderPage title="Model Performance" description="Monitor AI model accuracy" icon={Brain} features={["Accuracy metrics", "Response times"]} />;
-    if (path.startsWith("/admin/automation-logs")) return <AdminPlaceholderPage title="Automation Logs" description="View workflow execution logs" icon={Workflow} features={["Execution history", "Error tracking"]} />;
+    if (path.startsWith("/admin/ai-usage")) return <AdminAIUsage />;
+    if (path.startsWith("/admin/ai-models")) return <AdminAIModels />;
+    if (path.startsWith("/admin/automation-logs")) return <AdminAutomationLogs />;
     
     // Infrastructure & MSP
     if (path.startsWith("/admin/msp")) return <AdminMSPMonitoring />;
-    if (path.startsWith("/admin/servers")) return <AdminPlaceholderPage title="Server Health" description="Monitor server health and performance" icon={HardDrive} features={["CPU/Memory monitoring", "Disk usage"]} />;
+    if (path.startsWith("/admin/servers")) return <AdminServerHealth />;
     if (path.startsWith("/admin/cloud")) return <AdminCloudResources />;
     if (path.startsWith("/admin/database")) return <AdminDatabaseStatus />;
     if (path.startsWith("/admin/api-gateway")) return <AdminAPIGateway />;
@@ -158,8 +158,8 @@ const AdminPage = () => {
     if (path.startsWith("/admin/portal-settings")) return <AdminPortalSettings />;
     if (path.startsWith("/admin/roles")) return <AdminRolesPermissions />;
     if (path.startsWith("/admin/integrations")) return <AdminIntegrations />;
-    if (path.startsWith("/admin/api-keys")) return <AdminPlaceholderPage title="API Keys & Webhooks" description="Manage API credentials and webhooks" icon={Key} features={["API key management", "Webhook configuration"]} />;
-    if (path.startsWith("/admin/feature-flags")) return <AdminPlaceholderPage title="Feature Flags" description="Toggle features across the platform" icon={Layers} features={["Feature toggles", "A/B testing"]} />;
+    if (path.startsWith("/admin/api-keys")) return <AdminAPIKeysWebhooks />;
+    if (path.startsWith("/admin/feature-flags")) return <AdminFeatureFlags />;
     if (path.startsWith("/admin/logs")) return <AdminSystemLogs />;
     if (path.startsWith("/admin/backup")) return <AdminBackupRecovery />;
     if (path.startsWith("/admin/super")) return <AdminSuperAdmin />;
