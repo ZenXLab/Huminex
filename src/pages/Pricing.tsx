@@ -7,6 +7,7 @@ import { PricingLeadCapture } from "@/components/pricing/PricingLeadCapture";
 import { PricingFAQ } from "@/components/pricing/PricingFAQ";
 import { ExitIntentPopup } from "@/components/pricing/ExitIntentPopup";
 import { BusinessTypeMatcher } from "@/components/pricing/BusinessTypeMatcher";
+import { PricingVsQuoteComparison } from "@/components/pricing/PricingVsQuoteComparison";
 
 const Pricing = () => {
   const [showExitPopup, setShowExitPopup] = useState(false);
@@ -133,8 +134,13 @@ const Pricing = () => {
             </div>
           </section>
 
+          {/* Pricing vs Quote Comparison */}
+          <PricingVsQuoteComparison />
+
           {/* Main Pricing Section */}
-          <PricingSection />
+          <div id="pricing-plans">
+            <PricingSection />
+          </div>
 
           {/* Lead Capture */}
           <section className="py-16 bg-background">
