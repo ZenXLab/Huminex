@@ -23,6 +23,11 @@ import TenantRiskGovernance from "./TenantRiskGovernance";
 import TenantRequests from "./TenantRequests";
 import TenantNotifications from "./TenantNotifications";
 import TenantManagedOps from "./TenantManagedOps";
+import TenantIntegrations from "./settings/TenantIntegrations";
+import TenantAPIKeys from "./settings/TenantAPIKeys";
+import TenantBilling from "./settings/TenantBilling";
+import TenantDataExport from "./settings/TenantDataExport";
+import TenantCustomDomain from "./settings/TenantCustomDomain";
 
 // Placeholder for remaining pages
 const PlaceholderPage: React.FC<{ title: string; description: string }> = ({ title, description }) => (
@@ -100,11 +105,11 @@ const TenantPortal: React.FC = () => {
         
         {/* Settings */}
         <Route path="settings" element={<TenantSettings />} />
-        <Route path="settings/integrations" element={<PlaceholderPage title="Integrations" description="Connect third-party services and APIs" />} />
-        <Route path="settings/api-keys" element={<PlaceholderPage title="API Keys" description="Manage API keys and webhooks" />} />
-        <Route path="settings/billing" element={<PlaceholderPage title="Billing & Plans" description="Manage your subscription and billing" />} />
-        <Route path="settings/export" element={<PlaceholderPage title="Data Export" description="Export your organization data" />} />
-        <Route path="settings/domain" element={<PlaceholderPage title="Custom Domain" description="Configure your custom domain" />} />
+        <Route path="settings/integrations" element={<TenantIntegrations />} />
+        <Route path="settings/api-keys" element={<TenantAPIKeys />} />
+        <Route path="settings/billing" element={<TenantBilling />} />
+        <Route path="settings/export" element={<TenantDataExport />} />
+        <Route path="settings/domain" element={<TenantCustomDomain />} />
         
         <Route path="onboarding" element={<PlaceholderPage title="Onboarding" description="Complete your organization setup" />} />
         <Route path="*" element={<PlaceholderPage title="Page Not Found" description="The page you're looking for doesn't exist" />} />
