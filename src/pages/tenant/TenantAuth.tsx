@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 import { z } from "zod";
 import { useAuth } from "@/hooks/useAuth";
+import { ForgotPasswordModal } from "@/components/auth/ForgotPasswordModal";
 
 const loginSchema = z.object({
   email: z.string().email("Please enter a valid email address"),
@@ -29,6 +30,7 @@ const loginSchema = z.object({
 const TenantAuth = () => {
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -192,7 +194,11 @@ const TenantAuth = () => {
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <Label htmlFor="password" className="text-[#0F1E3A] text-sm font-medium">Password</Label>
-                <button type="button" className="text-xs text-[#005EEB] hover:text-[#0047B3] transition-colors">
+                <button 
+                  type="button" 
+                  onClick={() => setShowForgotPassword(true)}
+                  className="text-xs text-[#005EEB] hover:text-[#0047B3] transition-colors"
+                >
                   Forgot password?
                 </button>
               </div>
@@ -283,6 +289,12 @@ const TenantAuth = () => {
           </p>
         </div>
       </div>
+
+      <ForgotPasswordModal
+        isOpen={showForgotPassword}
+        onClose={() => setShowForgotPassword(false)}
+        portalType="organization"
+      />
     </div>
   );
 };

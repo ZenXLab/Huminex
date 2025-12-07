@@ -21,6 +21,7 @@ import Auth from "./pages/Auth";
 import Onboarding from "./pages/Onboarding";
 import Portal from "./pages/Portal";
 import NotFound from "./pages/NotFound";
+import ResetPassword from "./pages/ResetPassword";
 
 // Service pages
 import DigitalEngineering from "./pages/services/DigitalEngineering";
@@ -87,6 +88,7 @@ const AnimatedRoutes = () => {
           <Route path="/pricing" element={<Pricing />} />
           <Route path="/partners" element={<Partners />} />
           <Route path="/auth" element={<Auth />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="/onboarding" element={<Onboarding />} />
           
           {/* Client Portal Routes - Employee access (unlocked by Tenant Admin) */}
