@@ -5,13 +5,36 @@ import TenantDashboard from "./TenantDashboard";
 import TenantWorkforce from "./TenantWorkforce";
 import TenantPayroll from "./TenantPayroll";
 import TenantRecruitment from "./TenantRecruitment";
+import TenantAttendance from "./TenantAttendance";
+import TenantCompliance from "./TenantCompliance";
+import TenantFinance from "./TenantFinance";
+import TenantBGV from "./TenantBGV";
+import TenantInsurance from "./TenantInsurance";
+import TenantProjects from "./TenantProjects";
+import TenantDocuments from "./TenantDocuments";
+import TenantAnnouncements from "./TenantAnnouncements";
+import TenantPerformance from "./TenantPerformance";
+import TenantOpZenix from "./TenantOpZenix";
+import TenantProximaAI from "./TenantProximaAI";
+import TenantSettings from "./TenantSettings";
 
 // Placeholder for remaining pages
-const PlaceholderPage: React.FC<{ title: string }> = ({ title }) => (
-  <div className="flex items-center justify-center h-[60vh]">
-    <div className="text-center">
-      <h1 className="text-2xl font-bold text-[#0F1E3A] mb-2">{title}</h1>
-      <p className="text-[#6B7280]">This module is under development.</p>
+const PlaceholderPage: React.FC<{ title: string; description: string }> = ({ title, description }) => (
+  <div className="space-y-6 animate-fade-in">
+    <div>
+      <h1 className="text-2xl font-bold text-[#0F1E3A]">{title}</h1>
+      <p className="text-sm text-[#6B7280] mt-1">{description}</p>
+    </div>
+    <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-12 text-center">
+      <div className="w-16 h-16 rounded-full bg-[#F7F9FC] mx-auto mb-4 flex items-center justify-center">
+        <svg className="w-8 h-8 text-[#6B7280]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
+        </svg>
+      </div>
+      <h3 className="text-lg font-semibold text-[#0F1E3A] mb-2">Coming Soon</h3>
+      <p className="text-[#6B7280] max-w-md mx-auto">
+        This module is currently under development.
+      </p>
     </div>
   </div>
 );
@@ -20,27 +43,51 @@ const TenantPortal: React.FC = () => {
   return (
     <Routes>
       <Route element={<TenantLayout />}>
-        <Route index element={<Navigate to="dashboard" replace />} />
+        <Route index element={<Navigate to="/tenant/dashboard" replace />} />
         <Route path="dashboard" element={<TenantDashboard />} />
+        
+        {/* Workforce Management */}
         <Route path="workforce" element={<TenantWorkforce />} />
+        <Route path="attendance" element={<TenantAttendance />} />
+        <Route path="documents" element={<TenantDocuments />} />
+        <Route path="announcements" element={<TenantAnnouncements />} />
+        
+        {/* Payroll & Finance */}
         <Route path="payroll" element={<TenantPayroll />} />
+        <Route path="finance" element={<TenantFinance />} />
+        <Route path="insurance" element={<TenantInsurance />} />
+        
+        {/* Talent & Hiring */}
         <Route path="recruitment" element={<TenantRecruitment />} />
-        <Route path="attendance" element={<PlaceholderPage title="Attendance & Leave" />} />
-        <Route path="compliance" element={<PlaceholderPage title="Statutory Compliance" />} />
-        <Route path="finance" element={<PlaceholderPage title="Finance & Billing" />} />
-        <Route path="insurance" element={<PlaceholderPage title="Insurance & Claims" />} />
-        <Route path="bgv" element={<PlaceholderPage title="Background Verification" />} />
-        <Route path="projects" element={<PlaceholderPage title="Projects & Tasks" />} />
-        <Route path="ems" element={<PlaceholderPage title="Enterprise Management" />} />
-        <Route path="performance" element={<PlaceholderPage title="Performance & Engagement" />} />
-        <Route path="automations" element={<PlaceholderPage title="OpZenix Automations" />} />
-        <Route path="intelligence" element={<PlaceholderPage title="Proxima AI" />} />
-        <Route path="identity" element={<PlaceholderPage title="Identity & Access" />} />
-        <Route path="risk" element={<PlaceholderPage title="Risk & Governance" />} />
-        <Route path="managed-ops" element={<PlaceholderPage title="Managed Operations" />} />
-        <Route path="settings/*" element={<PlaceholderPage title="Tenant Settings" />} />
-        <Route path="onboarding" element={<PlaceholderPage title="Onboarding Wizard" />} />
-        <Route path="*" element={<PlaceholderPage title="Page Not Found" />} />
+        <Route path="bgv" element={<TenantBGV />} />
+        <Route path="performance" element={<TenantPerformance />} />
+        
+        {/* Operations */}
+        <Route path="projects" element={<TenantProjects />} />
+        <Route path="ems" element={<PlaceholderPage title="EMS / Assets" description="Enterprise asset management and tracking" />} />
+        <Route path="requests" element={<PlaceholderPage title="My Requests" description="Track your submitted requests and approvals" />} />
+        <Route path="notifications" element={<PlaceholderPage title="Notifications" description="View all your notifications" />} />
+        
+        {/* Compliance & Risk */}
+        <Route path="compliance" element={<TenantCompliance />} />
+        <Route path="risk" element={<PlaceholderPage title="Risk & Governance" description="Risk management and audit trails" />} />
+        <Route path="identity" element={<PlaceholderPage title="Identity & Access" description="User roles, permissions, and SSO configuration" />} />
+        
+        {/* Intelligence & Automation */}
+        <Route path="intelligence" element={<TenantProximaAI />} />
+        <Route path="automations" element={<TenantOpZenix />} />
+        <Route path="managed-ops" element={<PlaceholderPage title="Managed Operations" description="Managed services and support tickets" />} />
+        
+        {/* Settings */}
+        <Route path="settings" element={<TenantSettings />} />
+        <Route path="settings/integrations" element={<PlaceholderPage title="Integrations" description="Connect third-party services and APIs" />} />
+        <Route path="settings/api-keys" element={<PlaceholderPage title="API Keys" description="Manage API keys and webhooks" />} />
+        <Route path="settings/billing" element={<PlaceholderPage title="Billing & Plans" description="Manage your subscription and billing" />} />
+        <Route path="settings/export" element={<PlaceholderPage title="Data Export" description="Export your organization data" />} />
+        <Route path="settings/domain" element={<PlaceholderPage title="Custom Domain" description="Configure your custom domain" />} />
+        
+        <Route path="onboarding" element={<PlaceholderPage title="Onboarding" description="Complete your organization setup" />} />
+        <Route path="*" element={<PlaceholderPage title="Page Not Found" description="The page you're looking for doesn't exist" />} />
       </Route>
     </Routes>
   );
