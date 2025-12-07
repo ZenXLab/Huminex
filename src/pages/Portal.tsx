@@ -19,6 +19,7 @@ import { PortalAIDashboard } from "@/components/portal/PortalAIDashboard";
 import { PortalFeedback } from "@/components/portal/PortalFeedback";
 import { PortalResources } from "@/components/portal/PortalResources";
 import { PortalMSPMonitoring } from "@/components/portal/PortalMSPMonitoring";
+import { NotificationBell } from "@/components/portal/NotificationBell";
 import { 
   LayoutDashboard, 
   FolderKanban, 
@@ -30,7 +31,6 @@ import {
   Settings, 
   LogOut,
   Menu,
-  Bell,
   Search,
   Plus,
   Users,
@@ -274,10 +274,7 @@ export default function Portal() {
             </div>
 
             <div className="flex items-center gap-3">
-              <Button variant="ghost" size="sm" className="relative">
-                <Bell className="w-5 h-5" />
-                <span className="absolute top-1 right-1 w-2 h-2 bg-destructive rounded-full" />
-              </Button>
+              <NotificationBell userId={user?.id} />
               <Button size="sm" className="gap-2 hidden sm:flex">
                 <Plus className="w-4 h-4" />
                 New Request
