@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate, Link, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useClientTier } from "@/hooks/useClientTier";
+import { useEmployeeRole, isModuleAccessibleByRole, EmployeeRole } from "@/hooks/useEmployeeRole";
 import { TierUpgradePrompt, getRequiredTierForModule } from "@/components/portal/TierUpgradePrompt";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -37,7 +38,8 @@ import {
   Star,
   BookOpen,
   Server,
-  Crown
+  Crown,
+  Lock
 } from "lucide-react";
 import cropxonIcon from "@/assets/cropxon-icon.png";
 import { cn } from "@/lib/utils";
@@ -57,6 +59,22 @@ const allSidebarItems = [
   { name: "Settings", href: "/portal/settings", icon: Settings, section: "Account" },
 ];
 
+const roleLabels: Record<EmployeeRole, string> = {
+  staff: "Staff",
+  hr: "HR",
+  manager: "Manager",
+  finance: "Finance",
+  admin: "Admin"
+};
+
+const roleColors: Record<EmployeeRole, string> = {
+  staff: "bg-gray-500/10 text-gray-600",
+  hr: "bg-pink-500/10 text-pink-600",
+  manager: "bg-blue-500/10 text-blue-600",
+  finance: "bg-green-500/10 text-green-600",
+  admin: "bg-purple-500/10 text-purple-600"
+};
+
 const tierColors: Record<string, string> = {
   basic: "bg-gray-500/10 text-gray-600",
   standard: "bg-blue-500/10 text-blue-600",
@@ -68,6 +86,7 @@ export default function Portal() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { user, loading, signOut } = useAuth();
   const { tier, isModuleAllowed, loading: tierLoading } = useClientTier();
+  const { role: employeeRole, loading: roleLoading } = useEmployeeRole();
   const navigate = useNavigate();
   const location = useLocation();
   const [profile, setProfile] = useState<any>(null);
@@ -94,7 +113,7 @@ export default function Portal() {
     setProfile(data);
   };
 
-  if (loading || tierLoading) {
+  if (loading || tierLoading || roleLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
@@ -102,11 +121,12 @@ export default function Portal() {
     );
   }
 
-  // Group all items by section (including locked ones)
+  // Group items by section, checking both tier and role access
   const sidebarSections = allSidebarItems.reduce((acc, item) => {
     const section = acc.find(s => s.title === item.section);
-    const isAllowed = isModuleAllowed(item.name);
-    const itemWithAccess = { ...item, isAllowed };
+    const isTierAllowed = isModuleAllowed(item.name);
+    const isRoleAllowed = isModuleAccessibleByRole(item.name, employeeRole);
+    const itemWithAccess = { ...item, isTierAllowed, isRoleAllowed };
     
     if (section) {
       section.items.push(itemWithAccess);
@@ -114,7 +134,7 @@ export default function Portal() {
       acc.push({ title: item.section, items: [itemWithAccess] });
     }
     return acc;
-  }, [] as { title: string; items: (typeof allSidebarItems[0] & { isAllowed: boolean })[] }[]);
+  }, [] as { title: string; items: (typeof allSidebarItems[0] & { isTierAllowed: boolean; isRoleAllowed: boolean })[] }[]);
 
 
   const isActive = (path: string) => {
@@ -169,11 +189,19 @@ export default function Portal() {
                 <span className="text-primary font-heading font-semibold text-xs">ATLAS Portal</span>
               </div>
             </Link>
-            <div className="mt-3 flex items-center gap-2">
-              <Crown className="w-3.5 h-3.5 text-amber-500" />
-              <Badge className={cn("text-xs capitalize", tierColors[tier])}>
-                {tier} Plan
-              </Badge>
+            <div className="mt-3 flex flex-col gap-1.5">
+              <div className="flex items-center gap-2">
+                <Crown className="w-3.5 h-3.5 text-amber-500" />
+                <Badge className={cn("text-xs capitalize", tierColors[tier])}>
+                  {tier} Plan
+                </Badge>
+              </div>
+              <div className="flex items-center gap-2">
+                <Users className="w-3.5 h-3.5 text-primary" />
+                <Badge className={cn("text-xs", roleColors[employeeRole])}>
+                  {roleLabels[employeeRole]} Access
+                </Badge>
+              </div>
             </div>
           </div>
 
@@ -189,8 +217,23 @@ export default function Portal() {
                       const Icon = item.icon;
                       const active = isActive(item.href);
                       
-                      // Show locked module with upgrade prompt
-                      if (!item.isAllowed) {
+                      // First check role access - if not allowed by role, show lock
+                      if (!item.isRoleAllowed) {
+                        return (
+                          <div
+                            key={item.name}
+                            className="flex items-center gap-3 px-3 py-2 rounded-xl text-muted-foreground/50 cursor-not-allowed"
+                            title={`${item.name} requires ${item.name === "Invoices" ? "Finance" : item.name === "AI Dashboard" ? "Manager" : item.name === "MSP Monitoring" ? "Finance" : item.name === "Team" || item.name === "Tickets" ? "HR/Manager" : "higher"} role access`}
+                          >
+                            <Icon className="w-4 h-4" />
+                            <span className="text-sm font-medium flex-1">{item.name}</span>
+                            <Lock className="w-3.5 h-3.5" />
+                          </div>
+                        );
+                      }
+                      
+                      // Then check tier access - if not allowed by tier, show upgrade prompt
+                      if (!item.isTierAllowed) {
                         return (
                           <TierUpgradePrompt
                             key={item.name}
