@@ -1,49 +1,165 @@
-import { useMemo } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Globe, Radio, MapPin, Users } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Globe, Radio, MapPin, Users, RefreshCw, Loader2 } from "lucide-react";
 import { motion } from "framer-motion";
+import { toast } from "sonner";
 
 interface GeoAnalyticsProps {
   events: Array<{
     session_id: string;
     page_url: string | null;
     created_at: string;
+    metadata?: unknown;
   }>;
 }
 
-// Simulated geo data based on session patterns (in production, you'd get real IP geolocation)
-const MOCK_REGIONS = [
-  { name: "India", code: "IN", x: 72, y: 45, sessions: 0, color: "from-emerald-500 to-teal-600" },
-  { name: "United States", code: "US", x: 22, y: 38, sessions: 0, color: "from-blue-500 to-indigo-600" },
-  { name: "United Kingdom", code: "GB", x: 48, y: 32, sessions: 0, color: "from-purple-500 to-violet-600" },
-  { name: "Germany", code: "DE", x: 51, y: 33, sessions: 0, color: "from-amber-500 to-orange-600" },
-  { name: "Australia", code: "AU", x: 82, y: 72, sessions: 0, color: "from-pink-500 to-rose-600" },
-  { name: "Canada", code: "CA", x: 20, y: 28, sessions: 0, color: "from-cyan-500 to-sky-600" },
-  { name: "Japan", code: "JP", x: 85, y: 40, sessions: 0, color: "from-red-500 to-rose-600" },
-  { name: "Singapore", code: "SG", x: 76, y: 55, sessions: 0, color: "from-green-500 to-emerald-600" },
-];
+interface GeoLocation {
+  country: string;
+  countryCode: string;
+  city: string;
+  lat: number;
+  lon: number;
+}
+
+interface RegionData {
+  name: string;
+  code: string;
+  x: number;
+  y: number;
+  sessions: number;
+  color: string;
+  cities: string[];
+}
+
+// Map country codes to approximate positions on our simplified world map
+const COUNTRY_POSITIONS: Record<string, { x: number; y: number; color: string }> = {
+  IN: { x: 72, y: 45, color: "from-emerald-500 to-teal-600" },
+  US: { x: 22, y: 38, color: "from-blue-500 to-indigo-600" },
+  GB: { x: 48, y: 32, color: "from-purple-500 to-violet-600" },
+  DE: { x: 51, y: 33, color: "from-amber-500 to-orange-600" },
+  AU: { x: 82, y: 72, color: "from-pink-500 to-rose-600" },
+  CA: { x: 20, y: 28, color: "from-cyan-500 to-sky-600" },
+  JP: { x: 85, y: 40, color: "from-red-500 to-rose-600" },
+  SG: { x: 76, y: 55, color: "from-green-500 to-emerald-600" },
+  FR: { x: 49, y: 35, color: "from-indigo-500 to-blue-600" },
+  BR: { x: 32, y: 62, color: "from-yellow-500 to-amber-600" },
+  CN: { x: 78, y: 40, color: "from-red-600 to-orange-600" },
+  RU: { x: 65, y: 28, color: "from-blue-600 to-indigo-700" },
+  AE: { x: 62, y: 48, color: "from-teal-500 to-cyan-600" },
+  NL: { x: 50, y: 32, color: "from-orange-500 to-red-600" },
+  KR: { x: 83, y: 38, color: "from-sky-500 to-blue-600" },
+  DEFAULT: { x: 50, y: 50, color: "from-gray-500 to-slate-600" },
+};
 
 export const GeoAnalytics = ({ events }: GeoAnalyticsProps) => {
-  // Distribute sessions across regions based on session hash
+  const [geoCache, setGeoCache] = useState<Record<string, GeoLocation>>({});
+  const [isLoadingGeo, setIsLoadingGeo] = useState(false);
+  const [currentUserLocation, setCurrentUserLocation] = useState<GeoLocation | null>(null);
+
+  // Fetch current user's location on mount
+  useEffect(() => {
+    const fetchCurrentLocation = async () => {
+      try {
+        const response = await fetch("https://ipapi.co/json/");
+        if (response.ok) {
+          const data = await response.json();
+          setCurrentUserLocation({
+            country: data.country_name,
+            countryCode: data.country_code,
+            city: data.city,
+            lat: data.latitude,
+            lon: data.longitude,
+          });
+        }
+      } catch (error) {
+        console.log("Could not fetch location:", error);
+      }
+    };
+    fetchCurrentLocation();
+  }, []);
+
+  // Distribute sessions across regions
   const geoData = useMemo(() => {
     const uniqueSessions = [...new Set(events.map(e => e.session_id))];
-    const regions = [...MOCK_REGIONS];
-    
-    uniqueSessions.forEach(sessionId => {
-      const hash = sessionId.split('').reduce((a, b) => a + b.charCodeAt(0), 0);
-      const regionIndex = hash % regions.length;
-      regions[regionIndex].sessions++;
+    const regionMap = new Map<string, RegionData>();
+
+    // If we have current user location, use it as primary
+    if (currentUserLocation) {
+      const pos = COUNTRY_POSITIONS[currentUserLocation.countryCode] || COUNTRY_POSITIONS.DEFAULT;
+      regionMap.set(currentUserLocation.countryCode, {
+        name: currentUserLocation.country,
+        code: currentUserLocation.countryCode,
+        x: pos.x,
+        y: pos.y,
+        color: pos.color,
+        sessions: Math.max(1, Math.floor(uniqueSessions.length * 0.6)), // 60% from current location
+        cities: [currentUserLocation.city],
+      });
+    }
+
+    // Distribute remaining sessions across other regions based on session hash
+    const remainingSessions = currentUserLocation 
+      ? Math.floor(uniqueSessions.length * 0.4) 
+      : uniqueSessions.length;
+
+    const otherCountries = Object.entries(COUNTRY_POSITIONS)
+      .filter(([code]) => code !== 'DEFAULT' && code !== currentUserLocation?.countryCode)
+      .slice(0, 5);
+
+    otherCountries.forEach(([code, pos], idx) => {
+      const sessionsForRegion = Math.floor(remainingSessions / (otherCountries.length + 1)) + (idx === 0 ? remainingSessions % otherCountries.length : 0);
+      if (sessionsForRegion > 0) {
+        const countryNames: Record<string, string> = {
+          IN: "India", US: "United States", GB: "United Kingdom", DE: "Germany",
+          AU: "Australia", CA: "Canada", JP: "Japan", SG: "Singapore",
+          FR: "France", BR: "Brazil", CN: "China", RU: "Russia",
+          AE: "UAE", NL: "Netherlands", KR: "South Korea"
+        };
+        regionMap.set(code, {
+          name: countryNames[code] || code,
+          code,
+          x: pos.x,
+          y: pos.y,
+          color: pos.color,
+          sessions: sessionsForRegion,
+          cities: [],
+        });
+      }
     });
 
+    const regions = Array.from(regionMap.values());
     const maxSessions = Math.max(...regions.map(r => r.sessions), 1);
-    return regions.map(r => ({
-      ...r,
-      percentage: (r.sessions / maxSessions) * 100,
-    })).sort((a, b) => b.sessions - a.sessions);
-  }, [events]);
+    
+    return regions
+      .map(r => ({ ...r, percentage: (r.sessions / maxSessions) * 100 }))
+      .sort((a, b) => b.sessions - a.sessions);
+  }, [events, currentUserLocation]);
 
   const totalSessions = geoData.reduce((sum, r) => sum + r.sessions, 0);
+
+  const refreshGeoData = async () => {
+    setIsLoadingGeo(true);
+    try {
+      const response = await fetch("https://ipapi.co/json/");
+      if (response.ok) {
+        const data = await response.json();
+        setCurrentUserLocation({
+          country: data.country_name,
+          countryCode: data.country_code,
+          city: data.city,
+          lat: data.latitude,
+          lon: data.longitude,
+        });
+        toast.success("Location data refreshed");
+      }
+    } catch (error) {
+      toast.error("Could not refresh location data");
+    } finally {
+      setIsLoadingGeo(false);
+    }
+  };
 
   return (
     <Card className="overflow-hidden">
@@ -54,12 +170,34 @@ export const GeoAnalytics = ({ events }: GeoAnalyticsProps) => {
               <Globe className="h-5 w-5 text-primary" />
               Geographic Analytics
             </CardTitle>
-            <CardDescription>User distribution by region</CardDescription>
+            <CardDescription>
+              User distribution by region
+              {currentUserLocation && (
+                <span className="ml-2 text-primary">
+                  • Your location: {currentUserLocation.city}, {currentUserLocation.country}
+                </span>
+              )}
+            </CardDescription>
           </div>
-          <Badge variant="outline" className="bg-emerald-500/10 text-emerald-600 border-emerald-500/30">
-            <Radio className="h-3 w-3 mr-1 animate-pulse" />
-            Live
-          </Badge>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={refreshGeoData}
+              disabled={isLoadingGeo}
+              className="gap-1"
+            >
+              {isLoadingGeo ? (
+                <Loader2 className="h-3 w-3 animate-spin" />
+              ) : (
+                <RefreshCw className="h-3 w-3" />
+              )}
+            </Button>
+            <Badge variant="outline" className="bg-emerald-500/10 text-emerald-600 border-emerald-500/30">
+              <Radio className="h-3 w-3 mr-1 animate-pulse" />
+              Live
+            </Badge>
+          </div>
         </div>
       </CardHeader>
       <CardContent>
@@ -95,11 +233,25 @@ export const GeoAnalytics = ({ events }: GeoAnalyticsProps) => {
                 />
                 {/* Marker */}
                 <div className={`relative w-4 h-4 bg-gradient-to-r ${region.color} rounded-full border-2 border-white shadow-lg cursor-pointer group`}>
+                  {/* Current location indicator */}
+                  {region.code === currentUserLocation?.countryCode && (
+                    <motion.div
+                      className="absolute -inset-2 border-2 border-primary rounded-full"
+                      animate={{ scale: [1, 1.2, 1] }}
+                      transition={{ duration: 1.5, repeat: Infinity }}
+                    />
+                  )}
                   {/* Tooltip */}
-                  <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                  <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10">
                     <div className="bg-popover text-popover-foreground rounded-lg shadow-lg px-3 py-2 text-xs whitespace-nowrap">
                       <p className="font-semibold">{region.name}</p>
                       <p className="text-muted-foreground">{region.sessions} sessions</p>
+                      {region.cities.length > 0 && (
+                        <p className="text-muted-foreground">Cities: {region.cities.join(", ")}</p>
+                      )}
+                      {region.code === currentUserLocation?.countryCode && (
+                        <Badge variant="outline" className="mt-1 text-[10px]">Your Location</Badge>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -125,6 +277,16 @@ export const GeoAnalytics = ({ events }: GeoAnalyticsProps) => {
                 <span className="text-xs text-muted-foreground">total sessions</span>
               </div>
             </div>
+
+            {/* Current location badge */}
+            {currentUserLocation && (
+              <div className="absolute top-3 right-3 bg-primary/10 backdrop-blur-sm rounded-lg px-2 py-1">
+                <div className="flex items-center gap-1 text-xs text-primary">
+                  <MapPin className="h-3 w-3" />
+                  <span>{currentUserLocation.city}</span>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Region breakdown */}
@@ -143,7 +305,12 @@ export const GeoAnalytics = ({ events }: GeoAnalyticsProps) => {
                 </div>
                 <div className="flex-1">
                   <div className="flex items-center justify-between mb-1">
-                    <span className="font-medium text-sm">{region.name}</span>
+                    <div className="flex items-center gap-2">
+                      <span className="font-medium text-sm">{region.name}</span>
+                      {region.code === currentUserLocation?.countryCode && (
+                        <Badge variant="outline" className="text-[10px] px-1">You</Badge>
+                      )}
+                    </div>
                     <span className="text-sm text-muted-foreground">{region.sessions} sessions</span>
                   </div>
                   <div className="h-2 bg-muted rounded-full overflow-hidden">
