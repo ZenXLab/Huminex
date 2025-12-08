@@ -22,6 +22,7 @@ export interface DashboardPreset {
   description: string;
   icon: string;
   widgets: WidgetConfig[];
+  isCustom?: boolean;
 }
 
 interface DashboardLayout {
@@ -31,6 +32,7 @@ interface DashboardLayout {
 }
 
 const STORAGE_KEY = "admin-dashboard-layout";
+const CUSTOM_PRESETS_KEY = "admin-custom-presets";
 
 // Widget catalog - all available widgets
 export const widgetCatalog: WidgetMeta[] = [
@@ -119,11 +121,12 @@ export const dashboardPresets: DashboardPreset[] = [
 export const useDashboardLayout = () => {
   const [widgets, setWidgets] = useState<WidgetConfig[]>(defaultWidgets);
   const [activePreset, setActivePreset] = useState<string | null>("standard");
+  const [customPresets, setCustomPresets] = useState<DashboardPreset[]>([]);
   const [isEditMode, setIsEditMode] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const [isLibraryOpen, setIsLibraryOpen] = useState(false);
 
-  // Load layout from localStorage on mount
+  // Load layout and custom presets from localStorage on mount
   useEffect(() => {
     try {
       const saved = localStorage.getItem(STORAGE_KEY);
@@ -131,6 +134,11 @@ export const useDashboardLayout = () => {
         const layout: DashboardLayout = JSON.parse(saved);
         setWidgets(layout.widgets.sort((a, b) => a.order - b.order));
         setActivePreset(layout.activePreset);
+      }
+      
+      const savedPresets = localStorage.getItem(CUSTOM_PRESETS_KEY);
+      if (savedPresets) {
+        setCustomPresets(JSON.parse(savedPresets));
       }
     } catch (e) {
       console.error("Failed to load dashboard layout:", e);
@@ -232,17 +240,56 @@ export const useDashboardLayout = () => {
     [saveLayout]
   );
 
-  // Apply preset
+  // Apply preset (built-in or custom)
   const applyPreset = useCallback(
     (presetId: string) => {
-      const preset = dashboardPresets.find((p) => p.id === presetId);
+      const allPresets = [...dashboardPresets, ...customPresets];
+      const preset = allPresets.find((p) => p.id === presetId);
       if (!preset) return;
 
       setWidgets(preset.widgets);
       setActivePreset(presetId);
       saveLayout(preset.widgets, presetId);
     },
-    [saveLayout]
+    [saveLayout, customPresets]
+  );
+
+  // Save current layout as custom preset
+  const saveCustomPreset = useCallback(
+    (name: string, description: string = "") => {
+      const presetId = `custom-${Date.now()}`;
+      const newPreset: DashboardPreset = {
+        id: presetId,
+        name,
+        description: description || `Custom preset saved on ${new Date().toLocaleDateString()}`,
+        icon: "Star",
+        widgets: [...widgets],
+        isCustom: true,
+      };
+      
+      const updatedPresets = [...customPresets, newPreset];
+      setCustomPresets(updatedPresets);
+      setActivePreset(presetId);
+      localStorage.setItem(CUSTOM_PRESETS_KEY, JSON.stringify(updatedPresets));
+      saveLayout(widgets, presetId);
+      
+      return presetId;
+    },
+    [widgets, customPresets, saveLayout]
+  );
+
+  // Delete custom preset
+  const deleteCustomPreset = useCallback(
+    (presetId: string) => {
+      const updatedPresets = customPresets.filter((p) => p.id !== presetId);
+      setCustomPresets(updatedPresets);
+      localStorage.setItem(CUSTOM_PRESETS_KEY, JSON.stringify(updatedPresets));
+      
+      if (activePreset === presetId) {
+        setActivePreset(null);
+      }
+    },
+    [customPresets, activePreset]
   );
 
   // Reset to default layout
@@ -255,6 +302,7 @@ export const useDashboardLayout = () => {
   return {
     widgets,
     activePreset,
+    customPresets,
     isEditMode,
     isDragging,
     isLibraryOpen,
@@ -266,6 +314,8 @@ export const useDashboardLayout = () => {
     toggleWidget,
     addWidget,
     applyPreset,
+    saveCustomPreset,
+    deleteCustomPreset,
     resetLayout,
   };
 };

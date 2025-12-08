@@ -84,6 +84,7 @@ export const AdminOverview = () => {
   const {
     widgets,
     activePreset,
+    customPresets,
     isEditMode,
     isLibraryOpen,
     setIsEditMode,
@@ -94,6 +95,8 @@ export const AdminOverview = () => {
     toggleWidget,
     addWidget,
     applyPreset,
+    saveCustomPreset,
+    deleteCustomPreset,
     resetLayout,
   } = useDashboardLayout();
 
@@ -603,7 +606,10 @@ export const AdminOverview = () => {
           </Button>
           <DashboardPresets
             activePreset={activePreset}
+            customPresets={customPresets}
             onApplyPreset={applyPreset}
+            onSaveCustomPreset={saveCustomPreset}
+            onDeleteCustomPreset={deleteCustomPreset}
           />
           <DashboardEditControls
             isEditMode={isEditMode}
