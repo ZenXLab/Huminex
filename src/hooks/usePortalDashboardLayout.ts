@@ -34,8 +34,21 @@ interface PortalDashboardLayout {
   lastUpdated: string;
 }
 
+interface RoleWidgetAccess {
+  [widgetId: string]: boolean;
+}
+
+interface WidgetAccessConfig {
+  staff: RoleWidgetAccess;
+  hr: RoleWidgetAccess;
+  manager: RoleWidgetAccess;
+  finance: RoleWidgetAccess;
+  admin: RoleWidgetAccess;
+}
+
 const STORAGE_KEY = "portal-dashboard-layout";
 const CUSTOM_PRESETS_KEY = "portal-custom-presets";
+const WIDGET_ACCESS_STORAGE_KEY = "tenant-widget-access-config";
 
 // Portal widget catalog - all available employee widgets
 export const portalWidgetCatalog: PortalWidgetMeta[] = [
@@ -65,12 +78,48 @@ export const portalWidgetCatalog: PortalWidgetMeta[] = [
   { id: "approvals", name: "Pending Approvals", description: "Leave and expense approvals", icon: "ClipboardCheck", category: "operations", defaultSize: "medium", allowedRoles: ["hr", "manager", "admin"] },
 ];
 
-// Get widgets accessible for a specific role
-export const getWidgetsForRole = (role: EmployeeRole): PortalWidgetMeta[] => {
-  return portalWidgetCatalog.filter(widget => widget.allowedRoles.includes(role));
+// Get tenant admin's widget access configuration
+const getTenantWidgetAccessConfig = (): WidgetAccessConfig | null => {
+  try {
+    const saved = localStorage.getItem(WIDGET_ACCESS_STORAGE_KEY);
+    if (saved) {
+      return JSON.parse(saved);
+    }
+  } catch (e) {
+    console.error("Failed to load widget access config:", e);
+  }
+  return null;
 };
 
-// Default widgets by role
+// Check if a widget is enabled for a role by tenant admin
+const isWidgetEnabledByTenant = (widgetId: string, role: EmployeeRole): boolean => {
+  const config = getTenantWidgetAccessConfig();
+  if (!config) {
+    // No tenant config = use default role-based access
+    return true;
+  }
+  
+  const roleConfig = config[role];
+  if (!roleConfig) {
+    return true;
+  }
+  
+  // If widget is explicitly configured, use that; otherwise default to role's default access
+  if (widgetId in roleConfig) {
+    return roleConfig[widgetId];
+  }
+  
+  return true;
+};
+
+// Get widgets accessible for a specific role (combines role permissions + tenant config)
+export const getWidgetsForRole = (role: EmployeeRole): PortalWidgetMeta[] => {
+  return portalWidgetCatalog.filter(widget => 
+    widget.allowedRoles.includes(role) && isWidgetEnabledByTenant(widget.id, role)
+  );
+};
+
+// Default widgets by role (filtered by tenant config)
 const getDefaultWidgetsByRole = (role: EmployeeRole): PortalWidgetConfig[] => {
   const baseWidgets: PortalWidgetConfig[] = [
     { id: "quick-stats", order: 0, size: "full", visible: true },
@@ -114,7 +163,10 @@ const getDefaultWidgetsByRole = (role: EmployeeRole): PortalWidgetConfig[] => {
     ],
   };
 
-  return roleSpecificWidgets[role] || baseWidgets;
+  const allWidgets = roleSpecificWidgets[role] || baseWidgets;
+  
+  // Filter out widgets that tenant admin has disabled for this role
+  return allWidgets.filter(widget => isWidgetEnabledByTenant(widget.id, role));
 };
 
 // Role-based presets
@@ -229,10 +281,10 @@ export const usePortalDashboardLayout = (role: EmployeeRole) => {
       const saved = localStorage.getItem(storageKeyWithRole);
       if (saved) {
         const layout: PortalDashboardLayout = JSON.parse(saved);
-        // Filter widgets to only include those accessible by current role
+        // Filter widgets to only include those accessible by current role AND enabled by tenant
         const accessibleWidgets = layout.widgets.filter(w => {
           const meta = portalWidgetCatalog.find(m => m.id === w.id);
-          return meta?.allowedRoles.includes(role);
+          return meta?.allowedRoles.includes(role) && isWidgetEnabledByTenant(w.id, role);
         });
         setWidgets(accessibleWidgets.sort((a, b) => a.order - b.order));
         setActivePreset(layout.activePreset);
@@ -316,7 +368,8 @@ export const usePortalDashboardLayout = (role: EmployeeRole) => {
   const addWidget = useCallback(
     (widgetId: string) => {
       const meta = portalWidgetCatalog.find((w) => w.id === widgetId);
-      if (!meta || !meta.allowedRoles.includes(role)) return;
+      // Check role permissions AND tenant config
+      if (!meta || !meta.allowedRoles.includes(role) || !isWidgetEnabledByTenant(widgetId, role)) return;
 
       setWidgets((prev) => {
         const exists = prev.find((w) => w.id === widgetId);
@@ -351,10 +404,10 @@ export const usePortalDashboardLayout = (role: EmployeeRole) => {
       const preset = allPresets.find((p) => p.id === presetId);
       if (!preset) return;
 
-      // Filter widgets to only include those accessible by current role
+      // Filter widgets to only include those accessible by current role AND enabled by tenant
       const accessibleWidgets = preset.widgets.filter(w => {
         const meta = portalWidgetCatalog.find(m => m.id === w.id);
-        return meta?.allowedRoles.includes(role);
+        return meta?.allowedRoles.includes(role) && isWidgetEnabledByTenant(w.id, role);
       });
 
       setWidgets(accessibleWidgets);
