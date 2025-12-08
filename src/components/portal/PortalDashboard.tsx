@@ -1,17 +1,18 @@
-import React from "react";
+import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { 
   FolderKanban, Receipt, HeadphonesIcon, Calendar, ArrowUpRight, ChevronRight, 
-  FileText, Clock, Zap, RefreshCw, Settings, BarChart3
+  FileText, Clock, Zap, RefreshCw, Settings, BarChart3, Plus
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { useEmployeeRole, EmployeeRole } from "@/hooks/useEmployeeRole";
-import { usePortalDashboardLayout, PortalWidgetConfig, portalWidgetCatalog, getPortalPresets } from "@/hooks/usePortalDashboardLayout";
+import { useEmployeeRole } from "@/hooks/useEmployeeRole";
+import { usePortalDashboardLayout, PortalWidgetConfig, portalWidgetCatalog } from "@/hooks/usePortalDashboardLayout";
+import { DraggablePortalWidget } from "./DraggablePortalWidget";
 
 // Import widgets
 import { AttendanceWidget } from "./widgets/AttendanceWidget";
@@ -34,8 +35,12 @@ export const PortalDashboard = ({ userId }: PortalDashboardProps) => {
   const { role } = useEmployeeRole();
   const { 
     widgets, activePreset, isEditMode, setIsEditMode, 
-    reorderWidgets, toggleWidget, applyPreset, resetLayout, presets 
+    reorderWidgets, resizeWidget, toggleWidget, addWidget,
+    applyPreset, resetLayout, presets, availableWidgets, isLibraryOpen, setIsLibraryOpen
   } = usePortalDashboardLayout(role);
+  
+  const [dragOverId, setDragOverId] = useState<string | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
 
   const { data: projects } = useQuery({
     queryKey: ["portal-projects", userId],
@@ -165,32 +170,69 @@ export const PortalDashboard = ({ userId }: PortalDashboardProps) => {
         </div>
       )}
 
-      {/* Widgets Grid */}
+      {/* Widgets Grid with Drag-and-Drop */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         {visibleWidgets.map((widget) => (
-          <div 
-            key={widget.id} 
-            className={`${getWidgetGridClass(widget.size)} ${isEditMode ? 'ring-2 ring-primary/30 ring-dashed cursor-pointer' : ''}`}
-            onClick={() => isEditMode && toggleWidget(widget.id)}
+          <DraggablePortalWidget
+            key={widget.id}
+            widget={widget}
+            isEditMode={isEditMode}
+            onDragStart={() => setIsDragging(true)}
+            onDragEnd={(targetId) => {
+              setIsDragging(false);
+              if (targetId && targetId !== widget.id) {
+                reorderWidgets(widget.id, targetId);
+              }
+            }}
+            onResize={(size) => resizeWidget(widget.id, size)}
+            onToggleVisibility={() => toggleWidget(widget.id)}
+            dragOverId={dragOverId}
+            setDragOverId={setDragOverId}
           >
             {renderWidget(widget.id)}
-          </div>
+          </DraggablePortalWidget>
         ))}
       </div>
 
-      {/* Hidden Widgets (Edit Mode) */}
-      {isEditMode && widgets.filter(w => !w.visible).length > 0 && (
-        <div className="space-y-2">
-          <p className="text-sm font-medium text-muted-foreground">Hidden Widgets (click to show)</p>
-          <div className="flex flex-wrap gap-2">
-            {widgets.filter(w => !w.visible).map((widget) => {
-              const meta = portalWidgetCatalog.find(m => m.id === widget.id);
-              return (
-                <Button key={widget.id} variant="outline" size="sm" onClick={() => toggleWidget(widget.id)} className="opacity-60">
-                  {meta?.name || widget.id}
-                </Button>
-              );
-            })}
+      {/* Widget Library (Edit Mode) */}
+      {isEditMode && (
+        <div className="space-y-4">
+          {/* Hidden Widgets */}
+          {widgets.filter(w => !w.visible).length > 0 && (
+            <div className="space-y-2">
+              <p className="text-sm font-medium text-muted-foreground">Hidden Widgets (click to show)</p>
+              <div className="flex flex-wrap gap-2">
+                {widgets.filter(w => !w.visible).map((widget) => {
+                  const meta = portalWidgetCatalog.find(m => m.id === widget.id);
+                  return (
+                    <Button key={widget.id} variant="outline" size="sm" onClick={() => toggleWidget(widget.id)} className="opacity-60 hover:opacity-100">
+                      {meta?.name || widget.id}
+                    </Button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* Available Widgets to Add */}
+          <div className="space-y-2">
+            <p className="text-sm font-medium text-muted-foreground">Add Widgets</p>
+            <div className="flex flex-wrap gap-2">
+              {availableWidgets
+                .filter(w => !widgets.find(widget => widget.id === w.id))
+                .map((widget) => (
+                  <Button 
+                    key={widget.id} 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={() => addWidget(widget.id)}
+                    className="gap-1"
+                  >
+                    <Plus className="w-3 h-3" />
+                    {widget.name}
+                  </Button>
+                ))}
+            </div>
           </div>
         </div>
       )}
