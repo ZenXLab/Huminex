@@ -11,7 +11,8 @@ import { toast } from "sonner";
 import { 
   Eye, Loader2, Download, Receipt, CreditCard, TrendingUp, 
   Clock, CheckCircle, XCircle, AlertCircle, Search, RefreshCw,
-  Calendar, DollarSign, ArrowUpRight, ArrowDownRight, Filter
+  Calendar, DollarSign, ArrowUpRight, ArrowDownRight, Filter,
+  Globe, User, FileDown, History
 } from "lucide-react";
 
 const statusColors: Record<string, string> = {
@@ -42,6 +43,8 @@ export const AdminInvoices = () => {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [downloadLoading, setDownloadLoading] = useState(false);
   const [checkingOverdue, setCheckingOverdue] = useState(false);
+  const [invoiceDownloads, setInvoiceDownloads] = useState<any[]>([]);
+  const [loadingDownloads, setLoadingDownloads] = useState(false);
 
   const fetchInvoices = async () => {
     try {
@@ -455,10 +458,27 @@ export const AdminInvoices = () => {
           </DialogHeader>
           
           {selectedInvoice && (
-            <Tabs defaultValue="details" className="w-full">
-              <TabsList className="grid w-full grid-cols-2">
+            <Tabs defaultValue="details" className="w-full" onValueChange={(val) => {
+              if (val === 'downloads' && selectedInvoice) {
+                setLoadingDownloads(true);
+                supabase
+                  .from('invoice_downloads')
+                  .select('*')
+                  .eq('invoice_id', selectedInvoice.id)
+                  .order('created_at', { ascending: false })
+                  .then(({ data, error }) => {
+                    if (!error) setInvoiceDownloads(data || []);
+                    setLoadingDownloads(false);
+                  });
+              }
+            }}>
+              <TabsList className="grid w-full grid-cols-3">
                 <TabsTrigger value="details">Invoice Details</TabsTrigger>
                 <TabsTrigger value="payment">Payment Info</TabsTrigger>
+                <TabsTrigger value="downloads" className="flex items-center gap-1">
+                  <FileDown className="h-3 w-3" />
+                  Downloads
+                </TabsTrigger>
               </TabsList>
 
               <TabsContent value="details" className="space-y-6 mt-4">
