@@ -991,6 +991,50 @@ export type Database = {
         }
         Relationships: []
       }
+      invoice_downloads: {
+        Row: {
+          created_at: string
+          download_type: string
+          downloaded_by: string | null
+          downloaded_by_email: string | null
+          downloaded_by_name: string | null
+          id: string
+          invoice_id: string | null
+          ip_address: string | null
+          user_agent: string | null
+        }
+        Insert: {
+          created_at?: string
+          download_type?: string
+          downloaded_by?: string | null
+          downloaded_by_email?: string | null
+          downloaded_by_name?: string | null
+          id?: string
+          invoice_id?: string | null
+          ip_address?: string | null
+          user_agent?: string | null
+        }
+        Update: {
+          created_at?: string
+          download_type?: string
+          downloaded_by?: string | null
+          downloaded_by_email?: string | null
+          downloaded_by_name?: string | null
+          id?: string
+          invoice_id?: string | null
+          ip_address?: string | null
+          user_agent?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invoice_downloads_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "invoices"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       invoices: {
         Row: {
           amount: number
@@ -1001,6 +1045,8 @@ export type Database = {
           notes: string | null
           paid_at: string | null
           quote_id: string | null
+          reminder_count: number | null
+          reminder_sent_at: string | null
           status: Database["public"]["Enums"]["invoice_status"] | null
           tax_amount: number
           tax_percent: number | null
@@ -1017,6 +1063,8 @@ export type Database = {
           notes?: string | null
           paid_at?: string | null
           quote_id?: string | null
+          reminder_count?: number | null
+          reminder_sent_at?: string | null
           status?: Database["public"]["Enums"]["invoice_status"] | null
           tax_amount: number
           tax_percent?: number | null
@@ -1033,6 +1081,8 @@ export type Database = {
           notes?: string | null
           paid_at?: string | null
           quote_id?: string | null
+          reminder_count?: number | null
+          reminder_sent_at?: string | null
           status?: Database["public"]["Enums"]["invoice_status"] | null
           tax_amount?: number
           tax_percent?: number | null
