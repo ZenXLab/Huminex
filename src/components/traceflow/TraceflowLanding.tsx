@@ -376,10 +376,12 @@ export const TraceflowLanding = () => {
 
             {/* Desktop CTAs */}
             <div className="hidden lg:flex items-center gap-3">
-              <Button variant="ghost" size="sm" className="text-foreground/70 hover:text-foreground">
-                Sign In
-              </Button>
-              <Link to="/contact">
+              <Link to="/traceflow/login">
+                <Button variant="ghost" size="sm" className="text-foreground/70 hover:text-foreground">
+                  Sign In
+                </Button>
+              </Link>
+              <Link to="/traceflow/login">
                 <Button 
                   size="sm" 
                   className="bg-[#FF8A00] hover:bg-[#FF8A00]/90 text-white shadow-lg shadow-[#FF8A00]/25"
@@ -423,8 +425,10 @@ export const TraceflowLanding = () => {
               Contact
             </Link>
             <div className="pt-4 border-t border-border space-y-2">
-              <Button variant="outline" className="w-full justify-center">Sign In</Button>
-              <Link to="/contact">
+              <Link to="/traceflow/login">
+                <Button variant="outline" className="w-full justify-center">Sign In</Button>
+              </Link>
+              <Link to="/traceflow/login">
                 <Button className="w-full justify-center bg-[#FF8A00] hover:bg-[#FF8A00]/90 text-white">
                   Request Demo
                 </Button>
@@ -520,7 +524,7 @@ export const TraceflowLanding = () => {
               </p>
 
               <div className="flex flex-col sm:flex-row gap-3 pt-2">
-                <Link to="/contact">
+                <Link to="/traceflow/login">
                   <Button 
                     size="lg" 
                     className="bg-[#FF8A00] hover:bg-[#FF8A00]/90 text-white shadow-xl shadow-[#FF8A00]/25 px-8 h-12 text-base"
@@ -529,7 +533,7 @@ export const TraceflowLanding = () => {
                     <ArrowRight className="ml-2 h-4 w-4" />
                   </Button>
                 </Link>
-                <Link to="/traceflow/dashboard">
+                <Link to="/traceflow/login">
                   <Button 
                     size="lg" 
                     variant="outline" 

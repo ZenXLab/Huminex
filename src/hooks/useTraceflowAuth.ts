@@ -58,15 +58,19 @@ export const useTraceflowAuth = () => {
           ?.filter((f) => f.is_enabled)
           .map((f) => f.feature_id) || [];
 
-        // Build TraceflowUser
+        // Build TraceflowUser with proper type casting
+        const role = isAdminUser ? "admin" : (subscription?.role as "admin" | "owner" | "member" | "viewer" || "member");
+        const plan = isAdminUser ? "enterprise" : (subscription?.plan || "starter");
+        const status = isAdminUser ? "active" : (subscription?.status as "active" | "trial" | "pending_payment" | "cancelled" || "pending_payment");
+        
         setTraceflowUser({
           id: user.id,
           email: user.email || "",
           fullName: user.user_metadata?.full_name || "",
           companyName: user.user_metadata?.company_name || "",
-          role: isAdminUser ? "admin" : (subscription?.role || "member"),
-          plan: isAdminUser ? "enterprise" : (subscription?.plan || "starter"),
-          subscriptionStatus: isAdminUser ? "active" : (subscription?.status || "pending_payment"),
+          role,
+          plan,
+          subscriptionStatus: status,
           features: isAdminUser 
             ? ["all"] // Admins have access to all features
             : enabledFeatures,

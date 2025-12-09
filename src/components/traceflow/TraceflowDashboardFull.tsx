@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Progress } from "@/components/ui/progress";
 import { 
   LayoutDashboard, 
   Video, 
@@ -79,17 +80,20 @@ interface AIInsightCard {
   llmUsed?: string;
 }
 
+// TRACEFLOW 11 Core Feature Modules
 const sidebarItems = [
-  { icon: LayoutDashboard, label: "Overview", id: "overview" },
-  { icon: Video, label: "Sessions", id: "sessions", badge: "Live" },
-  { icon: MousePointer, label: "UX Intelligence", id: "ux" },
-  { icon: Map, label: "Heatmaps", id: "heatmaps" },
-  { icon: GitBranch, label: "Funnels", id: "funnels" },
-  { icon: Brain, label: "AI Cortex", id: "ai" },
-  { icon: Bot, label: "NeuroRouter", id: "neurorouter", badge: "New" },
-  { icon: Code2, label: "SDK Setup", id: "sdk" },
-  { icon: Plug2, label: "Integrations", id: "integrations" },
-  { icon: Settings, label: "Settings", id: "settings" },
+  { icon: LayoutDashboard, label: "Overview", id: "overview", description: "AI-powered dashboard with real-time insights" },
+  { icon: MousePointer, label: "Capture Engine", id: "capture", description: "Universal auto-capture across web & mobile", badge: "Core" },
+  { icon: Video, label: "Session Intelligence", id: "sessions", description: "AI summaries, root-cause & fix suggestions", badge: "Live" },
+  { icon: Layers, label: "UX Intelligence", id: "ux", description: "Visual breakage, heatmaps & design auditor" },
+  { icon: GitBranch, label: "Journey Intelligence", id: "journeys", description: "Auto-funnels, drop-off causality & simulator" },
+  { icon: BarChart3, label: "Product Intelligence", id: "product", description: "Feature usage, retention & churn prediction" },
+  { icon: Activity, label: "Observability", id: "observability", description: "OTel traces, service maps & API correlation" },
+  { icon: Brain, label: "Multi-Modal AI", id: "multimodal", description: "Voice, text & sentiment fusion with sessions", badge: "New" },
+  { icon: Bot, label: "AI Operations", id: "ai-ops", description: "Multi-agent auto-ticketing & monitoring" },
+  { icon: Target, label: "Revenue Insights", id: "revenue", description: "Financial impact & ROI of UX improvements" },
+  { icon: Code2, label: "SDK & Setup", id: "sdk", description: "Integrate TRACEFLOW in minutes" },
+  { icon: Settings, label: "Admin & Billing", id: "settings", description: "Feature store, team & billing management" },
 ];
 
 export const TraceflowDashboardFull = () => {
@@ -204,29 +208,271 @@ export const TraceflowDashboardFull = () => {
   };
 
   const renderContent = () => {
+    // Get current module info for header
+    const currentModule = sidebarItems.find(item => item.id === activeTab);
+    
     switch (activeTab) {
       case "sessions":
         return <TraceflowSessionReplay />;
       case "ux":
-      case "heatmaps":
         return <TraceflowUXIntelligence />;
       case "sdk":
         return <TraceflowSDK />;
-      case "neurorouter":
+      
+      case "capture":
         return (
           <div className="space-y-6">
             <div className="flex items-center justify-between">
               <div>
-                <h2 className="text-2xl font-bold">NeuroRouter AI</h2>
-                <p className="text-muted-foreground">Multi-LLM orchestration and task routing</p>
+                <h2 className="text-2xl font-bold flex items-center gap-2">
+                  <MousePointer className="h-6 w-6 text-[#0B3D91]" />
+                  Universal Capture Engine
+                </h2>
+                <p className="text-muted-foreground">Auto-capture every user interaction with zero manual tagging</p>
               </div>
-              <Button onClick={() => {}} className="bg-gradient-to-r from-[#0B3D91] to-[#00C2D8]">
-                <RefreshCw className="h-4 w-4 mr-2" />
-                Refresh Logs
-              </Button>
+              <Badge className="bg-blue-500/10 text-blue-600">Core Feature</Badge>
+            </div>
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {[
+                { title: "Auto Event Capture", desc: "Zero manual tagging required - captures clicks, taps, gestures automatically", metric: "100%", status: "active" },
+                { title: "Web Session Replay", desc: "Pixel-perfect playback of every user session", metric: "HD", status: "active" },
+                { title: "Mobile Gesture Capture", desc: "Native iOS & Android gesture tracking", metric: "Native", status: "active" },
+                { title: "Rage Click Detection", desc: "AI-powered frustration pattern recognition", metric: "Real-time", status: "active" },
+                { title: "Dead Click Detection", desc: "Identify non-responsive UI elements", metric: "Instant", status: "active" },
+                { title: "DOM Timeline Tracking", desc: "Complete DOM mutation history", metric: "Full", status: "active" },
+              ].map((feature) => (
+                <Card key={feature.title} className="border-0 shadow-lg">
+                  <CardContent className="p-4">
+                    <div className="flex items-center justify-between mb-2">
+                      <Badge variant="outline" className="text-emerald-600 border-emerald-300 bg-emerald-50">Active</Badge>
+                      <span className="text-sm font-bold text-[#0B3D91]">{feature.metric}</span>
+                    </div>
+                    <h4 className="font-semibold mb-1">{feature.title}</h4>
+                    <p className="text-xs text-muted-foreground">{feature.desc}</p>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </div>
+        );
+
+      case "journeys":
+        return (
+          <div className="space-y-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-2xl font-bold flex items-center gap-2">
+                  <GitBranch className="h-6 w-6 text-[#0B3D91]" />
+                  Journey Intelligence
+                </h2>
+                <p className="text-muted-foreground">Auto-build funnels, explain drop-offs, predict conversion impact</p>
+              </div>
+            </div>
+            <div className="grid md:grid-cols-2 gap-6">
+              <Card className="border-0 shadow-lg">
+                <CardHeader>
+                  <CardTitle className="text-lg">Causality Engine</CardTitle>
+                  <CardDescription>Explains WHY users drop off, not just where</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3">
+                    <div className="p-3 bg-red-50 rounded-lg border border-red-100">
+                      <div className="flex items-center gap-2 mb-1">
+                        <AlertTriangle className="h-4 w-4 text-red-500" />
+                        <span className="font-medium text-red-700">Checkout Drop-off</span>
+                      </div>
+                      <p className="text-xs text-red-600">Payment gateway timeout causing 68% abandonment</p>
+                    </div>
+                    <div className="p-3 bg-amber-50 rounded-lg border border-amber-100">
+                      <div className="flex items-center gap-2 mb-1">
+                        <AlertTriangle className="h-4 w-4 text-amber-500" />
+                        <span className="font-medium text-amber-700">Form Friction</span>
+                      </div>
+                      <p className="text-xs text-amber-600">Address autocomplete failure on mobile devices</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+              <Card className="border-0 shadow-lg">
+                <CardHeader>
+                  <CardTitle className="text-lg">Impact Simulator</CardTitle>
+                  <CardDescription>Predict conversion uplift from proposed fixes</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-center py-4">
+                    <div className="text-4xl font-bold text-emerald-600 mb-1">+23%</div>
+                    <p className="text-sm text-muted-foreground">Projected conversion increase</p>
+                    <p className="text-xs text-muted-foreground mt-2">if checkout flow is optimized</p>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+        );
+
+      case "product":
+        return (
+          <div className="space-y-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-2xl font-bold flex items-center gap-2">
+                  <BarChart3 className="h-6 w-6 text-[#0B3D91]" />
+                  Product Intelligence
+                </h2>
+                <p className="text-muted-foreground">Feature adoption, retention drivers, churn signals</p>
+              </div>
+            </div>
+            <div className="grid md:grid-cols-3 gap-4">
+              {[
+                { title: "Feature Usage", value: "12.4K", change: "+18%", desc: "Active users on new dashboard" },
+                { title: "Retention Rate", value: "87%", change: "+5%", desc: "30-day user retention" },
+                { title: "Churn Risk", value: "234", change: "-12%", desc: "Users at risk of churning" },
+              ].map((stat) => (
+                <Card key={stat.title} className="border-0 shadow-lg">
+                  <CardContent className="p-4">
+                    <p className="text-sm text-muted-foreground">{stat.title}</p>
+                    <div className="flex items-baseline gap-2 mt-1">
+                      <span className="text-2xl font-bold">{stat.value}</span>
+                      <span className={cn("text-xs", stat.change.startsWith("+") ? "text-emerald-600" : "text-red-600")}>{stat.change}</span>
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-1">{stat.desc}</p>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </div>
+        );
+
+      case "observability":
+        return (
+          <div className="space-y-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-2xl font-bold flex items-center gap-2">
+                  <Activity className="h-6 w-6 text-[#0B3D91]" />
+                  Experience Observability
+                </h2>
+                <p className="text-muted-foreground">Connect frontend behavior with backend traces, logs & API performance</p>
+              </div>
+              <Badge className="bg-purple-500/10 text-purple-600">OTel-Powered</Badge>
+            </div>
+            <div className="grid md:grid-cols-2 gap-6">
+              <Card className="border-0 shadow-lg">
+                <CardHeader>
+                  <CardTitle className="text-lg">Service Map</CardTitle>
+                  <CardDescription>Real-time service dependencies and latency</CardDescription>
+                </CardHeader>
+                <CardContent className="h-48 flex items-center justify-center bg-slate-50 rounded-lg">
+                  <p className="text-muted-foreground">Interactive service map visualization</p>
+                </CardContent>
+              </Card>
+              <Card className="border-0 shadow-lg">
+                <CardHeader>
+                  <CardTitle className="text-lg">API Correlation</CardTitle>
+                  <CardDescription>Link user frustration to specific API calls</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-2">
+                    <div className="p-2 bg-red-50 rounded border-l-4 border-red-500">
+                      <p className="text-xs font-medium">POST /api/checkout</p>
+                      <p className="text-xs text-red-600">Avg 4.2s latency causing 68% rage clicks</p>
+                    </div>
+                    <div className="p-2 bg-amber-50 rounded border-l-4 border-amber-500">
+                      <p className="text-xs font-medium">GET /api/products</p>
+                      <p className="text-xs text-amber-600">Intermittent 500 errors detected</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+        );
+
+      case "multimodal":
+        return (
+          <div className="space-y-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-2xl font-bold flex items-center gap-2">
+                  <Brain className="h-6 w-6 text-[#0B3D91]" />
+                  Multi-Modal Intelligence
+                </h2>
+                <p className="text-muted-foreground">Voice, text & sentiment fusion with exact user sessions</p>
+              </div>
+              <Badge className="bg-[#FF8A00]/10 text-[#FF8A00]">World First</Badge>
+            </div>
+            <div className="grid md:grid-cols-2 gap-6">
+              <Card className="border-0 shadow-lg">
+                <CardHeader>
+                  <CardTitle className="text-lg">Voice + Session Fusion</CardTitle>
+                  <CardDescription>Audio complaint maps to exact recorded session</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="p-4 bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg">
+                    <div className="flex items-center gap-2 mb-2">
+                      <div className="w-8 h-8 rounded-full bg-purple-500 flex items-center justify-center">
+                        <Users className="h-4 w-4 text-white" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium">Customer Voice Note</p>
+                        <p className="text-xs text-muted-foreground">"The checkout button wasn't working..."</p>
+                      </div>
+                    </div>
+                    <div className="mt-2 p-2 bg-white rounded border">
+                      <p className="text-xs text-emerald-600">✓ Matched to Session #4521 - Rage clicks detected</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+              <Card className="border-0 shadow-lg">
+                <CardHeader>
+                  <CardTitle className="text-lg">Sentiment Analysis</CardTitle>
+                  <CardDescription>NPS, feedback & sentiment trends</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3">
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm">Positive</span>
+                      <div className="flex-1 mx-3 h-2 bg-slate-100 rounded-full overflow-hidden">
+                        <div className="h-full bg-emerald-500 w-3/5" />
+                      </div>
+                      <span className="text-sm font-medium">62%</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm">Neutral</span>
+                      <div className="flex-1 mx-3 h-2 bg-slate-100 rounded-full overflow-hidden">
+                        <div className="h-full bg-amber-500 w-1/4" />
+                      </div>
+                      <span className="text-sm font-medium">25%</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm">Negative</span>
+                      <div className="flex-1 mx-3 h-2 bg-slate-100 rounded-full overflow-hidden">
+                        <div className="h-full bg-red-500 w-[13%]" />
+                      </div>
+                      <span className="text-sm font-medium">13%</span>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+        );
+
+      case "ai-ops":
+        return (
+          <div className="space-y-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-2xl font-bold flex items-center gap-2">
+                  <Bot className="h-6 w-6 text-[#0B3D91]" />
+                  AI Operations
+                </h2>
+                <p className="text-muted-foreground">Multi-agent automation for diagnostics, ticketing & monitoring</p>
+              </div>
             </div>
             
-            {/* LLM Usage Stats */}
+            {/* NeuroRouter Stats */}
             <div className="grid grid-cols-4 gap-4">
               {[
                 { name: "DeepSeek", tasks: 245, icon: Brain, color: "from-blue-500 to-indigo-600", specialty: "Reasoning" },
@@ -251,47 +497,127 @@ export const TraceflowDashboardFull = () => {
               ))}
             </div>
 
-            {/* NeuroRouter Logs */}
+            {/* AI Agents */}
             <Card className="border-0 shadow-lg">
               <CardHeader>
-                <CardTitle>Recent Routing Decisions</CardTitle>
-                <CardDescription>AI task routing log with model selection reasoning</CardDescription>
+                <CardTitle>Active AI Agents</CardTitle>
+                <CardDescription>Autonomous agents working on your experience data</CardDescription>
               </CardHeader>
               <CardContent>
-                <ScrollArea className="h-[400px]">
-                  <div className="space-y-3">
-                    {neuroRouterLogs && neuroRouterLogs.length > 0 ? (
-                      neuroRouterLogs.map((log, index) => (
-                        <div
-                          key={log.id}
-                          className="p-4 rounded-lg border bg-muted/30 animate-fade-in"
-                          style={{ animationDelay: `${index * 50}ms` }}
-                        >
-                          <div className="flex items-center justify-between mb-2">
-                            <div className="flex items-center gap-2">
-                              <Badge className="bg-[#0B3D91]/10 text-[#0B3D91]">{log.task_type}</Badge>
-                              <span className="text-xs text-muted-foreground">→</span>
-                              <Badge variant="outline">{log.selected_llm} / {log.selected_model}</Badge>
-                            </div>
-                            <span className="text-xs text-muted-foreground">
-                              {log.latency_ms}ms
-                            </span>
-                          </div>
-                          <p className="text-sm text-muted-foreground">{log.routing_reason}</p>
-                        </div>
-                      ))
-                    ) : (
-                      <div className="text-center py-8 text-muted-foreground">
-                        <Brain className="h-12 w-12 mx-auto mb-3 opacity-30" />
-                        <p>No routing logs yet. Run an AI analysis to see NeuroRouter in action.</p>
+                <div className="grid md:grid-cols-3 gap-4">
+                  {[
+                    { name: "Diagnostics Agent", status: "Running", tasks: 12, desc: "Analyzing session anomalies" },
+                    { name: "Ticketing Agent", status: "Idle", tasks: 0, desc: "Auto-creates Jira tickets" },
+                    { name: "Regression Agent", status: "Running", tasks: 3, desc: "Monitoring for regressions" },
+                  ].map((agent) => (
+                    <div key={agent.name} className="p-4 rounded-lg border bg-muted/30">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="font-medium">{agent.name}</span>
+                        <Badge className={agent.status === "Running" ? "bg-emerald-500/10 text-emerald-600" : "bg-slate-500/10 text-slate-600"}>
+                          {agent.status}
+                        </Badge>
                       </div>
-                    )}
-                  </div>
-                </ScrollArea>
+                      <p className="text-xs text-muted-foreground">{agent.desc}</p>
+                      {agent.tasks > 0 && (
+                        <p className="text-xs text-[#0B3D91] mt-1">{agent.tasks} tasks in progress</p>
+                      )}
+                    </div>
+                  ))}
+                </div>
               </CardContent>
             </Card>
           </div>
         );
+
+      case "revenue":
+        return (
+          <div className="space-y-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-2xl font-bold flex items-center gap-2">
+                  <Target className="h-6 w-6 text-[#0B3D91]" />
+                  Revenue & Growth Intelligence
+                </h2>
+                <p className="text-muted-foreground">Quantify financial impact of UX issues, predict ROI of fixes</p>
+              </div>
+            </div>
+            <div className="grid md:grid-cols-3 gap-4">
+              <Card className="border-0 shadow-lg bg-gradient-to-br from-red-50 to-orange-50">
+                <CardContent className="p-4">
+                  <p className="text-sm text-muted-foreground">Revenue at Risk</p>
+                  <p className="text-3xl font-bold text-red-600">₹12.4L</p>
+                  <p className="text-xs text-red-600 mt-1">Due to checkout friction</p>
+                </CardContent>
+              </Card>
+              <Card className="border-0 shadow-lg bg-gradient-to-br from-emerald-50 to-teal-50">
+                <CardContent className="p-4">
+                  <p className="text-sm text-muted-foreground">Projected Recovery</p>
+                  <p className="text-3xl font-bold text-emerald-600">₹8.2L</p>
+                  <p className="text-xs text-emerald-600 mt-1">If top 5 issues fixed</p>
+                </CardContent>
+              </Card>
+              <Card className="border-0 shadow-lg bg-gradient-to-br from-blue-50 to-indigo-50">
+                <CardContent className="p-4">
+                  <p className="text-sm text-muted-foreground">ROI of TRACEFLOW</p>
+                  <p className="text-3xl font-bold text-blue-600">4.2x</p>
+                  <p className="text-xs text-blue-600 mt-1">In first 6 months</p>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+        );
+
+      case "settings":
+        return (
+          <div className="space-y-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-2xl font-bold flex items-center gap-2">
+                  <Settings className="h-6 w-6 text-[#0B3D91]" />
+                  Admin & Billing
+                </h2>
+                <p className="text-muted-foreground">Feature store, team management & billing</p>
+              </div>
+            </div>
+            <div className="grid md:grid-cols-2 gap-6">
+              <Card className="border-0 shadow-lg">
+                <CardHeader>
+                  <CardTitle>Feature Store</CardTitle>
+                  <CardDescription>Enable/disable features per team</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3">
+                    {["Session Replay", "AI Summaries", "Heatmaps", "Voice Fusion", "NeuroRouter"].map((feature) => (
+                      <div key={feature} className="flex items-center justify-between p-2 rounded-lg hover:bg-muted/50">
+                        <span className="text-sm">{feature}</span>
+                        <Badge className="bg-emerald-500/10 text-emerald-600">Enabled</Badge>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+              <Card className="border-0 shadow-lg">
+                <CardHeader>
+                  <CardTitle>Current Plan</CardTitle>
+                  <CardDescription>Professional - 250K sessions/month</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    <div className="flex justify-between">
+                      <span className="text-sm text-muted-foreground">Sessions Used</span>
+                      <span className="font-medium">142,500 / 250,000</span>
+                    </div>
+                    <Progress value={57} className="h-2" />
+                    <Button className="w-full bg-gradient-to-r from-[#0B3D91] to-[#00C2D8]">
+                      Upgrade to Enterprise
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+        );
+
       default:
         return (
           <>
@@ -537,20 +863,28 @@ export const TraceflowDashboardFull = () => {
                 activeTab === item.id && "text-white"
               )} />
               {!sidebarCollapsed && (
-                <div className="flex-1 flex items-center justify-between">
-                  <span className="text-sm font-medium">{item.label}</span>
-                  {item.badge && (
-                    <Badge 
-                      className={cn(
-                        "text-[9px] h-4 px-1.5",
-                        item.badge === "Live" 
-                          ? "bg-emerald-500/20 text-emerald-400" 
-                          : "bg-[#FF8A00]/20 text-[#FF8A00]"
-                      )}
-                    >
-                      {item.badge}
-                    </Badge>
-                  )}
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium">{item.label}</span>
+                    {item.badge && (
+                      <Badge 
+                        className={cn(
+                          "text-[9px] h-4 px-1.5 ml-1",
+                          item.badge === "Live" 
+                            ? "bg-emerald-500/20 text-emerald-400" 
+                            : item.badge === "Core"
+                            ? "bg-blue-500/20 text-blue-400"
+                            : "bg-[#FF8A00]/20 text-[#FF8A00]"
+                        )}
+                      >
+                        {item.badge}
+                      </Badge>
+                    )}
+                  </div>
+                  <span className={cn(
+                    "text-[10px] truncate block",
+                    activeTab === item.id ? "text-white/70" : "text-slate-500"
+                  )}>{item.description}</span>
                 </div>
               )}
             </button>
