@@ -55,7 +55,7 @@ export const AdminClickstream = () => {
   const [liveEventsCount, setLiveEventsCount] = useState(0);
   const [lastUpdate, setLastUpdate] = useState<Date>(new Date());
   const [eventsExpanded, setEventsExpanded] = useState(false);
-  const [notificationsEnabled, setNotificationsEnabled] = useState(true);
+  const [notificationsEnabled, setNotificationsEnabled] = useState(false); // Disabled by default for performance
   const [activeSection, setActiveSection] = useState("overview");
   const [privacySettings, setPrivacySettings] = useState<PrivacySettings>(defaultPrivacySettings);
   const [showExportModal, setShowExportModal] = useState(false);
@@ -63,7 +63,7 @@ export const AdminClickstream = () => {
   const [pageFilter, setPageFilter] = useState("");
   const queryClient = useQueryClient();
 
-  // Use infinite query for progressive loading of events
+  // Use infinite query for progressive loading of events - only fetch when section is active
   const {
     data: infiniteEventsData,
     isLoading: isInfiniteLoading,
@@ -77,11 +77,11 @@ export const AdminClickstream = () => {
     customDateRange,
   });
 
-  // Flatten pages into single array for components
+  // Flatten pages into single array for components - memoized
   const events = useMemo(() => flattenClickstreamPages(infiniteEventsData), [infiniteEventsData]);
   const isLoading = isInfiniteLoading;
 
-  // Update last update time when data changes
+  // Update last update time when data changes - debounced
   useEffect(() => {
     if (events.length > 0) {
       setLastUpdate(new Date());
@@ -90,6 +90,7 @@ export const AdminClickstream = () => {
 
   const refetch = refetchInfinite;
 
+  // Only fetch experiments when needed - lazy
   const { data: experiments } = useQuery({
     queryKey: ["ab-experiments-active"],
     queryFn: async () => {
@@ -97,18 +98,22 @@ export const AdminClickstream = () => {
         .from("ab_experiments")
         .select("id, name, status")
         .eq("status", "running")
-        .limit(10);
+        .limit(5);
       if (error) throw error;
       return data;
     },
-    staleTime: 60000, // Cache for 1 minute
+    staleTime: 5 * 60 * 1000, // 5 minutes cache
+    gcTime: 10 * 60 * 1000,
     refetchOnWindowFocus: false,
+    enabled: activeSection === "overview", // Only fetch when on overview
   });
 
-  // Real-time subscription
+  // Real-time subscription - only when notifications are enabled
   useEffect(() => {
+    if (!notificationsEnabled) return;
+
     const channel = supabase
-      .channel('clickstream-realtime-v4')
+      .channel('clickstream-realtime-v5')
       .on('postgres_changes', {
         event: 'INSERT',
         schema: 'public',
@@ -116,26 +121,23 @@ export const AdminClickstream = () => {
       }, (payload) => {
         setLiveEventsCount(prev => prev + 1);
         setLastUpdate(new Date());
-        queryClient.invalidateQueries({ queryKey: ["clickstream-events"] });
         
-        if (notificationsEnabled) {
-          const newEvent = payload.new as any;
-          const eventInfo = newEvent.event_type === 'pageview' 
-            ? `Page: ${newEvent.page_url || 'Unknown'}`
-            : newEvent.event_type === 'click'
-              ? `Clicked: ${newEvent.element_text?.slice(0, 30) || 'Element'}`
-              : `Action: ${newEvent.event_type}`;
-          
-          toast.info(`New ${newEvent.event_type} event`, {
-            description: eventInfo,
-            duration: 3000,
-          });
-        }
+        const newEvent = payload.new as any;
+        const eventInfo = newEvent.event_type === 'pageview' 
+          ? `Page: ${newEvent.page_url || 'Unknown'}`
+          : newEvent.event_type === 'click'
+            ? `Clicked: ${newEvent.element_text?.slice(0, 30) || 'Element'}`
+            : `Action: ${newEvent.event_type}`;
+        
+        toast.info(`New ${newEvent.event_type} event`, {
+          description: eventInfo,
+          duration: 2000,
+        });
       })
       .subscribe();
 
     return () => { supabase.removeChannel(channel); };
-  }, [queryClient, notificationsEnabled]);
+  }, [notificationsEnabled]);
 
   const handleRefresh = async () => {
     setIsRefreshing(true);

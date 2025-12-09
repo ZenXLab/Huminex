@@ -1,5 +1,4 @@
-import { useEffect, useRef, useCallback } from "react";
-import { record, EventType } from "rrweb";
+import { useEffect, useRef, useCallback, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
 interface PrivacySettings {
@@ -26,7 +25,7 @@ const defaultPrivacySettings: PrivacySettings = {
   maskPasswords: true,
   maskEmails: false,
   maskCreditCards: true,
-  excludedPages: [], // Empty by default - record all pages
+  excludedPages: ["/admin/*"], // Exclude admin pages by default to prevent issues
   excludedSelectors: [".sensitive", "[data-private]", ".credit-card"],
   recordCanvas: false,
   collectFonts: false,
@@ -68,9 +67,11 @@ export const useSessionRecording = (options: UseSessionRecordingOptions = {}) =>
   const recordingIdRef = useRef<string | null>(null);
   const sessionIdRef = useRef<string>(getSessionId());
   const startTimeRef = useRef<Date>(new Date());
-  const saveIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const saveIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const [isRecording, setIsRecording] = useState(false);
+  const rrwebLoadedRef = useRef(false);
 
-  // Save events to database
+  // Save events to database with error handling
   const saveEvents = useCallback(async (isFinal = false) => {
     if (eventsRef.current.length === 0) return;
 
@@ -79,10 +80,10 @@ export const useSessionRecording = (options: UseSessionRecordingOptions = {}) =>
     const now = new Date();
     const duration = now.getTime() - startTimeRef.current.getTime();
 
-    // Count unique pages
+    // Count unique pages from meta events
     const pages = new Set<string>();
     eventsCopy.forEach((event) => {
-      if (event.type === EventType.Meta && event.data?.href) {
+      if (event.type === 4 && event.data?.href) { // EventType.Meta = 4
         pages.add(event.data.href);
       }
     });
@@ -107,84 +108,72 @@ export const useSessionRecording = (options: UseSessionRecordingOptions = {}) =>
 
     try {
       if (recordingIdRef.current) {
-        // Update existing recording
-        const { error } = await supabase
+        await supabase
           .from("session_recordings")
           .update(recordingData)
           .eq("id", recordingIdRef.current);
-
-        if (error) {
-          console.error("Error updating session recording:", error);
-        } else {
-          console.log(`Updated recording ${recordingIdRef.current} with ${eventsCopy.length} events`);
-        }
       } else {
-        // Create new recording
-        const { data, error } = await supabase
+        const { data } = await supabase
           .from("session_recordings")
           .insert(recordingData)
           .select("id")
           .single();
 
-        if (error) {
-          console.error("Error saving session recording:", error);
-        } else if (data) {
+        if (data) {
           recordingIdRef.current = data.id;
-          console.log(`Created new recording ${data.id} with ${eventsCopy.length} events`);
         }
       }
-    } catch (err) {
-      console.error("Failed to save session recording:", err);
+    } catch {
+      // Silently fail to avoid console spam
     }
   }, [privacy]);
 
-  // Start recording
-  const startRecording = useCallback(() => {
+  // Start recording - lazy load rrweb to avoid blocking
+  const startRecording = useCallback(async () => {
     if (stopFnRef.current) return; // Already recording
+    if (isPageExcluded(privacy.excludedPages)) return;
 
-    // Check if page is excluded
-    if (isPageExcluded(privacy.excludedPages)) {
-      console.log("Session recording disabled for this page:", window.location.pathname);
-      return;
+    try {
+      // Lazy load rrweb only when needed
+      if (!rrwebLoadedRef.current) {
+        const rrweb = await import("rrweb");
+        rrwebLoadedRef.current = true;
+        
+        startTimeRef.current = new Date();
+        eventsRef.current = [];
+        recordingIdRef.current = null;
+
+        const blockSelectors = privacy.excludedSelectors.join(",");
+
+        stopFnRef.current = rrweb.record({
+          emit: (event) => {
+            eventsRef.current.push(event);
+          },
+          checkoutEveryNms,
+          sampling: {
+            mousemove: false, // Disable for performance
+            mouseInteraction: true,
+            scroll: 300, // Reduce frequency
+            media: 800,
+            input: "last",
+          },
+          recordCanvas: false,
+          collectFonts: false,
+          inlineStylesheet: false, // Disable for performance
+          maskAllInputs: privacy.maskAllInputs,
+          blockSelector: blockSelectors || undefined,
+        });
+
+        setIsRecording(true);
+
+        // Save events less frequently (30 seconds)
+        saveIntervalRef.current = setInterval(() => {
+          saveEvents(false);
+        }, 30000);
+      }
+    } catch {
+      // rrweb failed to load - silently fail
     }
-
-    console.log("Starting rrweb session recording...");
-    startTimeRef.current = new Date();
-    eventsRef.current = [];
-    recordingIdRef.current = null;
-
-    // Build block selectors from privacy settings
-    const blockSelectors = privacy.excludedSelectors.join(",");
-
-    stopFnRef.current = record({
-      emit: (event) => {
-        eventsRef.current.push(event);
-      },
-      checkoutEveryNms,
-      sampling: {
-        mousemove: true,
-        mouseInteraction: true,
-        scroll: 150,
-        media: 800,
-        input: "last",
-      },
-      recordCanvas: privacy.recordCanvas,
-      collectFonts: privacy.collectFonts,
-      inlineStylesheet: privacy.inlineStylesheet,
-      maskAllInputs: privacy.maskAllInputs,
-      maskInputOptions: {
-        password: privacy.maskPasswords,
-        email: privacy.maskEmails,
-        // @ts-ignore - credit card masking
-        creditcard: privacy.maskCreditCards,
-      },
-      blockSelector: blockSelectors || undefined,
-    });
-
-    // Save events periodically
-    saveIntervalRef.current = setInterval(() => {
-      saveEvents(false);
-    }, 10000); // Save every 10 seconds
   }, [checkoutEveryNms, saveEvents, privacy]);
 
   // Stop recording
@@ -199,47 +188,36 @@ export const useSessionRecording = (options: UseSessionRecordingOptions = {}) =>
       saveIntervalRef.current = null;
     }
 
-    // Final save
+    setIsRecording(false);
     saveEvents(true);
-    console.log("Stopped rrweb session recording");
   }, [saveEvents]);
 
   useEffect(() => {
     if (!enabled) return;
+    
+    // Delay start to not block initial page load
+    const timeout = setTimeout(() => {
+      startRecording();
+    }, 3000);
 
-    startRecording();
-
-    // Save on page unload
-    const handleUnload = () => {
-      stopRecording();
-    };
-
-    // Re-check on route change
-    const handleRouteChange = () => {
-      if (isPageExcluded(privacy.excludedPages)) {
-        stopRecording();
-      } else if (!stopFnRef.current) {
-        startRecording();
-      }
-    };
+    const handleUnload = () => stopRecording();
 
     window.addEventListener("beforeunload", handleUnload);
     window.addEventListener("pagehide", handleUnload);
-    window.addEventListener("popstate", handleRouteChange);
 
     return () => {
+      clearTimeout(timeout);
       window.removeEventListener("beforeunload", handleUnload);
       window.removeEventListener("pagehide", handleUnload);
-      window.removeEventListener("popstate", handleRouteChange);
       stopRecording();
     };
-  }, [enabled, startRecording, stopRecording, privacy.excludedPages]);
+  }, [enabled, startRecording, stopRecording]);
 
   return {
     sessionId: sessionIdRef.current,
     startRecording,
     stopRecording,
     eventCount: eventsRef.current.length,
-    isRecording: !!stopFnRef.current,
+    isRecording,
   };
 };

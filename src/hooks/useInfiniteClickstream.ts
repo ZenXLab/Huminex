@@ -1,7 +1,7 @@
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
-const PAGE_SIZE = 50;
+const PAGE_SIZE = 25; // Reduced for faster initial load
 
 interface UseInfiniteClickstreamOptions {
   eventFilter?: string;
@@ -17,9 +17,10 @@ export const useInfiniteClickstream = ({
   return useInfiniteQuery({
     queryKey: ["clickstream-events-infinite", eventFilter, timeRange, customDateRange?.from?.toISOString(), customDateRange?.to?.toISOString()],
     queryFn: async ({ pageParam = 0 }) => {
+      // Only fetch essential columns for faster query
       let query = supabase
         .from("clickstream_events")
-        .select("id, session_id, event_type, page_url, element_id, element_text, created_at, metadata")
+        .select("id, session_id, event_type, page_url, element_text, created_at")
         .order("created_at", { ascending: false })
         .range(pageParam * PAGE_SIZE, (pageParam + 1) * PAGE_SIZE - 1);
 
@@ -52,9 +53,10 @@ export const useInfiniteClickstream = ({
     },
     getNextPageParam: (lastPage) => lastPage.nextPage,
     initialPageParam: 0,
-    staleTime: 30000,
-    gcTime: 2 * 60 * 1000,
+    staleTime: 60000, // 1 minute cache
+    gcTime: 5 * 60 * 1000, // 5 minutes
     refetchOnWindowFocus: false,
+    refetchOnMount: false, // Don't refetch on component remount
   });
 };
 
