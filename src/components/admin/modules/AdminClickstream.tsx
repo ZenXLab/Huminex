@@ -14,6 +14,7 @@ import { format } from "date-fns";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useInfiniteClickstream, flattenClickstreamPages } from "@/hooks/useInfiniteClickstream";
 
 // Lazy load heavy clickstream sub-components for faster initial render
 const ConversionFunnel = lazy(() => import("./clickstream/ConversionFunnel").then(m => ({ default: m.ConversionFunnel })));
@@ -61,47 +62,32 @@ export const AdminClickstream = () => {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const queryClient = useQueryClient();
 
-  const { data: events, isLoading, refetch } = useQuery({
-    queryKey: ["clickstream-events", eventFilter, timeRange, customDateRange?.from?.toISOString(), customDateRange?.to?.toISOString()],
-    queryFn: async () => {
-      let query = supabase
-        .from("clickstream_events")
-        .select("id, session_id, event_type, page_url, element_id, element_text, created_at, metadata")
-        .order("created_at", { ascending: false })
-        .limit(200); // Reduced limit for faster initial load
-
-      if (eventFilter !== "all") {
-        query = query.eq("event_type", eventFilter);
-      }
-
-      if (timeRange === "custom" && customDateRange) {
-        query = query
-          .gte("created_at", customDateRange.from.toISOString())
-          .lte("created_at", customDateRange.to.toISOString());
-      } else {
-        const timeFilters: Record<string, number> = {
-          "1h": 1,
-          "24h": 24,
-          "7d": 168,
-          "30d": 720,
-          "90d": 2160,
-        };
-
-        if (timeFilters[timeRange]) {
-          const since = new Date();
-          since.setHours(since.getHours() - timeFilters[timeRange]);
-          query = query.gte("created_at", since.toISOString());
-        }
-      }
-
-      const { data, error } = await query;
-      if (error) throw error;
-      setLastUpdate(new Date());
-      return data || [];
-    },
-    refetchInterval: 30000, // Increased from 5s to 30s to reduce load
-    staleTime: 10000, // Cache for 10 seconds
+  // Use infinite query for progressive loading of events
+  const {
+    data: infiniteEventsData,
+    isLoading: isInfiniteLoading,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    refetch: refetchInfinite,
+  } = useInfiniteClickstream({
+    eventFilter,
+    timeRange,
+    customDateRange,
   });
+
+  // Flatten pages into single array for components
+  const events = useMemo(() => flattenClickstreamPages(infiniteEventsData), [infiniteEventsData]);
+  const isLoading = isInfiniteLoading;
+
+  // Update last update time when data changes
+  useEffect(() => {
+    if (events.length > 0) {
+      setLastUpdate(new Date());
+    }
+  }, [events.length]);
+
+  const refetch = refetchInfinite;
 
   const { data: experiments } = useQuery({
     queryKey: ["ab-experiments-active"],
@@ -115,6 +101,7 @@ export const AdminClickstream = () => {
       return data;
     },
     staleTime: 60000, // Cache for 1 minute
+    refetchOnWindowFocus: false,
   });
 
   // Real-time subscription
@@ -193,7 +180,7 @@ export const AdminClickstream = () => {
       if (event.page_url) acc[event.page_url] = (acc[event.page_url] || 0) + 1;
       return acc;
     }, {} as Record<string, number>) || {};
-    return Object.entries(topPages).sort(([, a], [, b]) => b - a).slice(0, 5);
+    return Object.entries(topPages).sort((a, b) => (b[1] as number) - (a[1] as number)).slice(0, 5);
   }, [events]);
 
   const virtualTableColumns = useMemo(() => [
@@ -320,10 +307,10 @@ export const AdminClickstream = () => {
                     <p className="text-muted-foreground text-center py-6 sm:py-8 text-sm">No page data available</p>
                   ) : (
                     <div className="space-y-2 sm:space-y-3">
-                      {sortedPages.map(([page, count], idx) => (
+                      {sortedPages.map(([page, count]) => (
                         <div key={page} className="flex items-center justify-between gap-2">
                           <span className="text-xs sm:text-sm truncate flex-1 min-w-0">{page}</span>
-                          <Badge variant="secondary" className="shrink-0">{count}</Badge>
+                          <Badge variant="secondary" className="shrink-0">{count as number}</Badge>
                         </div>
                       ))}
                     </div>
@@ -438,20 +425,27 @@ export const AdminClickstream = () => {
       case "events":
         return (
           <Card>
-            <CardHeader><CardTitle className="text-sm sm:text-base">All Events ({events?.length || 0})</CardTitle></CardHeader>
+            <CardHeader>
+              <CardTitle className="text-sm sm:text-base flex items-center justify-between">
+                All Events ({events?.length || 0})
+                {hasNextPage && (
+                  <Badge variant="outline" className="text-xs">More available</Badge>
+                )}
+              </CardTitle>
+            </CardHeader>
             <CardContent>
-              {isLoading ? (
-                <AdminTableSkeleton rows={10} />
-              ) : (
-                <VirtualTable
-                  data={events || []}
-                  columns={virtualTableColumns}
-                  rowHeight={48}
-                  getRowKey={(item) => item.id}
-                  emptyMessage="No events recorded yet"
-                  className="max-h-[500px]"
-                />
-              )}
+              <VirtualTable
+                data={events || []}
+                columns={virtualTableColumns}
+                rowHeight={48}
+                getRowKey={(item: any) => item.id}
+                emptyMessage="No events recorded yet"
+                className="max-h-[500px]"
+                isLoading={isLoading}
+                hasNextPage={hasNextPage}
+                isFetchingNextPage={isFetchingNextPage}
+                fetchNextPage={fetchNextPage}
+              />
             </CardContent>
           </Card>
         );

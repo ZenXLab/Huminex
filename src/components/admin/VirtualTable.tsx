@@ -1,5 +1,6 @@
 import React, { useRef, useState, useEffect, useCallback, memo, useMemo } from "react";
 import { cn } from "@/lib/utils";
+import { Loader2 } from "lucide-react";
 
 interface Column<T> {
   key: string;
@@ -17,6 +18,11 @@ interface VirtualTableProps<T> {
   onRowClick?: (item: T, index: number) => void;
   emptyMessage?: string;
   getRowKey?: (item: T, index: number) => string;
+  // Infinite scroll props
+  hasNextPage?: boolean;
+  isFetchingNextPage?: boolean;
+  fetchNextPage?: () => void;
+  isLoading?: boolean;
 }
 
 const VirtualTableRow = memo(({ 
@@ -57,6 +63,26 @@ const VirtualTableRow = memo(({
 
 VirtualTableRow.displayName = "VirtualTableRow";
 
+// Loading skeleton row
+const SkeletonRow = memo(({ columns, style }: { columns: Column<any>[]; style: React.CSSProperties }) => (
+  <div 
+    className="flex items-center border-b border-border bg-muted/20 animate-pulse"
+    style={style}
+  >
+    {columns.map((col) => (
+      <div 
+        key={col.key} 
+        className="px-4 py-2"
+        style={{ width: col.width || 150, flex: col.width ? 'none' : 1 }}
+      >
+        <div className="h-4 bg-muted rounded w-3/4" />
+      </div>
+    ))}
+  </div>
+));
+
+SkeletonRow.displayName = "SkeletonRow";
+
 export function VirtualTable<T>({
   data,
   columns,
@@ -65,7 +91,11 @@ export function VirtualTable<T>({
   className,
   onRowClick,
   emptyMessage = "No data available",
-  getRowKey = (_, index) => String(index)
+  getRowKey = (_, index) => String(index),
+  hasNextPage = false,
+  isFetchingNextPage = false,
+  fetchNextPage,
+  isLoading = false,
 }: VirtualTableProps<T>) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [scrollTop, setScrollTop] = useState(0);
@@ -86,20 +116,66 @@ export function VirtualTable<T>({
   }, []);
 
   const handleScroll = useCallback((e: React.UIEvent<HTMLDivElement>) => {
-    setScrollTop(e.currentTarget.scrollTop);
-  }, []);
+    const target = e.currentTarget;
+    setScrollTop(target.scrollTop);
+    
+    // Infinite scroll trigger - load more when 200px from bottom
+    if (
+      hasNextPage && 
+      !isFetchingNextPage && 
+      fetchNextPage &&
+      target.scrollHeight - target.scrollTop - target.clientHeight < 200
+    ) {
+      fetchNextPage();
+    }
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   const { visibleItems, startIndex, totalHeight } = useMemo(() => {
     const start = Math.max(0, Math.floor(scrollTop / rowHeight) - overscan);
     const visibleCount = Math.ceil(containerHeight / rowHeight) + overscan * 2;
     const end = Math.min(data.length, start + visibleCount);
     
+    // Add extra height for loading indicator if fetching
+    const extraHeight = isFetchingNextPage ? rowHeight : 0;
+    
     return {
       visibleItems: data.slice(start, end),
       startIndex: start,
-      totalHeight: data.length * rowHeight
+      totalHeight: data.length * rowHeight + extraHeight
     };
-  }, [data, scrollTop, containerHeight, rowHeight, overscan]);
+  }, [data, scrollTop, containerHeight, rowHeight, overscan, isFetchingNextPage]);
+
+  // Show loading skeleton on initial load
+  if (isLoading) {
+    const skeletonRows = 8;
+    return (
+      <div className={cn("rounded-lg border bg-card overflow-hidden", className)}>
+        <div 
+          className="flex items-center bg-muted/50 border-b border-border font-medium text-sm"
+          style={{ height: 44 }}
+        >
+          {columns.map((col) => (
+            <div 
+              key={col.key} 
+              className="px-4 py-2 truncate"
+              style={{ width: col.width || 150, flex: col.width ? 'none' : 1 }}
+            >
+              {col.header}
+            </div>
+          ))}
+        </div>
+        <div>
+          {Array.from({ length: skeletonRows }).map((_, i) => (
+            <SkeletonRow 
+              key={i} 
+              columns={columns} 
+              style={{ height: rowHeight }} 
+            />
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   if (data.length === 0) {
     return (
@@ -159,8 +235,29 @@ export function VirtualTable<T>({
               />
             );
           })}
+          
+          {/* Loading indicator for infinite scroll */}
+          {isFetchingNextPage && (
+            <div 
+              className="absolute left-0 right-0 flex items-center justify-center gap-2 text-muted-foreground text-sm"
+              style={{ 
+                top: data.length * rowHeight, 
+                height: rowHeight 
+              }}
+            >
+              <Loader2 className="h-4 w-4 animate-spin" />
+              Loading more...
+            </div>
+          )}
         </div>
       </div>
+      
+      {/* Load more indicator at bottom */}
+      {hasNextPage && !isFetchingNextPage && (
+        <div className="px-4 py-2 text-center text-xs text-muted-foreground bg-muted/30 border-t">
+          Scroll down to load more
+        </div>
+      )}
     </div>
   );
 }
