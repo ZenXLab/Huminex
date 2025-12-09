@@ -19,6 +19,8 @@ interface PricingTierCardProps {
   gradient: string;
   isAnnual: boolean;
   currency: string;
+  onSelect?: (name: string, price: number) => void;
+  isSelected?: boolean;
 }
 
 export const PricingTierCard = ({
@@ -36,7 +38,9 @@ export const PricingTierCard = ({
   ctaLink,
   gradient,
   isAnnual,
-  currency
+  currency,
+  onSelect,
+  isSelected
 }: PricingTierCardProps) => {
   const formatPrice = (p: number) => {
     if (currency === "₹") {
@@ -45,14 +49,32 @@ export const PricingTierCard = ({
     return `$${p}`;
   };
 
+  const handleCardClick = () => {
+    if (onSelect && price !== null) {
+      onSelect(name, price);
+    }
+  };
+
   return (
     <div
-      className={`relative group rounded-3xl border-2 transition-all duration-500 hover:scale-[1.02] ${
-        popular 
+      onClick={handleCardClick}
+      className={`relative group rounded-3xl border-2 transition-all duration-500 hover:scale-[1.02] cursor-pointer ${
+        isSelected
+          ? 'bg-gradient-to-b from-card to-accent/10 border-accent shadow-2xl shadow-accent/30 ring-2 ring-accent'
+          : popular 
           ? 'bg-gradient-to-b from-card to-primary/5 border-primary shadow-2xl shadow-primary/20 scale-105 z-10' 
           : 'bg-card border-border/50 hover:border-primary/30 hover:shadow-xl'
       }`}
     >
+      {/* Selected Badge */}
+      {isSelected && (
+        <div className="absolute -top-5 right-4 z-20">
+          <div className="px-4 py-1.5 rounded-full bg-accent text-accent-foreground text-xs font-bold shadow-lg flex items-center gap-1">
+            <Check className="w-3 h-3" />
+            Selected
+          </div>
+        </div>
+      )}
       {/* Popular Badge */}
       {popular && (
         <div className="absolute -top-5 left-1/2 -translate-x-1/2 z-20">

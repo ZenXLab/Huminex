@@ -1,12 +1,14 @@
 import { useState, useCallback } from "react";
 import { Button } from "@/components/ui/button";
-import { Zap, Star, Building2, Globe, IndianRupee, TrendingUp, Shield, Clock } from "lucide-react";
+import { Zap, Star, Building2, Globe, IndianRupee, TrendingUp, Shield, Clock, FileText } from "lucide-react";
 import { PricingTierCard } from "./pricing/PricingTierCard";
 import { PricingCalculator } from "./pricing/PricingCalculator";
 import { PricingAddons } from "./pricing/PricingAddons";
 import { PricingFAQ } from "./pricing/PricingFAQ";
 import { PricingLeadCapture } from "./pricing/PricingLeadCapture";
 import { PricingComparisonModal } from "./PricingComparisonModal";
+import { InvoicePreviewModal } from "./pricing/InvoicePreviewModal";
+import { useClickstream } from "@/hooks/useClickstream";
 
 const indiaPricing = [
   {
@@ -171,19 +173,75 @@ const globalPricing = [
   },
 ];
 
+// Addon data for invoice modal
+const indiaAddons = [
+  { id: "bgv", name: "Background Verification (BGV)", price: 49 },
+  { id: "doc-verify", name: "Document Verification", price: 25 },
+  { id: "notifications", name: "Slack/WhatsApp Notifications", price: 2 },
+  { id: "payroll-reprocess", name: "Payroll Re-processing", price: 5 },
+  { id: "payroll-approval", name: "Payroll Approval Workflows", price: 1 },
+  { id: "workflow-runs", name: "Extra 1,000 Workflow Runs", price: 999 },
+  { id: "proxima-ai", name: "Proxima AI Assistant", price: 49 },
+  { id: "ai-insights", name: "AI Insights Dashboard", price: 19 },
+];
+
+const globalAddons = [
+  { id: "bgv", name: "Background Verification (BGV)", price: 1.5 },
+  { id: "doc-verify", name: "Document Verification", price: 0.75 },
+  { id: "notifications", name: "Slack/WhatsApp Notifications", price: 0.5 },
+  { id: "payroll-reprocess", name: "Payroll Re-processing", price: 0.25 },
+  { id: "payroll-approval", name: "Payroll Approval Workflows", price: 0.15 },
+  { id: "workflow-runs", name: "Extra 1,000 Workflow Runs", price: 29 },
+  { id: "proxima-ai", name: "Proxima AI Assistant", price: 1.5 },
+  { id: "ai-insights", name: "AI Insights Dashboard", price: 0.5 },
+];
+
 export const PricingSection = () => {
   const [isAnnual, setIsAnnual] = useState(true);
   const [region, setRegion] = useState<'india' | 'global'>('india');
   const [selectedAddons, setSelectedAddons] = useState<string[]>([]);
   const [addonsPrice, setAddonsPrice] = useState(0);
+  const [selectedPlan, setSelectedPlan] = useState<{ name: string; price: number } | null>(null);
+  const [isInvoiceModalOpen, setIsInvoiceModalOpen] = useState(false);
+  const { trackEvent } = useClickstream();
 
   const pricing = region === 'india' ? indiaPricing : globalPricing;
   const currency = region === 'india' ? '₹' : '$';
+  const addonsList = region === 'india' ? indiaAddons : globalAddons;
 
   const handleAddonsChange = useCallback((addons: string[], totalPrice: number) => {
     setSelectedAddons(addons);
     setAddonsPrice(totalPrice);
   }, []);
+
+  const handlePlanSelect = (planName: string, price: number) => {
+    setSelectedPlan({ name: planName, price });
+    trackEvent("plan_selected", { planName, price, region, isAnnual });
+  };
+
+  const openInvoicePreview = () => {
+    if (!selectedPlan && selectedAddons.length === 0) {
+      // Auto-select Professional/Growth plan if nothing selected
+      const defaultPlan = pricing[1];
+      const defaultPrice = isAnnual ? defaultPlan.annualPrice : defaultPlan.monthlyPrice;
+      if (defaultPrice) {
+        setSelectedPlan({ name: defaultPlan.name, price: defaultPrice });
+      }
+    }
+    setIsInvoiceModalOpen(true);
+    trackEvent("invoice_preview_button_clicked", { 
+      region, 
+      selectedPlan: selectedPlan?.name,
+      addonsCount: selectedAddons.length,
+      isAnnual 
+    });
+  };
+
+  // Get selected addon details for invoice
+  const selectedAddonDetails = selectedAddons.map(id => {
+    const addon = addonsList.find(a => a.id === id);
+    return addon ? { id: addon.id, name: addon.name, price: addon.price } : null;
+  }).filter(Boolean) as { id: string; name: string; price: number }[];
 
   return (
     <section id="pricing" className="py-24 bg-background relative overflow-hidden">
@@ -282,26 +340,31 @@ export const PricingSection = () => {
 
         {/* Pricing Cards */}
         <div className="grid md:grid-cols-3 gap-8 max-w-7xl mx-auto mb-20">
-          {pricing.map((plan) => (
-            <PricingTierCard
-              key={plan.name}
-              name={plan.name}
-              description={plan.description}
-              price={isAnnual ? plan.annualPrice : plan.monthlyPrice}
-              originalPrice={!isAnnual ? null : plan.originalMonthly}
-              perUser={plan.perUser}
-              minimumFee={plan.minimumFee}
-              employeeLimit={plan.employeeLimit}
-              icon={plan.icon}
-              popular={plan.popular}
-              features={plan.features}
-              cta={plan.cta}
-              ctaLink={plan.ctaLink}
-              gradient={plan.gradient}
-              isAnnual={isAnnual}
-              currency={currency}
-            />
-          ))}
+          {pricing.map((plan) => {
+            const planPrice = isAnnual ? plan.annualPrice : plan.monthlyPrice;
+            return (
+              <PricingTierCard
+                key={plan.name}
+                name={plan.name}
+                description={plan.description}
+                price={planPrice}
+                originalPrice={!isAnnual ? null : plan.originalMonthly}
+                perUser={plan.perUser}
+                minimumFee={plan.minimumFee}
+                employeeLimit={plan.employeeLimit}
+                icon={plan.icon}
+                popular={plan.popular}
+                features={plan.features}
+                cta={plan.cta}
+                ctaLink={plan.ctaLink}
+                gradient={plan.gradient}
+                isAnnual={isAnnual}
+                currency={currency}
+                onSelect={handlePlanSelect}
+                isSelected={selectedPlan?.name === plan.name}
+              />
+            );
+          })}
         </div>
 
         {/* Compare with Competitors */}
@@ -318,13 +381,41 @@ export const PricingSection = () => {
         </div>
 
         {/* Add-ons */}
-        <div className="mb-20">
+        <div className="mb-12">
           <PricingAddons 
             region={region} 
             selectedAddons={selectedAddons}
             onAddonsChange={handleAddonsChange}
           />
         </div>
+
+        {/* Preview Invoice Button */}
+        {(selectedPlan || selectedAddons.length > 0) && (
+          <div className="mb-20 text-center">
+            <Button
+              onClick={openInvoicePreview}
+              size="lg"
+              className="h-16 px-12 bg-gradient-to-r from-primary via-accent to-primary hover:opacity-90 text-primary-foreground font-bold text-lg rounded-2xl shadow-xl animate-pulse"
+            >
+              <FileText className="w-6 h-6 mr-3" />
+              Preview Invoice & Pricing
+            </Button>
+            <p className="text-sm text-muted-foreground mt-3">
+              Review your selection with GST/Tax calculations before proceeding
+            </p>
+          </div>
+        )}
+
+        {/* Invoice Preview Modal */}
+        <InvoicePreviewModal
+          isOpen={isInvoiceModalOpen}
+          onClose={() => setIsInvoiceModalOpen(false)}
+          region={region}
+          plan={selectedPlan}
+          addons={selectedAddonDetails}
+          addonsTotal={addonsPrice}
+          isAnnual={isAnnual}
+        />
 
         {/* Lead Capture */}
         <div className="mb-20">
