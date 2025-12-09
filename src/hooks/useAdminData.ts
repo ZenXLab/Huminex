@@ -4,55 +4,56 @@ import { useEffect, useCallback, useMemo } from "react";
 
 // Centralized admin data hooks with caching and optimization
 
-// Cache times
-const STALE_TIME = 30 * 1000; // 30 seconds
-const CACHE_TIME = 5 * 60 * 1000; // 5 minutes
+// Optimized cache times for faster perceived performance
+const STALE_TIME = 60 * 1000; // 1 minute - increased for less refetching
+const CACHE_TIME = 10 * 60 * 1000; // 10 minutes - longer cache
 
-// Stats hook for dashboard overview
+// Stats hook for dashboard overview - optimized with parallel fetching
 export const useAdminStats = () => {
   return useQuery({
     queryKey: ["admin-stats"],
     queryFn: async () => {
-      // Parallel fetch all stats for better performance
+      // Parallel fetch all stats with optimized queries (head: true for count only)
       const [
-        { count: quotesCount },
-        { data: pendingQuotes },
-        { count: invoicesCount },
-        { data: paidInvoices },
-        { count: usersCount },
-        { count: inquiriesCount },
-        { data: pendingOnboardings },
-        { count: activeTenantsCount },
+        quotesResult,
+        pendingQuotesResult,
+        invoicesResult,
+        paidInvoicesResult,
+        usersResult,
+        inquiriesResult,
+        pendingOnboardingsResult,
+        activeTenantsResult,
       ] = await Promise.all([
         supabase.from("quotes").select("*", { count: "exact", head: true }),
-        supabase.from("quotes").select("id").eq("status", "pending"),
+        supabase.from("quotes").select("*", { count: "exact", head: true }).eq("status", "pending"),
         supabase.from("invoices").select("*", { count: "exact", head: true }),
-        supabase.from("invoices").select("total_amount").eq("status", "paid"),
+        supabase.from("invoices").select("total_amount").eq("status", "paid").limit(100), // Limit for performance
         supabase.from("profiles").select("*", { count: "exact", head: true }),
         supabase.from("inquiries").select("*", { count: "exact", head: true }),
-        supabase.from("onboarding_sessions").select("id").in("status", ["new", "pending", "pending_approval", "verified"]),
+        supabase.from("onboarding_sessions").select("*", { count: "exact", head: true }).in("status", ["new", "pending", "pending_approval", "verified"]),
         supabase.from("client_tenants").select("*", { count: "exact", head: true }).eq("status", "active"),
       ]);
 
-      const totalRevenue = paidInvoices?.reduce((sum, i) => sum + Number(i.total_amount || 0), 0) || 0;
+      const totalRevenue = paidInvoicesResult.data?.reduce((sum, i) => sum + Number(i.total_amount || 0), 0) || 0;
 
       return {
-        totalQuotes: quotesCount || 0,
-        pendingQuotes: pendingQuotes?.length || 0,
-        totalInvoices: invoicesCount || 0,
+        totalQuotes: quotesResult.count || 0,
+        pendingQuotes: pendingQuotesResult.count || 0,
+        totalInvoices: invoicesResult.count || 0,
         totalRevenue,
-        totalUsers: usersCount || 0,
-        totalInquiries: inquiriesCount || 0,
-        pendingOnboarding: pendingOnboardings?.length || 0,
-        activeTenants: activeTenantsCount || 0,
+        totalUsers: usersResult.count || 0,
+        totalInquiries: inquiriesResult.count || 0,
+        pendingOnboarding: pendingOnboardingsResult.count || 0,
+        activeTenants: activeTenantsResult.count || 0,
       };
     },
     staleTime: STALE_TIME,
     gcTime: CACHE_TIME,
+    refetchOnWindowFocus: false, // Prevent unnecessary refetches
   });
 };
 
-// Recent quotes hook
+// Recent quotes hook - optimized with smaller payload
 export const useRecentQuotes = (limit = 5) => {
   return useQuery({
     queryKey: ["admin-recent-quotes", limit],
@@ -67,10 +68,11 @@ export const useRecentQuotes = (limit = 5) => {
     },
     staleTime: STALE_TIME,
     gcTime: CACHE_TIME,
+    refetchOnWindowFocus: false,
   });
 };
 
-// All quotes hook with pagination
+// All quotes hook with pagination - optimized with limit
 export const useAllQuotes = () => {
   return useQuery({
     queryKey: ["admin-all-quotes"],
@@ -78,16 +80,18 @@ export const useAllQuotes = () => {
       const { data, error } = await supabase
         .from("quotes")
         .select("*")
-        .order("created_at", { ascending: false });
+        .order("created_at", { ascending: false })
+        .limit(200); // Limit for faster load
       if (error) throw error;
       return data || [];
     },
     staleTime: STALE_TIME,
     gcTime: CACHE_TIME,
+    refetchOnWindowFocus: false,
   });
 };
 
-// Pending onboardings hook
+// Pending onboardings hook - optimized
 export const usePendingOnboardings = (limit = 5) => {
   return useQuery({
     queryKey: ["admin-pending-onboardings", limit],
@@ -103,10 +107,11 @@ export const usePendingOnboardings = (limit = 5) => {
     },
     staleTime: STALE_TIME,
     gcTime: CACHE_TIME,
+    refetchOnWindowFocus: false,
   });
 };
 
-// Recent tenants hook
+// Recent tenants hook - optimized
 export const useRecentTenants = (limit = 5) => {
   return useQuery({
     queryKey: ["admin-recent-tenants", limit],
@@ -121,10 +126,11 @@ export const useRecentTenants = (limit = 5) => {
     },
     staleTime: STALE_TIME,
     gcTime: CACHE_TIME,
+    refetchOnWindowFocus: false,
   });
 };
 
-// All tenants hook
+// All tenants hook - optimized with limit
 export const useAllTenants = () => {
   return useQuery({
     queryKey: ["admin-all-tenants"],
@@ -132,23 +138,25 @@ export const useAllTenants = () => {
       const { data, error } = await supabase
         .from("client_tenants")
         .select("*")
-        .order("created_at", { ascending: false });
+        .order("created_at", { ascending: false })
+        .limit(200); // Limit for faster load
       if (error) throw error;
       return data || [];
     },
     staleTime: STALE_TIME,
     gcTime: CACHE_TIME,
+    refetchOnWindowFocus: false,
   });
 };
 
-// Audit logs hook with limit
-export const useAuditLogs = (limit = 100) => {
+// Audit logs hook with limit - optimized
+export const useAuditLogs = (limit = 50) => {
   return useQuery({
     queryKey: ["admin-audit-logs", limit],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("audit_logs")
-        .select("*")
+        .select("id, action, resource_type, resource_id, user_id, created_at")
         .order("created_at", { ascending: false })
         .limit(limit);
       if (error) throw error;
@@ -156,10 +164,11 @@ export const useAuditLogs = (limit = 100) => {
     },
     staleTime: STALE_TIME,
     gcTime: CACHE_TIME,
+    refetchOnWindowFocus: false,
   });
 };
 
-// Clickstream events hook with filters
+// Clickstream events hook with filters - heavily optimized
 export const useClickstreamEvents = (
   eventFilter: string = "all",
   timeRange: string = "24h",
@@ -170,9 +179,9 @@ export const useClickstreamEvents = (
     queryFn: async () => {
       let query = supabase
         .from("clickstream_events")
-        .select("*")
+        .select("id, session_id, event_type, page_url, element_id, element_text, created_at, metadata")
         .order("created_at", { ascending: false })
-        .limit(500);
+        .limit(100); // Reduced from 500 for faster initial load
 
       if (eventFilter !== "all") {
         query = query.eq("event_type", eventFilter);
@@ -197,13 +206,14 @@ export const useClickstreamEvents = (
       if (error) throw error;
       return data || [];
     },
-    staleTime: 5000, // Clickstream needs faster refresh
-    gcTime: 60 * 1000,
-    refetchInterval: 10000, // Reduced from 5s to 10s
+    staleTime: 30000, // 30 seconds cache
+    gcTime: 2 * 60 * 1000, // 2 minutes
+    refetchInterval: 60000, // Reduced to 1 minute interval
+    refetchOnWindowFocus: false,
   });
 };
 
-// Real-time subscription hook for admin dashboard
+// Real-time subscription hook for admin dashboard - optimized with longer debounce
 export const useAdminRealtime = (tables: string[]) => {
   const queryClient = useQueryClient();
 
@@ -212,11 +222,11 @@ export const useAdminRealtime = (tables: string[]) => {
       return supabase
         .channel(`admin-${table}-changes`)
         .on("postgres_changes", { event: "*", schema: "public", table }, () => {
-          // Debounce invalidation to prevent rapid re-renders
+          // Longer debounce to prevent rapid re-renders (2 seconds)
           const timeoutId = setTimeout(() => {
             queryClient.invalidateQueries({ queryKey: ["admin-stats"] });
             queryClient.invalidateQueries({ queryKey: [`admin-${table}`] });
-          }, 500);
+          }, 2000);
           return () => clearTimeout(timeoutId);
         })
         .subscribe();

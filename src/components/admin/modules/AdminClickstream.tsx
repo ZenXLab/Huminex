@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo, memo } from "react";
+import { useState, useEffect, useCallback, useMemo, memo, lazy, Suspense } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -13,19 +13,37 @@ import { MousePointer, Eye, BarChart3, Users, RefreshCw, Radio, Trash2, AlertTri
 import { format } from "date-fns";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
-import { ConversionFunnel } from "./clickstream/ConversionFunnel";
-import { ClickHeatmap } from "./clickstream/ClickHeatmap";
-import { UserJourney } from "./clickstream/UserJourney";
+import { Skeleton } from "@/components/ui/skeleton";
+
+// Lazy load heavy clickstream sub-components for faster initial render
+const ConversionFunnel = lazy(() => import("./clickstream/ConversionFunnel").then(m => ({ default: m.ConversionFunnel })));
+const ClickHeatmap = lazy(() => import("./clickstream/ClickHeatmap").then(m => ({ default: m.ClickHeatmap })));
+const UserJourney = lazy(() => import("./clickstream/UserJourney").then(m => ({ default: m.UserJourney })));
+const DeviceAnalytics = lazy(() => import("./clickstream/DeviceAnalytics").then(m => ({ default: m.DeviceAnalytics })));
+const RRWebPlayer = lazy(() => import("./clickstream/RRWebPlayer").then(m => ({ default: m.RRWebPlayer })));
+const GeoAnalytics = lazy(() => import("./clickstream/GeoAnalytics").then(m => ({ default: m.GeoAnalytics })));
+const FormFieldAnalytics = lazy(() => import("./clickstream/FormFieldAnalytics").then(m => ({ default: m.FormFieldAnalytics })));
+const AIStruggleDetection = lazy(() => import("./clickstream/AIStruggleDetection").then(m => ({ default: m.AIStruggleDetection })));
+const ClickstreamComparisonTable = lazy(() => import("./clickstream/ClickstreamComparisonTable").then(m => ({ default: m.ClickstreamComparisonTable })));
+
+// Non-lazy imports for essential components
 import { DateRangePicker } from "./clickstream/DateRangePicker";
-import { DeviceAnalytics } from "./clickstream/DeviceAnalytics";
-import { RRWebPlayer } from "./clickstream/RRWebPlayer";
 import { ClickstreamLayout } from "./clickstream/ClickstreamLayout";
 import { PrivacyControls, defaultPrivacySettings, PrivacySettings } from "./clickstream/PrivacyControls";
-import { GeoAnalytics } from "./clickstream/GeoAnalytics";
 import { ExportModal } from "./clickstream/ExportModal";
-import { FormFieldAnalytics } from "./clickstream/FormFieldAnalytics";
-import { AIStruggleDetection } from "./clickstream/AIStruggleDetection";
-import { ClickstreamComparisonTable } from "./clickstream/ClickstreamComparisonTable";
+
+// Loading skeleton for lazy components
+const ComponentSkeleton = () => (
+  <div className="space-y-4 p-4">
+    <Skeleton className="h-8 w-48" />
+    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+      <Skeleton className="h-32" />
+      <Skeleton className="h-32" />
+      <Skeleton className="h-32" />
+    </div>
+    <Skeleton className="h-64" />
+  </div>
+);
 
 export const AdminClickstream = () => {
   const [eventFilter, setEventFilter] = useState<string>("all");
@@ -348,10 +366,18 @@ export const AdminClickstream = () => {
         );
 
       case "funnel":
-        return <ConversionFunnel events={events || []} />;
+        return (
+          <Suspense fallback={<ComponentSkeleton />}>
+            <ConversionFunnel events={events || []} />
+          </Suspense>
+        );
 
       case "journeys":
-        return <UserJourney events={events || []} />;
+        return (
+          <Suspense fallback={<ComponentSkeleton />}>
+            <UserJourney events={events || []} />
+          </Suspense>
+        );
 
       case "clicks":
         return (
@@ -382,16 +408,32 @@ export const AdminClickstream = () => {
 
       case "click-heatmap":
       case "scroll-heatmap":
-        return <ClickHeatmap events={events || []} />;
+        return (
+          <Suspense fallback={<ComponentSkeleton />}>
+            <ClickHeatmap events={events || []} />
+          </Suspense>
+        );
 
       case "session-replay":
-        return <RRWebPlayer />;
+        return (
+          <Suspense fallback={<ComponentSkeleton />}>
+            <RRWebPlayer />
+          </Suspense>
+        );
 
       case "device-analytics":
-        return <DeviceAnalytics events={events || []} />;
+        return (
+          <Suspense fallback={<ComponentSkeleton />}>
+            <DeviceAnalytics events={events || []} />
+          </Suspense>
+        );
 
       case "geo-analytics":
-        return <GeoAnalytics events={events || []} />;
+        return (
+          <Suspense fallback={<ComponentSkeleton />}>
+            <GeoAnalytics events={events || []} />
+          </Suspense>
+        );
 
       case "events":
         return (
@@ -426,13 +468,25 @@ export const AdminClickstream = () => {
         );
 
       case "form-analytics":
-        return <FormFieldAnalytics events={events || []} />;
+        return (
+          <Suspense fallback={<ComponentSkeleton />}>
+            <FormFieldAnalytics events={events || []} />
+          </Suspense>
+        );
 
       case "ai-struggle":
-        return <AIStruggleDetection events={events || []} />;
+        return (
+          <Suspense fallback={<ComponentSkeleton />}>
+            <AIStruggleDetection events={events || []} />
+          </Suspense>
+        );
 
       case "comparison":
-        return <ClickstreamComparisonTable />;
+        return (
+          <Suspense fallback={<ComponentSkeleton />}>
+            <ClickstreamComparisonTable />
+          </Suspense>
+        );
 
       default:
         return <div className="text-center py-12 text-muted-foreground">Select a section from the sidebar</div>;
