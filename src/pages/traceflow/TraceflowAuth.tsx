@@ -106,6 +106,13 @@ export const TraceflowAuth = () => {
   const [fullName, setFullName] = useState("");
   const [companyName, setCompanyName] = useState("");
 
+  // DEV MODE: Bypass for ATLAS Admin testing (remove in production)
+  const handleDevBypass = () => {
+    localStorage.setItem("TRACEFLOW_DEV_MODE", "true");
+    toast.success("Dev Mode activated! Redirecting to dashboard...");
+    navigate("/traceflow/dashboard");
+  };
+
   const handleEmailSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email || !password) {
@@ -386,9 +393,9 @@ export const TraceflowAuth = () => {
                 : "Create your enterprise account"}
             </CardDescription>
 
-            {/* ATLAS Admin badge */}
+            {/* ATLAS Admin badge + Dev Bypass */}
             <motion.div
-              className="mt-3"
+              className="mt-3 space-y-2"
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
               transition={{ delay: 0.3, type: "spring" }}
@@ -397,6 +404,21 @@ export const TraceflowAuth = () => {
                 <Shield className="h-3 w-3 mr-1" />
                 ATLAS Admins get instant access
               </Badge>
+              
+              {/* DEV MODE bypass button - REMOVE IN PRODUCTION */}
+              {import.meta.env.DEV && (
+                <div className="pt-2">
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={handleDevBypass}
+                    className="w-full border-dashed border-yellow-500/50 text-yellow-600 hover:bg-yellow-500/10"
+                  >
+                    <Zap className="h-3 w-3 mr-1" />
+                    Skip Login (Dev Mode)
+                  </Button>
+                </div>
+              )}
             </motion.div>
           </CardHeader>
 

@@ -14,14 +14,34 @@ export interface TraceflowUser {
   features: string[];
 }
 
+// DEV MODE: Bypass authentication for testing (remove in production)
+const DEV_MODE_BYPASS = localStorage.getItem("TRACEFLOW_DEV_MODE") === "true";
+
 export const useTraceflowAuth = () => {
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
   const [traceflowUser, setTraceflowUser] = useState<TraceflowUser | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [isAdmin, setIsAdmin] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(DEV_MODE_BYPASS);
 
   useEffect(() => {
+    // DEV MODE: Skip auth check entirely
+    if (DEV_MODE_BYPASS) {
+      setTraceflowUser({
+        id: "dev-admin",
+        email: "admin@traceflow.dev",
+        fullName: "Dev Admin",
+        companyName: "CropXon ATLAS",
+        role: "admin",
+        plan: "enterprise",
+        subscriptionStatus: "active",
+        features: ["all"],
+      });
+      setIsAdmin(true);
+      setIsLoading(false);
+      return;
+    }
+
     const fetchTraceflowUser = async () => {
       if (!user?.id) {
         setIsLoading(false);
@@ -34,7 +54,7 @@ export const useTraceflowAuth = () => {
           .from("user_roles")
           .select("role")
           .eq("user_id", user.id)
-          .single();
+          .maybeSingle();
 
         const isAdminUser = roleData?.role === "admin";
         setIsAdmin(isAdminUser);
