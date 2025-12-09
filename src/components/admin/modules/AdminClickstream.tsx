@@ -8,8 +8,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { AdminCardSkeleton, AdminTableSkeleton } from "@/components/admin/AdminCardSkeleton";
 import { VirtualTable } from "@/components/admin/VirtualTable";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { MousePointer, Eye, BarChart3, Users, RefreshCw, Radio, Trash2, AlertTriangle, Download, ChevronDown, ChevronUp, Bell, AlertCircle, ShieldAlert } from "lucide-react";
+import { MousePointer, Eye, BarChart3, Users, RefreshCw, Radio, Download, ChevronDown, ChevronUp, Bell } from "lucide-react";
 import { format } from "date-fns";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
@@ -26,12 +25,14 @@ const GeoAnalytics = lazy(() => import("./clickstream/GeoAnalytics").then(m => (
 const FormFieldAnalytics = lazy(() => import("./clickstream/FormFieldAnalytics").then(m => ({ default: m.FormFieldAnalytics })));
 const AIStruggleDetection = lazy(() => import("./clickstream/AIStruggleDetection").then(m => ({ default: m.AIStruggleDetection })));
 const ClickstreamComparisonTable = lazy(() => import("./clickstream/ClickstreamComparisonTable").then(m => ({ default: m.ClickstreamComparisonTable })));
+const ClickstreamSettings = lazy(() => import("./clickstream/ClickstreamSettings").then(m => ({ default: m.ClickstreamSettings })));
 
 // Non-lazy imports for essential components
 import { DateRangePicker } from "./clickstream/DateRangePicker";
 import { ClickstreamLayout } from "./clickstream/ClickstreamLayout";
 import { PrivacyControls, defaultPrivacySettings, PrivacySettings } from "./clickstream/PrivacyControls";
 import { ExportModal } from "./clickstream/ExportModal";
+import { EventsSearchFilter } from "./clickstream/EventsSearchFilter";
 
 // Loading skeleton for lazy components
 const ComponentSkeleton = () => (
@@ -52,14 +53,14 @@ export const AdminClickstream = () => {
   const [customDateRange, setCustomDateRange] = useState<{ from: Date; to: Date } | null>(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [liveEventsCount, setLiveEventsCount] = useState(0);
-  const [isDeleting, setIsDeleting] = useState(false);
   const [lastUpdate, setLastUpdate] = useState<Date>(new Date());
   const [eventsExpanded, setEventsExpanded] = useState(false);
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
   const [activeSection, setActiveSection] = useState("overview");
   const [privacySettings, setPrivacySettings] = useState<PrivacySettings>(defaultPrivacySettings);
   const [showExportModal, setShowExportModal] = useState(false);
-  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [pageFilter, setPageFilter] = useState("");
   const queryClient = useQueryClient();
 
   // Use infinite query for progressive loading of events
@@ -145,28 +146,33 @@ export const AdminClickstream = () => {
     } catch {
       toast.error("Failed to refresh");
     } finally {
-      setIsRefreshing(false);
-    }
+    setIsRefreshing(false);
+  }
+};
+
+  const handleDeleteSuccess = async () => {
+    await refetch();
+    setLiveEventsCount(0);
   };
 
-  const handleDeleteAllData = async () => {
-    setIsDeleting(true);
-    try {
-      const { error } = await supabase
-        .from("clickstream_events")
-        .delete()
-        .neq("id", "00000000-0000-0000-0000-000000000000");
-      if (error) throw error;
-      await refetch();
-      setLiveEventsCount(0);
-      setShowDeleteDialog(false);
-      toast.success("All clickstream data deleted successfully");
-    } catch {
-      toast.error("Delete failed");
-    } finally {
-      setIsDeleting(false);
-    }
-  };
+  // Get unique pages for filter dropdown
+  const availablePages = useMemo(() => {
+    const pages = new Set(events?.map(e => e.page_url).filter(Boolean));
+    return Array.from(pages) as string[];
+  }, [events]);
+
+  // Filter events based on search
+  const filteredEvents = useMemo(() => {
+    if (!events) return [];
+    return events.filter(e => {
+      const matchesSearch = !searchQuery || 
+        e.element_text?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        e.session_id?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        e.page_url?.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchesPage = !pageFilter || e.page_url === pageFilter;
+      return matchesSearch && matchesPage;
+    });
+  }, [events, searchQuery, pageFilter]);
 
   const stats = useMemo(() => ({
     totalEvents: events?.length || 0,
@@ -482,6 +488,19 @@ export const AdminClickstream = () => {
           </Suspense>
         );
 
+      case "settings":
+        return (
+          <Suspense fallback={<ComponentSkeleton />}>
+            <ClickstreamSettings
+              totalEvents={stats.totalEvents}
+              uniqueSessions={stats.uniqueSessions}
+              clicks={stats.clicks}
+              pageViews={stats.pageViews}
+              onDeleteSuccess={handleDeleteSuccess}
+            />
+          </Suspense>
+        );
+
       default:
         return <div className="text-center py-12 text-muted-foreground">Select a section from the sidebar</div>;
     }
@@ -508,82 +527,6 @@ export const AdminClickstream = () => {
         
         {/* Action Buttons - Responsive */}
         <div className="flex flex-wrap gap-2">
-          {/* Delete All Button with Enhanced Dialog */}
-          <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
-            <AlertDialogTrigger asChild>
-              <Button 
-                variant="destructive" 
-                size="sm" 
-                className="gap-1 text-xs sm:text-sm"
-              >
-                <Trash2 className="h-3 w-3 sm:h-4 sm:w-4" />
-                <span className="hidden sm:inline">Delete All</span>
-              </Button>
-            </AlertDialogTrigger>
-            <AlertDialogContent className="max-w-md">
-              <AlertDialogHeader>
-                <AlertDialogTitle className="flex items-center gap-2 text-destructive">
-                  <ShieldAlert className="h-5 w-5" />
-                  Danger: Delete All Data
-                </AlertDialogTitle>
-                <AlertDialogDescription asChild>
-                  <div className="space-y-4">
-                    <div className="p-4 bg-destructive/10 border border-destructive/30 rounded-lg">
-                      <div className="flex items-start gap-3">
-                        <AlertTriangle className="h-5 w-5 text-destructive shrink-0 mt-0.5" />
-                        <div className="space-y-2">
-                          <p className="font-medium text-destructive">This action cannot be undone!</p>
-                          <p className="text-sm text-muted-foreground">
-                            You are about to permanently delete all clickstream analytics data.
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <p className="text-sm font-medium">Data to be deleted:</p>
-                      <ul className="space-y-1 text-sm text-muted-foreground">
-                        <li className="flex items-center gap-2">
-                          <AlertCircle className="h-4 w-4 text-destructive" />
-                          <strong>{stats.totalEvents.toLocaleString()}</strong> clickstream events
-                        </li>
-                        <li className="flex items-center gap-2">
-                          <AlertCircle className="h-4 w-4 text-destructive" />
-                          <strong>{stats.uniqueSessions.toLocaleString()}</strong> unique sessions
-                        </li>
-                        <li className="flex items-center gap-2">
-                          <AlertCircle className="h-4 w-4 text-destructive" />
-                          <strong>{stats.clicks.toLocaleString()}</strong> click events
-                        </li>
-                        <li className="flex items-center gap-2">
-                          <AlertCircle className="h-4 w-4 text-destructive" />
-                          <strong>{stats.pageViews.toLocaleString()}</strong> page view events
-                        </li>
-                      </ul>
-                    </div>
-                  </div>
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter className="gap-2 sm:gap-0">
-                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                <AlertDialogAction 
-                  onClick={handleDeleteAllData} 
-                  disabled={isDeleting} 
-                  className="bg-destructive hover:bg-destructive/90"
-                >
-                  {isDeleting ? (
-                    <>Deleting...</>
-                  ) : (
-                    <>
-                      <Trash2 className="h-4 w-4 mr-2" />
-                      Delete All Data
-                    </>
-                  )}
-                </AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
-
           {/* Export Button */}
           <Button 
             variant="outline" 

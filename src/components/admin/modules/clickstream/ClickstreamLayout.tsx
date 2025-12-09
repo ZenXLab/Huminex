@@ -142,6 +142,12 @@ const navItems: NavItem[] = [
     icon: GitCompare,
     description: "ATLAS vs Glassbox vs FullStory",
   },
+  {
+    id: "settings",
+    label: "Settings",
+    icon: Shield,
+    description: "Feature toggles & data management",
+  },
 ];
 
 export const ClickstreamLayout = ({ 
