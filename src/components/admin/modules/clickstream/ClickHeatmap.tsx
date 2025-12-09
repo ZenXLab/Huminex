@@ -25,7 +25,7 @@ interface ClickHeatmapProps {
     page_url: string | null;
     element_text: string | null;
     element_id: string | null;
-    element_class: string | null;
+    element_class?: string | null;
     metadata: any;
   }>;
 }
