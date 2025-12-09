@@ -40,6 +40,8 @@ export const AdminInvoices = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [downloadLoading, setDownloadLoading] = useState(false);
+  const [checkingOverdue, setCheckingOverdue] = useState(false);
 
   const fetchInvoices = async () => {
     try {
@@ -164,10 +166,33 @@ export const AdminInvoices = () => {
             Track invoices, payment statuses, and transaction history
           </p>
         </div>
-        <Button onClick={handleRefresh} disabled={isRefreshing} variant="outline">
-          <RefreshCw className={`h-4 w-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
-          Refresh
-        </Button>
+        <div className="flex gap-2">
+          <Button 
+            onClick={async () => {
+              setCheckingOverdue(true);
+              try {
+                const { data, error } = await supabase.functions.invoke('check-overdue-invoices');
+                if (error) throw error;
+                toast.success(`Checked ${data.total_checked} invoices. ${data.marked_overdue} marked overdue, ${data.reminders_sent} reminders sent.`);
+                fetchInvoices();
+              } catch (err) {
+                toast.error('Failed to check overdue invoices');
+              } finally {
+                setCheckingOverdue(false);
+              }
+            }} 
+            disabled={checkingOverdue} 
+            variant="outline"
+            className="text-amber-600 border-amber-200 hover:bg-amber-50"
+          >
+            {checkingOverdue ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <AlertCircle className="h-4 w-4 mr-2" />}
+            Check Overdue
+          </Button>
+          <Button onClick={handleRefresh} disabled={isRefreshing} variant="outline">
+            <RefreshCw className={`h-4 w-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
+            Refresh
+          </Button>
+        </div>
       </div>
 
       {/* Stats Cards */}
@@ -595,8 +620,34 @@ export const AdminInvoices = () => {
           )}
 
           <DialogFooter className="mt-4">
-            <Button variant="outline" disabled>
-              <Download className="h-4 w-4 mr-2" />
+            <Button 
+              variant="outline" 
+              disabled={downloadLoading}
+              onClick={async () => {
+                if (!selectedInvoice) return;
+                setDownloadLoading(true);
+                try {
+                  const { data, error } = await supabase.functions.invoke('download-invoice-pdf', {
+                    body: { invoice_id: selectedInvoice.id }
+                  });
+                  if (error) throw error;
+                  const blob = new Blob([data], { type: 'text/html' });
+                  const url = URL.createObjectURL(blob);
+                  const printWindow = window.open(url, '_blank');
+                  if (printWindow) {
+                    printWindow.onload = () => printWindow.print();
+                  }
+                  toast.success('PDF generated - use browser print to save');
+                  fetchInvoices();
+                } catch (err) {
+                  console.error('PDF download error:', err);
+                  toast.error('Failed to generate PDF');
+                } finally {
+                  setDownloadLoading(false);
+                }
+              }}
+            >
+              {downloadLoading ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Download className="h-4 w-4 mr-2" />}
               Download PDF
             </Button>
           </DialogFooter>

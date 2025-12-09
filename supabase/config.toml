@@ -56,3 +56,9 @@ verify_jwt = false
 
 [functions.predictive-analytics]
 verify_jwt = false
+
+[functions.check-overdue-invoices]
+verify_jwt = false
+
+[functions.download-invoice-pdf]
+verify_jwt = false
