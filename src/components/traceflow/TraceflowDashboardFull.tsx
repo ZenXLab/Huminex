@@ -21,11 +21,13 @@ import {
   FormInput,
   Smartphone,
   Globe,
-  TrendingUp
+  TrendingUp,
+  Video
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useTraceflowSessions, useTraceflowStats, useNeuroRouterLogs, useTraceflowUXIssues } from "@/hooks/useTraceflow";
 import { TraceflowSessionReplay } from "./TraceflowSessionReplay";
+import { TraceflowRRWebReplay } from "./TraceflowRRWebReplay";
 import { TraceflowUXIntelligence } from "./TraceflowUXIntelligence";
 import { TraceflowSDK } from "./TraceflowSDK";
 import { TraceflowAdminPanel } from "./TraceflowAdminPanel";
@@ -111,7 +113,10 @@ export const TraceflowDashboardFull = () => {
         );
 
       case "sessions":
-        return <TraceflowSessionReplay />;
+        return <TraceflowRRWebReplay />;
+      
+      case "replay":
+        return <TraceflowRRWebReplay />;
 
       case "ux":
         return <TraceflowUXIntelligence />;
