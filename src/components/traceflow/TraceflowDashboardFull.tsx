@@ -39,7 +39,8 @@ import {
   Brain,
   Target,
   BarChart3,
-  PieChart
+  PieChart,
+  Shield
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Link } from "react-router-dom";
@@ -47,6 +48,10 @@ import { useTraceflowSessions, useTraceflowStats, useNeuroRouterLogs, useTracefl
 import { TraceflowSessionReplay } from "./TraceflowSessionReplay";
 import { TraceflowUXIntelligence } from "./TraceflowUXIntelligence";
 import { TraceflowSDK } from "./TraceflowSDK";
+import { TraceflowAdminPanel } from "./TraceflowAdminPanel";
+import { TraceflowRealtimeIndicator } from "./TraceflowRealtimeIndicator";
+import { useTraceflowAuth } from "@/hooks/useTraceflowAuth";
+import { useTraceflowRealtime } from "@/hooks/useTraceflowRBAC";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from 'recharts';
 
 // Mock data for charts - will be replaced with real data
@@ -101,6 +106,13 @@ export const TraceflowDashboardFull = () => {
   const [selectedInsight, setSelectedInsight] = useState<string | null>(null);
   const [activeFilter, setActiveFilter] = useState("Last 24h");
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  
+  // Get auth and subscription info
+  const { user, isAdmin } = useTraceflowAuth();
+  const subscriptionId = user?.id; // Using user ID as subscription reference for now
+  
+  // Enable real-time updates
+  const { isConnected } = useTraceflowRealtime(subscriptionId);
   
   // Get real data from hooks
   const { data: sessions, isLoading: sessionsLoading, refetch: refetchSessions } = useTraceflowSessions({ limit: 50 });
@@ -568,53 +580,11 @@ export const TraceflowDashboardFull = () => {
         );
 
       case "settings":
-        return (
-          <div className="space-y-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <h2 className="text-2xl font-bold flex items-center gap-2">
-                  <Settings className="h-6 w-6 text-[#0B3D91]" />
-                  Admin & Billing
-                </h2>
-                <p className="text-muted-foreground">Feature store, team management & billing</p>
-              </div>
-            </div>
-            <div className="grid md:grid-cols-2 gap-6">
-              <Card className="border-0 shadow-lg">
-                <CardHeader>
-                  <CardTitle>Feature Store</CardTitle>
-                  <CardDescription>Enable/disable features per team</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-3">
-                    {["Session Replay", "AI Summaries", "Heatmaps", "Voice Fusion", "NeuroRouter"].map((feature) => (
-                      <div key={feature} className="flex items-center justify-between p-2 rounded-lg hover:bg-muted/50">
-                        <span className="text-sm">{feature}</span>
-                        <Badge className="bg-emerald-500/10 text-emerald-600">Enabled</Badge>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-              <Card className="border-0 shadow-lg">
-                <CardHeader>
-                  <CardTitle>Current Plan</CardTitle>
-                  <CardDescription>Professional - 250K sessions/month</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    <div className="flex justify-between">
-                      <span className="text-sm text-muted-foreground">Sessions Used</span>
-                      <span className="font-medium">142,500 / 250,000</span>
-                    </div>
-                    <Progress value={57} className="h-2" />
-                    <Button className="w-full bg-gradient-to-r from-[#0B3D91] to-[#00C2D8]">
-                      Upgrade to Enterprise
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
+        return subscriptionId ? (
+          <TraceflowAdminPanel subscriptionId={subscriptionId} />
+        ) : (
+          <div className="flex items-center justify-center h-64">
+            <p className="text-muted-foreground">Loading admin panel...</p>
           </div>
         );
 
@@ -928,9 +898,11 @@ export const TraceflowDashboardFull = () => {
               <h1 className="font-semibold text-lg capitalize">
                 {activeTab === "neurorouter" ? "NeuroRouter AI" : activeTab.replace("-", " ")}
               </h1>
-              {activeTab === "overview" && (
-                <Badge variant="secondary" className="text-xs">
-                  Last updated: Just now
+              <TraceflowRealtimeIndicator subscriptionId={subscriptionId} />
+              {isAdmin && (
+                <Badge className="bg-amber-500/20 text-amber-600 border border-amber-300">
+                  <Shield className="h-3 w-3 mr-1" />
+                  Admin
                 </Badge>
               )}
             </div>

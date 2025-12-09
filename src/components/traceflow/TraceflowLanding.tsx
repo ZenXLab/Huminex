@@ -355,20 +355,19 @@ export const TraceflowLanding = () => {
               </div>
             </Link>
 
-            {/* Desktop Navigation */}
             <div className="hidden lg:flex items-center gap-1">
-              <Link to="#features" className="px-4 py-2 text-sm font-medium text-foreground/70 hover:text-foreground hover:bg-muted/50 rounded-lg transition-colors">
+              <a href="#features" className="px-4 py-2 text-sm font-medium text-foreground/70 hover:text-foreground hover:bg-muted/50 rounded-lg transition-colors">
                 Features
-              </Link>
-              <Link to="#how-it-works" className="px-4 py-2 text-sm font-medium text-foreground/70 hover:text-foreground hover:bg-muted/50 rounded-lg transition-colors">
+              </a>
+              <a href="#how-it-works" className="px-4 py-2 text-sm font-medium text-foreground/70 hover:text-foreground hover:bg-muted/50 rounded-lg transition-colors">
                 How It Works
-              </Link>
-              <Link to="#case-studies" className="px-4 py-2 text-sm font-medium text-foreground/70 hover:text-foreground hover:bg-muted/50 rounded-lg transition-colors">
+              </a>
+              <a href="#case-studies" className="px-4 py-2 text-sm font-medium text-foreground/70 hover:text-foreground hover:bg-muted/50 rounded-lg transition-colors">
                 Case Studies
-              </Link>
-              <Link to="#pricing" className="px-4 py-2 text-sm font-medium text-foreground/70 hover:text-foreground hover:bg-muted/50 rounded-lg transition-colors">
+              </a>
+              <a href="#pricing" className="px-4 py-2 text-sm font-medium text-foreground/70 hover:text-foreground hover:bg-muted/50 rounded-lg transition-colors">
                 Pricing
-              </Link>
+              </a>
               <Link to="/contact" className="px-4 py-2 text-sm font-medium text-foreground/70 hover:text-foreground hover:bg-muted/50 rounded-lg transition-colors">
                 Contact
               </Link>
@@ -409,19 +408,19 @@ export const TraceflowLanding = () => {
           mobileMenuOpen ? "max-h-screen border-t border-border" : "max-h-0"
         )}>
           <div className="bg-background px-4 py-4 space-y-2">
-            <Link to="#features" className="block px-4 py-3 text-sm font-medium text-foreground/80 hover:bg-muted/50 rounded-lg">
+            <a href="#features" onClick={() => setMobileMenuOpen(false)} className="block px-4 py-3 text-sm font-medium text-foreground/80 hover:bg-muted/50 rounded-lg">
               Features
-            </Link>
-            <Link to="#how-it-works" className="block px-4 py-3 text-sm font-medium text-foreground/80 hover:bg-muted/50 rounded-lg">
+            </a>
+            <a href="#how-it-works" onClick={() => setMobileMenuOpen(false)} className="block px-4 py-3 text-sm font-medium text-foreground/80 hover:bg-muted/50 rounded-lg">
               How It Works
-            </Link>
-            <Link to="#case-studies" className="block px-4 py-3 text-sm font-medium text-foreground/80 hover:bg-muted/50 rounded-lg">
+            </a>
+            <a href="#case-studies" onClick={() => setMobileMenuOpen(false)} className="block px-4 py-3 text-sm font-medium text-foreground/80 hover:bg-muted/50 rounded-lg">
               Case Studies
-            </Link>
-            <Link to="#pricing" className="block px-4 py-3 text-sm font-medium text-foreground/80 hover:bg-muted/50 rounded-lg">
+            </a>
+            <a href="#pricing" onClick={() => setMobileMenuOpen(false)} className="block px-4 py-3 text-sm font-medium text-foreground/80 hover:bg-muted/50 rounded-lg">
               Pricing
-            </Link>
-            <Link to="/contact" className="block px-4 py-3 text-sm font-medium text-foreground/80 hover:bg-muted/50 rounded-lg">
+            </a>
+            <Link to="/contact" onClick={() => setMobileMenuOpen(false)} className="block px-4 py-3 text-sm font-medium text-foreground/80 hover:bg-muted/50 rounded-lg">
               Contact
             </Link>
             <div className="pt-4 border-t border-border space-y-2">
@@ -789,8 +788,8 @@ export const TraceflowLanding = () => {
         </div>
       </section>
 
-      {/* World-First Features */}
-      <section className="py-16 lg:py-24 bg-gradient-to-br from-[#0B3D91] via-[#0B3D91] to-[#00C2D8] text-white relative overflow-hidden">
+      {/* World-First Features / How It Works */}
+      <section id="how-it-works" className="py-16 lg:py-24 bg-gradient-to-br from-[#0B3D91] via-[#0B3D91] to-[#00C2D8] text-white relative overflow-hidden">
         {/* Animated background patterns */}
         <div className="absolute inset-0 opacity-10">
           {[...Array(20)].map((_, i) => (
@@ -975,8 +974,8 @@ export const TraceflowLanding = () => {
         </div>
       </section>
 
-      {/* CTA Section */}
-      <section className="py-16 lg:py-24 bg-gradient-to-br from-[#0B3D91] to-[#00C2D8] relative overflow-hidden">
+      {/* Pricing / CTA Section */}
+      <section id="pricing" className="py-16 lg:py-24 bg-gradient-to-br from-[#0B3D91] to-[#00C2D8] relative overflow-hidden">
         <div className="absolute inset-0">
           {[...Array(5)].map((_, i) => (
             <div
@@ -1007,9 +1006,9 @@ export const TraceflowLanding = () => {
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
             </Link>
-            <Link to="/traceflow/dashboard">
+            <Link to="/traceflow/login">
               <Button size="lg" variant="outline" className="bg-white/10 border-white/30 text-white hover:bg-white/20 h-12">
-                Explore Dashboard
+                Start Free Trial
               </Button>
             </Link>
           </div>
