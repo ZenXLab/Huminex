@@ -25,7 +25,7 @@ const defaultPrivacySettings: PrivacySettings = {
   maskPasswords: true,
   maskEmails: false,
   maskCreditCards: true,
-  excludedPages: ["/admin/*"], // Exclude admin pages by default to prevent issues
+  excludedPages: ["/admin/*", "/traceflow/*"], // Exclude admin and traceflow pages
   excludedSelectors: [".sensitive", "[data-private]", ".credit-card"],
   recordCanvas: false,
   collectFonts: false,
@@ -69,7 +69,7 @@ export const useSessionRecording = (options: UseSessionRecordingOptions = {}) =>
   const startTimeRef = useRef<Date>(new Date());
   const saveIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const [isRecording, setIsRecording] = useState(false);
-  const rrwebLoadedRef = useRef(false);
+  const hasStartedRef = useRef(false);
 
   // Save events to database with error handling
   const saveEvents = useCallback(async (isFinal = false) => {
@@ -130,12 +130,13 @@ export const useSessionRecording = (options: UseSessionRecordingOptions = {}) =>
 
   // Start recording - lazy load rrweb to avoid blocking
   const startRecording = useCallback(async () => {
-    if (stopFnRef.current) return; // Already recording
+    if (stopFnRef.current || hasStartedRef.current) return; // Already recording or started
     if (isPageExcluded(privacy.excludedPages)) return;
+
+    hasStartedRef.current = true;
 
     try {
       const rrweb = await import("rrweb");
-      rrwebLoadedRef.current = true;
       
       startTimeRef.current = new Date();
       eventsRef.current = [];
@@ -149,9 +150,9 @@ export const useSessionRecording = (options: UseSessionRecordingOptions = {}) =>
         },
         checkoutEveryNms,
         sampling: {
-          mousemove: 50, // Capture mouse movements at 50ms intervals
+          mousemove: false, // Disable mousemove to reduce noise and errors
           mouseInteraction: true,
-          scroll: 150, // More frequent scroll capture
+          scroll: 200,
           media: 800,
           input: "last",
         },
@@ -160,12 +161,14 @@ export const useSessionRecording = (options: UseSessionRecordingOptions = {}) =>
         inlineStylesheet: privacy.inlineStylesheet,
         maskAllInputs: privacy.maskAllInputs,
         blockSelector: blockSelectors || undefined,
+        // Add error handling for problematic nodes
+        blockClass: 'rrweb-block',
       });
 
       setIsRecording(true);
       console.log("[rrweb] Recording started for session:", sessionIdRef.current);
 
-      // Save events every 15 seconds for more granular capture
+      // Save events every 15 seconds
       saveIntervalRef.current = setInterval(() => {
         if (eventsRef.current.length > 0) {
           console.log("[rrweb] Auto-saving", eventsRef.current.length, "events");
@@ -174,6 +177,7 @@ export const useSessionRecording = (options: UseSessionRecordingOptions = {}) =>
       }, 15000);
     } catch (err) {
       console.error("[rrweb] Failed to start recording:", err);
+      hasStartedRef.current = false;
     }
   }, [checkoutEveryNms, saveEvents, privacy]);
 
@@ -191,15 +195,18 @@ export const useSessionRecording = (options: UseSessionRecordingOptions = {}) =>
 
     setIsRecording(false);
     saveEvents(true);
+    hasStartedRef.current = false;
   }, [saveEvents]);
 
   useEffect(() => {
     if (!enabled) return;
     
-    // Delay start to not block initial page load
+    // Only start once - delay to not block initial page load
     const timeout = setTimeout(() => {
-      startRecording();
-    }, 3000);
+      if (!hasStartedRef.current) {
+        startRecording();
+      }
+    }, 2000);
 
     const handleUnload = () => stopRecording();
 
