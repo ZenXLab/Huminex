@@ -1987,6 +1987,162 @@ export type Database = {
           },
         ]
       }
+      traceflow_api_keys: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          expires_at: string | null
+          id: string
+          is_active: boolean | null
+          key_hash: string
+          key_prefix: string
+          last_used_at: string | null
+          name: string
+          permissions: string[] | null
+          rate_limit: number | null
+          subscription_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          key_hash: string
+          key_prefix: string
+          last_used_at?: string | null
+          name: string
+          permissions?: string[] | null
+          rate_limit?: number | null
+          subscription_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          key_hash?: string
+          key_prefix?: string
+          last_used_at?: string | null
+          name?: string
+          permissions?: string[] | null
+          rate_limit?: number | null
+          subscription_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "traceflow_api_keys_subscription_id_fkey"
+            columns: ["subscription_id"]
+            isOneToOne: false
+            referencedRelation: "traceflow_subscriptions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      traceflow_audit_logs: {
+        Row: {
+          action: string
+          created_at: string | null
+          id: string
+          ip_address: string | null
+          new_value: Json | null
+          old_value: Json | null
+          resource_id: string | null
+          resource_type: string
+          subscription_id: string | null
+          user_agent: string | null
+          user_email: string | null
+          user_id: string | null
+        }
+        Insert: {
+          action: string
+          created_at?: string | null
+          id?: string
+          ip_address?: string | null
+          new_value?: Json | null
+          old_value?: Json | null
+          resource_id?: string | null
+          resource_type: string
+          subscription_id?: string | null
+          user_agent?: string | null
+          user_email?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          action?: string
+          created_at?: string | null
+          id?: string
+          ip_address?: string | null
+          new_value?: Json | null
+          old_value?: Json | null
+          resource_id?: string | null
+          resource_type?: string
+          subscription_id?: string | null
+          user_agent?: string | null
+          user_email?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "traceflow_audit_logs_subscription_id_fkey"
+            columns: ["subscription_id"]
+            isOneToOne: false
+            referencedRelation: "traceflow_subscriptions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      traceflow_compliance_settings: {
+        Row: {
+          allowed_domains: string[] | null
+          blocked_ips: string[] | null
+          created_at: string | null
+          data_retention_days: number | null
+          gdpr_mode: boolean | null
+          hipaa_mode: boolean | null
+          id: string
+          pii_masking_enabled: boolean | null
+          session_recording_enabled: boolean | null
+          subscription_id: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          allowed_domains?: string[] | null
+          blocked_ips?: string[] | null
+          created_at?: string | null
+          data_retention_days?: number | null
+          gdpr_mode?: boolean | null
+          hipaa_mode?: boolean | null
+          id?: string
+          pii_masking_enabled?: boolean | null
+          session_recording_enabled?: boolean | null
+          subscription_id?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          allowed_domains?: string[] | null
+          blocked_ips?: string[] | null
+          created_at?: string | null
+          data_retention_days?: number | null
+          gdpr_mode?: boolean | null
+          hipaa_mode?: boolean | null
+          id?: string
+          pii_masking_enabled?: boolean | null
+          session_recording_enabled?: boolean | null
+          subscription_id?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "traceflow_compliance_settings_subscription_id_fkey"
+            columns: ["subscription_id"]
+            isOneToOne: true
+            referencedRelation: "traceflow_subscriptions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       traceflow_events: {
         Row: {
           browser: string | null
@@ -2051,6 +2207,62 @@ export type Database = {
             columns: ["tenant_id"]
             isOneToOne: false
             referencedRelation: "client_tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      traceflow_feature_access: {
+        Row: {
+          created_at: string | null
+          current_usage: number | null
+          enabled_for_roles:
+            | Database["public"]["Enums"]["traceflow_role"][]
+            | null
+          feature_description: string | null
+          feature_id: string
+          feature_name: string
+          id: string
+          is_enabled: boolean | null
+          subscription_id: string | null
+          updated_at: string | null
+          usage_limit: number | null
+        }
+        Insert: {
+          created_at?: string | null
+          current_usage?: number | null
+          enabled_for_roles?:
+            | Database["public"]["Enums"]["traceflow_role"][]
+            | null
+          feature_description?: string | null
+          feature_id: string
+          feature_name: string
+          id?: string
+          is_enabled?: boolean | null
+          subscription_id?: string | null
+          updated_at?: string | null
+          usage_limit?: number | null
+        }
+        Update: {
+          created_at?: string | null
+          current_usage?: number | null
+          enabled_for_roles?:
+            | Database["public"]["Enums"]["traceflow_role"][]
+            | null
+          feature_description?: string | null
+          feature_id?: string
+          feature_name?: string
+          id?: string
+          is_enabled?: boolean | null
+          subscription_id?: string | null
+          updated_at?: string | null
+          usage_limit?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "traceflow_feature_access_subscription_id_fkey"
+            columns: ["subscription_id"]
+            isOneToOne: false
+            referencedRelation: "traceflow_subscriptions"
             referencedColumns: ["id"]
           },
         ]
@@ -2370,6 +2582,56 @@ export type Database = {
           },
         ]
       }
+      traceflow_sso_config: {
+        Row: {
+          certificate: string | null
+          client_id: string | null
+          created_at: string | null
+          domain: string | null
+          enforce_sso: boolean | null
+          id: string
+          is_enabled: boolean | null
+          metadata_url: string | null
+          provider: string
+          subscription_id: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          certificate?: string | null
+          client_id?: string | null
+          created_at?: string | null
+          domain?: string | null
+          enforce_sso?: boolean | null
+          id?: string
+          is_enabled?: boolean | null
+          metadata_url?: string | null
+          provider: string
+          subscription_id?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          certificate?: string | null
+          client_id?: string | null
+          created_at?: string | null
+          domain?: string | null
+          enforce_sso?: boolean | null
+          id?: string
+          is_enabled?: boolean | null
+          metadata_url?: string | null
+          provider?: string
+          subscription_id?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "traceflow_sso_config_subscription_id_fkey"
+            columns: ["subscription_id"]
+            isOneToOne: true
+            referencedRelation: "traceflow_subscriptions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       traceflow_subscriptions: {
         Row: {
           company_size: string | null
@@ -2414,6 +2676,59 @@ export type Database = {
           website?: string | null
         }
         Relationships: []
+      }
+      traceflow_team_members: {
+        Row: {
+          accepted_at: string | null
+          created_at: string | null
+          email: string
+          full_name: string | null
+          id: string
+          invited_at: string | null
+          invited_by: string | null
+          role: Database["public"]["Enums"]["traceflow_role"]
+          status: string | null
+          subscription_id: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          accepted_at?: string | null
+          created_at?: string | null
+          email: string
+          full_name?: string | null
+          id?: string
+          invited_at?: string | null
+          invited_by?: string | null
+          role?: Database["public"]["Enums"]["traceflow_role"]
+          status?: string | null
+          subscription_id?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          accepted_at?: string | null
+          created_at?: string | null
+          email?: string
+          full_name?: string | null
+          id?: string
+          invited_at?: string | null
+          invited_by?: string | null
+          role?: Database["public"]["Enums"]["traceflow_role"]
+          status?: string | null
+          subscription_id?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "traceflow_team_members_subscription_id_fkey"
+            columns: ["subscription_id"]
+            isOneToOne: false
+            referencedRelation: "traceflow_subscriptions"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       traceflow_user_features: {
         Row: {
@@ -2612,11 +2927,13 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_traceflow_admin: { Args: { check_user_id: string }; Returns: boolean }
     }
     Enums: {
       app_role: "admin" | "user"
       invoice_status: "draft" | "sent" | "paid" | "overdue" | "cancelled"
       quote_status: "draft" | "pending" | "approved" | "rejected" | "converted"
+      traceflow_role: "owner" | "admin" | "analyst" | "viewer"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -2747,6 +3064,7 @@ export const Constants = {
       app_role: ["admin", "user"],
       invoice_status: ["draft", "sent", "paid", "overdue", "cancelled"],
       quote_status: ["draft", "pending", "approved", "rejected", "converted"],
+      traceflow_role: ["owner", "admin", "analyst", "viewer"],
     },
   },
 } as const
