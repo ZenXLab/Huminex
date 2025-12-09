@@ -12,6 +12,7 @@ import { toast } from 'sonner';
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
 import { industryCategories } from '@/lib/industryTypes';
+import { useFormFieldAnalytics } from '@/hooks/useFormFieldAnalytics';
 import { Check, Star, Zap, Shield, ArrowRight, Calculator, Building2, Users, Briefcase, Crown } from 'lucide-react';
 
 interface ServicePricing {
@@ -53,6 +54,9 @@ const GetQuote = () => {
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(true);
   
+  // Form field analytics
+  const formAnalytics = useFormFieldAnalytics('get-quote-form', 'Get Quote Form');
+  
   // Data from database
   const [services, setServices] = useState<ServicePricing[]>([]);
   const [addons, setAddons] = useState<Addon[]>([]);
@@ -74,6 +78,11 @@ const GetQuote = () => {
     phone: '',
     company: '',
   });
+
+  // Track form submission
+  const handleFormSubmit = () => {
+    formAnalytics.trackFormSubmit();
+  };
 
   useEffect(() => {
     fetchPricingData();

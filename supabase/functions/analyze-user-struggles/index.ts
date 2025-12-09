@@ -1,4 +1,4 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -37,6 +37,90 @@ interface StruggleAnalysis {
   aiInsights: string[];
   overallFrustrationScore: number;
   recommendations: string[];
+  emailAlertSent?: boolean;
+}
+
+// Send email alert for high frustration scores using Resend API
+async function sendFrustrationAlert(score: number, analysis: any): Promise<boolean> {
+  const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
+  if (!RESEND_API_KEY) {
+    console.warn("RESEND_API_KEY not configured, skipping email alert");
+    return false;
+  }
+
+  try {
+    const emailHtml = `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <div style="background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); padding: 20px; text-align: center;">
+          <h1 style="color: white; margin: 0;">⚠️ High Frustration Alert</h1>
+        </div>
+        <div style="padding: 24px; background: #f9fafb;">
+          <h2 style="color: #111827; margin-top: 0;">Frustration Score: ${score}/100</h2>
+          <p style="color: #6b7280;">Users are experiencing significant friction on your platform. Immediate attention recommended.</p>
+          
+          <div style="background: white; border-radius: 8px; padding: 16px; margin: 16px 0;">
+            <h3 style="color: #111827; margin-top: 0;">Key Issues Detected:</h3>
+            <ul style="color: #374151; padding-left: 20px;">
+              <li><strong>Rage Clicks:</strong> ${analysis.rageClicks?.count || 0} occurrences</li>
+              <li><strong>Dead Clicks:</strong> ${analysis.deadClicks?.count || 0} occurrences</li>
+              <li><strong>Form Abandonments:</strong> ${analysis.formAbandonment?.count || 0} occurrences</li>
+            </ul>
+          </div>
+          
+          <div style="background: white; border-radius: 8px; padding: 16px; margin: 16px 0;">
+            <h3 style="color: #111827; margin-top: 0;">AI Insights:</h3>
+            <ul style="color: #374151; padding-left: 20px;">
+              ${(analysis.aiInsights || []).map((insight: string) => `<li>${insight}</li>`).join('')}
+            </ul>
+          </div>
+          
+          <div style="background: #fef3c7; border-radius: 8px; padding: 16px; margin: 16px 0;">
+            <h3 style="color: #92400e; margin-top: 0;">Recommendations:</h3>
+            <ul style="color: #92400e; padding-left: 20px;">
+              ${(analysis.recommendations || []).map((rec: string) => `<li>${rec}</li>`).join('')}
+            </ul>
+          </div>
+          
+          <p style="text-align: center; margin-top: 24px;">
+            <a href="https://atlas.cropxon.com/admin/clickstream" 
+               style="display: inline-block; background: #2563eb; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px;">
+              View Full Analysis →
+            </a>
+          </p>
+        </div>
+        <div style="padding: 16px; text-align: center; color: #6b7280; font-size: 12px;">
+          This alert was triggered because the frustration score exceeded 70.
+          <br>CropXon ATLAS Analytics
+        </div>
+      </div>
+    `;
+
+    const response = await fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${RESEND_API_KEY}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        from: "ATLAS Analytics <onboarding@resend.dev>",
+        to: ["admin@cropxon.com"],
+        subject: `🚨 High User Frustration Detected (Score: ${score}/100)`,
+        html: emailHtml,
+      }),
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error("Resend API error:", response.status, errorText);
+      return false;
+    }
+
+    console.log("Frustration alert email sent successfully");
+    return true;
+  } catch (error) {
+    console.error("Failed to send frustration alert:", error);
+    return false;
+  }
 }
 
 serve(async (req) => {
@@ -100,11 +184,19 @@ serve(async (req) => {
       recommendations: aiAnalysis.recommendations,
     };
 
+    // Send email alert if frustration score is high (>70)
+    let emailAlertSent = false;
+    if (frustrationScore >= 70) {
+      emailAlertSent = await sendFrustrationAlert(frustrationScore, analysis);
+      analysis.emailAlertSent = emailAlertSent;
+    }
+
     console.log("Struggle analysis complete:", {
       rageClicks: rageClicks.count,
       deadClicks: deadClicks.count,
       formAbandonment: formAbandonment.count,
       frustrationScore,
+      emailAlertSent,
     });
 
     return new Response(

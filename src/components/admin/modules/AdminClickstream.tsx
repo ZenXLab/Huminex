@@ -48,9 +48,9 @@ export const AdminClickstream = () => {
     queryFn: async () => {
       let query = supabase
         .from("clickstream_events")
-        .select("*")
+        .select("id, session_id, event_type, page_url, element_id, element_text, created_at, metadata")
         .order("created_at", { ascending: false })
-        .limit(500);
+        .limit(200); // Reduced limit for faster initial load
 
       if (eventFilter !== "all") {
         query = query.eq("event_type", eventFilter);
@@ -81,7 +81,8 @@ export const AdminClickstream = () => {
       setLastUpdate(new Date());
       return data || [];
     },
-    refetchInterval: 5000,
+    refetchInterval: 30000, // Increased from 5s to 30s to reduce load
+    staleTime: 10000, // Cache for 10 seconds
   });
 
   const { data: experiments } = useQuery({
@@ -89,11 +90,13 @@ export const AdminClickstream = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("ab_experiments")
-        .select(`*, ab_variants (*), ab_user_assignments (*)`)
-        .eq("status", "running");
+        .select("id, name, status")
+        .eq("status", "running")
+        .limit(10);
       if (error) throw error;
       return data;
     },
+    staleTime: 60000, // Cache for 1 minute
   });
 
   // Real-time subscription

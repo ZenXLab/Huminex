@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Helmet } from "react-helmet-async";
 import { Link } from "react-router-dom";
 import { Header } from "@/components/Header";
@@ -9,6 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useScrollAnimation } from "@/hooks/useScrollAnimation";
+import { useFormFieldAnalytics } from "@/hooks/useFormFieldAnalytics";
 import { toast } from "sonner";
 import { 
   Mail, 
@@ -87,6 +88,9 @@ const Contact = () => {
     message: ""
   });
 
+  // Form field analytics
+  const formAnalytics = useFormFieldAnalytics('contact-form', 'Contact Form');
+
   const { ref: heroRef, isVisible: heroVisible } = useScrollAnimation({ threshold: 0.1 });
   const { ref: formRef, isVisible: formVisible } = useScrollAnimation({ threshold: 0.1 });
   const { ref: officesRef, isVisible: officesVisible } = useScrollAnimation({ threshold: 0.1 });
@@ -94,6 +98,9 @@ const Contact = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
+    
+    // Track form submission
+    formAnalytics.trackFormSubmit();
     
     // Simulate form submission
     await new Promise(resolve => setTimeout(resolve, 1500));
@@ -166,6 +173,8 @@ const Contact = () => {
                           placeholder="John Doe"
                           value={formData.name}
                           onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                          onFocus={() => formAnalytics.trackFieldFocus('name', 'text')}
+                          onBlur={(e) => formAnalytics.trackFieldBlur('name', !e.target.value, e.target.value)}
                           required
                           className="h-12 bg-background border-border/60 focus:border-primary transition-colors"
                         />
@@ -178,6 +187,14 @@ const Contact = () => {
                           placeholder="john@company.com"
                           value={formData.email}
                           onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                          onFocus={() => formAnalytics.trackFieldFocus('email', 'email')}
+                          onBlur={(e) => {
+                            const isValidEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e.target.value);
+                            formAnalytics.trackFieldBlur('email', !isValidEmail && e.target.value.length > 0, e.target.value);
+                            if (!isValidEmail && e.target.value.length > 0) {
+                              formAnalytics.trackFieldError('email', 'Invalid email format');
+                            }
+                          }}
                           required
                           className="h-12 bg-background border-border/60 focus:border-primary transition-colors"
                         />
@@ -192,6 +209,8 @@ const Contact = () => {
                           placeholder="Acme Corp"
                           value={formData.organization}
                           onChange={(e) => setFormData({ ...formData, organization: e.target.value })}
+                          onFocus={() => formAnalytics.trackFieldFocus('organization', 'text')}
+                          onBlur={(e) => formAnalytics.trackFieldBlur('organization', false, e.target.value)}
                           className="h-12 bg-background border-border/60 focus:border-primary transition-colors"
                         />
                       </div>
@@ -203,6 +222,8 @@ const Contact = () => {
                           placeholder="+91 98765 43210"
                           value={formData.phone}
                           onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                          onFocus={() => formAnalytics.trackFieldFocus('phone', 'tel')}
+                          onBlur={(e) => formAnalytics.trackFieldBlur('phone', false, e.target.value)}
                           className="h-12 bg-background border-border/60 focus:border-primary transition-colors"
                         />
                       </div>
@@ -233,6 +254,8 @@ const Contact = () => {
                         placeholder="Tell us about your organization and how we can help..."
                         value={formData.message}
                         onChange={(e) => setFormData({ ...formData, message: e.target.value })}
+                        onFocus={() => formAnalytics.trackFieldFocus('message', 'textarea')}
+                        onBlur={(e) => formAnalytics.trackFieldBlur('message', !e.target.value, e.target.value)}
                         required
                         rows={5}
                         className="bg-background border-border/60 focus:border-primary transition-colors resize-none"
