@@ -15,7 +15,13 @@ import {
   Bot,
   Activity,
   GitBranch,
-  BarChart3
+  BarChart3,
+  RefreshCw,
+  Thermometer,
+  FormInput,
+  Smartphone,
+  Globe,
+  TrendingUp
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useTraceflowSessions, useTraceflowStats, useNeuroRouterLogs, useTraceflowUXIssues } from "@/hooks/useTraceflow";
@@ -53,7 +59,6 @@ const ComponentSkeleton = () => (
 
 export const TraceflowDashboardFull = () => {
   const [activeTab, setActiveTab] = useState("overview");
-  const [timeFilter, setTimeFilter] = useState("24h");
   const [isRefreshing, setIsRefreshing] = useState(false);
   
   // Get auth and subscription info
@@ -64,10 +69,10 @@ export const TraceflowDashboardFull = () => {
   const { isConnected } = useTraceflowRealtime(subscriptionId);
   
   // Get real data from hooks
-  const { data: sessions, isLoading: sessionsLoading, refetch: refetchSessions } = useTraceflowSessions({ limit: 50 });
+  const { data: sessions, isLoading: sessionsLoading, refetch: refetchSessions } = useTraceflowSessions({ limit: 100 });
   const { data: uxIssues, refetch: refetchUxIssues } = useTraceflowUXIssues({ status: 'open' });
   const { data: stats } = useTraceflowStats();
-  const { data: neuroRouterLogs } = useNeuroRouterLogs(10);
+  const { data: neuroRouterLogs } = useNeuroRouterLogs(20);
 
   const handleRefresh = async () => {
     setIsRefreshing(true);
@@ -79,15 +84,24 @@ export const TraceflowDashboardFull = () => {
     setActiveTab("sessions");
   };
 
+  // Sidebar stats from real data
+  const sidebarStats = {
+    sessions24h: sessions?.length || 0,
+    uxIssues: uxIssues?.length || 0,
+    aiTasks: neuroRouterLogs?.length || 0,
+  };
+
   const renderContent = () => {
     switch (activeTab) {
       case "overview":
+      case "ai-analyst":
         return (
           <TraceflowOverviewTab 
             sessions={sessions || null}
             uxIssues={uxIssues || null}
             neuroRouterLogs={neuroRouterLogs || null}
             onViewSession={handleViewSession}
+            isLoading={sessionsLoading}
           />
         );
 
@@ -100,6 +114,9 @@ export const TraceflowDashboardFull = () => {
       case "sdk":
         return <TraceflowSDK />;
 
+      case "settings":
+        return <TraceflowAdminPanel subscriptionId={subscriptionId || ""} />;
+
       case "capture":
         return (
           <div className="space-y-6">
@@ -107,26 +124,54 @@ export const TraceflowDashboardFull = () => {
               <div>
                 <h2 className="text-2xl font-bold flex items-center gap-2">
                   <MousePointer className="h-6 w-6 text-primary" />
-                  Universal Capture Engine
+                  Capture Engine
                 </h2>
                 <p className="text-muted-foreground">Auto-capture every user interaction with zero manual tagging</p>
               </div>
               <Badge className="bg-primary/10 text-primary">Core Feature</Badge>
             </div>
+            
+            {/* Real stats */}
+            <div className="grid md:grid-cols-4 gap-4">
+              <Card>
+                <CardContent className="p-4 text-center">
+                  <p className="text-3xl font-bold text-primary">{sessions?.length || 0}</p>
+                  <p className="text-sm text-muted-foreground">Sessions Captured</p>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="p-4 text-center">
+                  <p className="text-3xl font-bold">{sessions?.reduce((a,s) => a + (s.event_count||0), 0) || 0}</p>
+                  <p className="text-sm text-muted-foreground">Total Events</p>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="p-4 text-center">
+                  <p className="text-3xl font-bold text-destructive">{sessions?.reduce((a,s) => a + (s.rage_click_count||0), 0) || 0}</p>
+                  <p className="text-sm text-muted-foreground">Rage Clicks</p>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="p-4 text-center">
+                  <p className="text-3xl font-bold text-amber-500">{sessions?.reduce((a,s) => a + (s.dead_click_count||0), 0) || 0}</p>
+                  <p className="text-sm text-muted-foreground">Dead Clicks</p>
+                </CardContent>
+              </Card>
+            </div>
+            
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
               {[
-                { title: "Auto Event Capture", desc: "Zero manual tagging required - captures clicks, taps, gestures automatically", metric: "100%", status: "active" },
-                { title: "Web Session Replay", desc: "Pixel-perfect playback of every user session", metric: "HD", status: "active" },
-                { title: "Mobile Gesture Capture", desc: "Native iOS & Android gesture tracking", metric: "Native", status: "active" },
-                { title: "Rage Click Detection", desc: "AI-powered frustration pattern recognition", metric: "Real-time", status: "active" },
-                { title: "Dead Click Detection", desc: "Identify non-responsive UI elements", metric: "Instant", status: "active" },
-                { title: "DOM Timeline Tracking", desc: "Complete DOM mutation history", metric: "Full", status: "active" },
+                { title: "Auto Event Capture", desc: "Zero manual tagging - captures clicks, taps, gestures", status: "Active" },
+                { title: "Session Recording", desc: "Pixel-perfect playback of every user session", status: "Active" },
+                { title: "Rage Click Detection", desc: "AI-powered frustration pattern recognition", status: "Active" },
+                { title: "Dead Click Detection", desc: "Identify non-responsive UI elements", status: "Active" },
+                { title: "Scroll Depth Tracking", desc: "Track how far users scroll on each page", status: "Active" },
+                { title: "Error Capture", desc: "Automatic JavaScript error logging", status: "Active" },
               ].map((feature) => (
                 <Card key={feature.title}>
                   <CardContent className="p-4">
                     <div className="flex items-center justify-between mb-2">
-                      <Badge variant="outline" className="text-emerald-600 border-emerald-300 bg-emerald-50">Active</Badge>
-                      <span className="text-sm font-bold text-primary">{feature.metric}</span>
+                      <Badge variant="outline" className="text-emerald-600 border-emerald-300 bg-emerald-50">{feature.status}</Badge>
                     </div>
                     <h4 className="font-semibold mb-1">{feature.title}</h4>
                     <p className="text-xs text-muted-foreground">{feature.desc}</p>
@@ -137,6 +182,60 @@ export const TraceflowDashboardFull = () => {
           </div>
         );
 
+      case "heatmaps":
+        return (
+          <Suspense fallback={<ComponentSkeleton />}>
+            <div className="space-y-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-2xl font-bold flex items-center gap-2">
+                    <Thermometer className="h-6 w-6 text-primary" />
+                    Click Heatmaps
+                  </h2>
+                  <p className="text-muted-foreground">Visual click distribution analysis across your pages</p>
+                </div>
+              </div>
+              <ClickHeatmap events={[]} />
+            </div>
+          </Suspense>
+        );
+
+      case "frustration":
+        return (
+          <Suspense fallback={<ComponentSkeleton />}>
+            <div className="space-y-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-2xl font-bold flex items-center gap-2">
+                    <AlertTriangle className="h-6 w-6 text-destructive" />
+                    Frustration Detection
+                  </h2>
+                  <p className="text-muted-foreground">AI-powered detection of rage clicks, dead clicks, and errors</p>
+                </div>
+              </div>
+              <AIStruggleDetection events={[]} />
+            </div>
+          </Suspense>
+        );
+
+      case "forms":
+        return (
+          <Suspense fallback={<ComponentSkeleton />}>
+            <div className="space-y-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-2xl font-bold flex items-center gap-2">
+                    <FormInput className="h-6 w-6 text-primary" />
+                    Form Analytics
+                  </h2>
+                  <p className="text-muted-foreground">Field-level abandonment and completion analysis</p>
+                </div>
+              </div>
+              <FormFieldAnalytics events={[]} />
+            </div>
+          </Suspense>
+        );
+
       case "journeys":
         return (
           <Suspense fallback={<ComponentSkeleton />}>
@@ -145,98 +244,145 @@ export const TraceflowDashboardFull = () => {
                 <div>
                   <h2 className="text-2xl font-bold flex items-center gap-2">
                     <GitBranch className="h-6 w-6 text-primary" />
-                    Journey Intelligence
+                    User Journeys
                   </h2>
-                  <p className="text-muted-foreground">Auto-build funnels, explain drop-offs, predict conversion impact</p>
+                  <p className="text-muted-foreground">Path analysis and drop-off point identification</p>
                 </div>
               </div>
-              <ConversionFunnel events={[]} />
               <UserJourney events={[]} />
             </div>
           </Suspense>
         );
 
-      case "product":
+      case "funnels":
         return (
-          <div className="space-y-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <h2 className="text-2xl font-bold flex items-center gap-2">
-                  <BarChart3 className="h-6 w-6 text-primary" />
-                  Product Intelligence
-                </h2>
-                <p className="text-muted-foreground">Feature adoption, retention drivers, churn signals</p>
+          <Suspense fallback={<ComponentSkeleton />}>
+            <div className="space-y-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-2xl font-bold flex items-center gap-2">
+                    <TrendingUp className="h-6 w-6 text-primary" />
+                    Conversion Funnels
+                  </h2>
+                  <p className="text-muted-foreground">Step-by-step conversion tracking and optimization</p>
+                </div>
               </div>
+              <ConversionFunnel events={[]} />
             </div>
-            <div className="grid md:grid-cols-3 gap-4">
-              {[
-                { title: "Feature Usage", value: "12.4K", change: "+18%", desc: "Active users on new dashboard" },
-                { title: "Retention Rate", value: "87%", change: "+5%", desc: "30-day user retention" },
-                { title: "Churn Risk", value: "234", change: "-12%", desc: "Users at risk of churning" },
-              ].map((stat) => (
-                <Card key={stat.title}>
-                  <CardContent className="p-4">
-                    <p className="text-sm text-muted-foreground">{stat.title}</p>
-                    <div className="flex items-baseline gap-2 mt-1">
-                      <span className="text-2xl font-bold">{stat.value}</span>
-                      <span className={cn("text-xs", stat.change.startsWith("+") ? "text-emerald-600" : "text-destructive")}>{stat.change}</span>
-                    </div>
-                    <p className="text-xs text-muted-foreground mt-1">{stat.desc}</p>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-            <Suspense fallback={<ComponentSkeleton />}>
-              <DeviceAnalytics events={[]} />
-            </Suspense>
-          </div>
+          </Suspense>
         );
 
-      case "observability":
+      case "devices":
+        return (
+          <Suspense fallback={<ComponentSkeleton />}>
+            <div className="space-y-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-2xl font-bold flex items-center gap-2">
+                    <Smartphone className="h-6 w-6 text-primary" />
+                    Device Analytics
+                  </h2>
+                  <p className="text-muted-foreground">Browser, OS, and device breakdown of your users</p>
+                </div>
+              </div>
+              <DeviceAnalytics events={[]} />
+            </div>
+          </Suspense>
+        );
+
+      case "geo":
+        return (
+          <Suspense fallback={<ComponentSkeleton />}>
+            <div className="space-y-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-2xl font-bold flex items-center gap-2">
+                    <Globe className="h-6 w-6 text-primary" />
+                    Geographic Analytics
+                  </h2>
+                  <p className="text-muted-foreground">User distribution by country and region</p>
+                </div>
+              </div>
+              <GeoAnalytics events={[]} />
+            </div>
+          </Suspense>
+        );
+
+      case "ai-ops":
         return (
           <div className="space-y-6">
             <div className="flex items-center justify-between">
               <div>
                 <h2 className="text-2xl font-bold flex items-center gap-2">
-                  <Activity className="h-6 w-6 text-primary" />
-                  Experience Observability
+                  <Bot className="h-6 w-6 text-primary" />
+                  NeuroRouter AI Operations
                 </h2>
-                <p className="text-muted-foreground">Connect frontend behavior with backend traces, logs & API performance</p>
+                <p className="text-muted-foreground">Multi-LLM task routing for intelligent analysis</p>
               </div>
-              <Badge className="bg-primary/10 text-primary">OTel-Powered</Badge>
+              <Badge className="bg-accent/10 text-accent">AI-Powered</Badge>
             </div>
-            <div className="grid md:grid-cols-2 gap-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg">Service Map</CardTitle>
-                  <CardDescription>Real-time service dependencies and latency</CardDescription>
-                </CardHeader>
-                <CardContent className="h-48 flex items-center justify-center bg-muted/30 rounded-lg">
-                  <p className="text-muted-foreground">Interactive service map visualization</p>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg">API Correlation</CardTitle>
-                  <CardDescription>Link user frustration to specific API calls</CardDescription>
-                </CardHeader>
-                <CardContent>
+            
+            {/* Real NeuroRouter stats */}
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+              {[
+                { name: "DeepSeek", specialty: "Reasoning", color: "from-primary to-accent", icon: Brain },
+                { name: "Gemini 2.5", specialty: "Vision", color: "from-primary to-primary/60", icon: Eye },
+                { name: "Claude 4", specialty: "Code", color: "from-amber-500 to-amber-600", icon: Code2 },
+                { name: "GPT-5", specialty: "General", color: "from-emerald-500 to-emerald-600", icon: Sparkles },
+              ].map((llm) => {
+                const tasksForLLM = neuroRouterLogs?.filter(l => l.selected_llm?.includes(llm.name.toLowerCase().split(' ')[0]))?.length || 0;
+                return (
+                  <Card key={llm.name} className="overflow-hidden">
+                    <div className={cn("h-1 bg-gradient-to-r", llm.color)} />
+                    <CardContent className="p-4">
+                      <div className="flex items-center justify-between mb-3">
+                        <div className={cn("w-10 h-10 rounded-lg bg-gradient-to-br flex items-center justify-center", llm.color)}>
+                          <llm.icon className="h-5 w-5 text-white" />
+                        </div>
+                        <Badge variant="secondary" className="text-xs">{llm.specialty}</Badge>
+                      </div>
+                      <h4 className="font-semibold">{llm.name}</h4>
+                      <p className="text-2xl font-bold mt-1">{tasksForLLM}</p>
+                      <p className="text-xs text-muted-foreground">tasks routed</p>
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </div>
+
+            {/* Recent AI Tasks */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg">Recent AI Tasks</CardTitle>
+                <CardDescription>Latest tasks processed by the NeuroRouter</CardDescription>
+              </CardHeader>
+              <CardContent>
+                {neuroRouterLogs && neuroRouterLogs.length > 0 ? (
                   <div className="space-y-2">
-                    <div className="p-2 bg-destructive/10 rounded border-l-4 border-destructive">
-                      <p className="text-xs font-medium">POST /api/checkout</p>
-                      <p className="text-xs text-destructive">Avg 4.2s latency causing 68% rage clicks</p>
-                    </div>
-                    <div className="p-2 bg-amber-500/10 rounded border-l-4 border-amber-500">
-                      <p className="text-xs font-medium">GET /api/products</p>
-                      <p className="text-xs text-amber-600">Intermittent 500 errors detected</p>
-                    </div>
+                    {neuroRouterLogs.slice(0, 5).map((log) => (
+                      <div key={log.id} className="flex items-center justify-between p-3 rounded-lg border bg-muted/30">
+                        <div className="flex items-center gap-3">
+                          <Badge variant="outline">{log.task_type}</Badge>
+                          <span className="text-sm">{log.selected_llm} - {log.selected_model}</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs text-muted-foreground">{log.latency_ms}ms</span>
+                          <Badge className={log.success ? "bg-emerald-500/10 text-emerald-600" : "bg-destructive/10 text-destructive"}>
+                            {log.success ? "Success" : "Failed"}
+                          </Badge>
+                        </div>
+                      </div>
+                    ))}
                   </div>
-                </CardContent>
-              </Card>
-            </div>
-            <Suspense fallback={<ComponentSkeleton />}>
-              <GeoAnalytics events={[]} />
-            </Suspense>
+                ) : (
+                  <div className="text-center py-8 text-muted-foreground">
+                    <Bot className="h-12 w-12 mx-auto mb-2 opacity-20" />
+                    <p>No AI tasks processed yet</p>
+                    <p className="text-xs">Tasks will appear here as sessions are analyzed</p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
           </div>
         );
 
@@ -253,134 +399,50 @@ export const TraceflowDashboardFull = () => {
               </div>
               <Badge className="bg-accent/10 text-accent">World First</Badge>
             </div>
-            <div className="grid md:grid-cols-2 gap-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg">Voice + Session Fusion</CardTitle>
-                  <CardDescription>Audio complaint maps to exact recorded session</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="p-4 bg-gradient-to-r from-primary/5 to-accent/5 rounded-lg">
-                    <div className="flex items-center gap-2 mb-2">
-                      <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center">
-                        <Users className="h-4 w-4 text-primary-foreground" />
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium">Customer Voice Note</p>
-                        <p className="text-xs text-muted-foreground">"The checkout button wasn't working..."</p>
-                      </div>
-                    </div>
-                    <div className="mt-2 p-2 bg-card rounded border">
-                      <p className="text-xs text-emerald-600">✓ Matched to Session #4521 - Rage clicks detected</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg">Sentiment Analysis</CardTitle>
-                  <CardDescription>NPS, feedback & sentiment trends</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-3">
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm">Positive</span>
-                      <div className="flex-1 mx-3 h-2 bg-muted rounded-full overflow-hidden">
-                        <div className="h-full bg-emerald-500 w-3/5" />
-                      </div>
-                      <span className="text-sm font-medium">62%</span>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm">Neutral</span>
-                      <div className="flex-1 mx-3 h-2 bg-muted rounded-full overflow-hidden">
-                        <div className="h-full bg-amber-500 w-1/4" />
-                      </div>
-                      <span className="text-sm font-medium">25%</span>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm">Negative</span>
-                      <div className="flex-1 mx-3 h-2 bg-muted rounded-full overflow-hidden">
-                        <div className="h-full bg-destructive w-[13%]" />
-                      </div>
-                      <span className="text-sm font-medium">13%</span>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
             <Suspense fallback={<ComponentSkeleton />}>
               <AIStruggleDetection events={[]} />
             </Suspense>
           </div>
         );
 
-      case "ai-ops":
+      case "product":
         return (
           <div className="space-y-6">
             <div className="flex items-center justify-between">
               <div>
                 <h2 className="text-2xl font-bold flex items-center gap-2">
-                  <Bot className="h-6 w-6 text-primary" />
-                  AI Operations
+                  <BarChart3 className="h-6 w-6 text-primary" />
+                  Product Intelligence
                 </h2>
-                <p className="text-muted-foreground">Multi-agent automation for diagnostics, ticketing & monitoring</p>
+                <p className="text-muted-foreground">Feature adoption, retention drivers, churn signals</p>
               </div>
             </div>
-            
-            {/* NeuroRouter Stats */}
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-              {[
-                { name: "DeepSeek", tasks: 245, icon: Brain, color: "from-primary to-accent", specialty: "Reasoning" },
-                { name: "Gemini 2.5", tasks: 189, icon: Eye, color: "from-primary to-primary/60", specialty: "Vision" },
-                { name: "Claude 4", tasks: 156, icon: Code2, color: "from-amber-500 to-amber-600", specialty: "Code" },
-                { name: "GPT-5", tasks: 134, icon: Sparkles, color: "from-emerald-500 to-emerald-600", specialty: "General" },
-              ].map((llm) => (
-                <Card key={llm.name} className="overflow-hidden">
-                  <div className={cn("h-1 bg-gradient-to-r", llm.color)} />
-                  <CardContent className="p-4">
-                    <div className="flex items-center justify-between mb-3">
-                      <div className={cn("w-10 h-10 rounded-lg bg-gradient-to-br flex items-center justify-center", llm.color)}>
-                        <llm.icon className="h-5 w-5 text-white" />
-                      </div>
-                      <Badge variant="secondary" className="text-xs">{llm.specialty}</Badge>
-                    </div>
-                    <h4 className="font-semibold">{llm.name}</h4>
-                    <p className="text-2xl font-bold mt-1">{llm.tasks}</p>
-                    <p className="text-xs text-muted-foreground">tasks routed</p>
-                  </CardContent>
-                </Card>
-              ))}
+            <div className="grid md:grid-cols-3 gap-4">
+              <Card>
+                <CardContent className="p-4">
+                  <p className="text-sm text-muted-foreground">Active Sessions</p>
+                  <p className="text-2xl font-bold">{sessions?.length || 0}</p>
+                  <p className="text-xs text-muted-foreground mt-1">In the last 24 hours</p>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="p-4">
+                  <p className="text-sm text-muted-foreground">Avg Frustration</p>
+                  <p className="text-2xl font-bold">{stats?.avgFrustration || 0}%</p>
+                  <p className="text-xs text-muted-foreground mt-1">User frustration score</p>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="p-4">
+                  <p className="text-sm text-muted-foreground">Critical Issues</p>
+                  <p className="text-2xl font-bold text-destructive">{stats?.criticalIssues || 0}</p>
+                  <p className="text-xs text-muted-foreground mt-1">Requiring attention</p>
+                </CardContent>
+              </Card>
             </div>
-
-            {/* AI Agents */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Active AI Agents</CardTitle>
-                <CardDescription>Autonomous agents working on your experience data</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="grid md:grid-cols-3 gap-4">
-                  {[
-                    { name: "Diagnostics Agent", status: "Running", tasks: 12, desc: "Analyzing session anomalies" },
-                    { name: "Ticketing Agent", status: "Idle", tasks: 0, desc: "Auto-creates Jira tickets" },
-                    { name: "Regression Agent", status: "Running", tasks: 3, desc: "Monitoring for regressions" },
-                  ].map((agent) => (
-                    <div key={agent.name} className="p-4 rounded-lg border bg-muted/30">
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="font-medium">{agent.name}</span>
-                        <Badge className={agent.status === "Running" ? "bg-emerald-500/10 text-emerald-600" : "bg-muted text-muted-foreground"}>
-                          {agent.status}
-                        </Badge>
-                      </div>
-                      <p className="text-xs text-muted-foreground">{agent.desc}</p>
-                      {agent.tasks > 0 && (
-                        <p className="text-xs text-primary mt-1">{agent.tasks} tasks in progress</p>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
+            <Suspense fallback={<ComponentSkeleton />}>
+              <DeviceAnalytics events={[]} />
+            </Suspense>
           </div>
         );
 
@@ -391,46 +453,68 @@ export const TraceflowDashboardFull = () => {
               <div>
                 <h2 className="text-2xl font-bold flex items-center gap-2">
                   <Target className="h-6 w-6 text-primary" />
-                  Revenue & Growth Intelligence
+                  Revenue Insights
                 </h2>
-                <p className="text-muted-foreground">Quantify financial impact of UX issues, predict ROI of fixes</p>
+                <p className="text-muted-foreground">Financial impact of UX issues and improvements</p>
               </div>
             </div>
-            <div className="grid md:grid-cols-3 gap-4">
-              <Card className="bg-gradient-to-br from-destructive/5 to-destructive/10">
-                <CardContent className="p-4">
-                  <p className="text-sm text-muted-foreground">Revenue at Risk</p>
-                  <p className="text-3xl font-bold text-destructive">₹12.4L</p>
-                  <p className="text-xs text-destructive mt-1">Due to checkout friction</p>
+            <div className="grid md:grid-cols-2 gap-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg">Estimated Revenue Impact</CardTitle>
+                  <CardDescription>Based on detected UX issues</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    {uxIssues && uxIssues.length > 0 ? (
+                      uxIssues.slice(0, 5).map((issue) => (
+                        <div key={issue.id} className="flex justify-between items-center p-3 border rounded-lg">
+                          <div>
+                            <p className="text-sm font-medium">{issue.issue_type}</p>
+                            <p className="text-xs text-muted-foreground">{issue.page_url}</p>
+                          </div>
+                          <div className="text-right">
+                            <Badge variant={issue.severity === 'critical' ? 'destructive' : 'secondary'}>
+                              {issue.severity}
+                            </Badge>
+                            <p className="text-xs text-muted-foreground mt-1">{issue.occurrence_count} occurrences</p>
+                          </div>
+                        </div>
+                      ))
+                    ) : (
+                      <div className="text-center py-8 text-muted-foreground">
+                        <Target className="h-12 w-12 mx-auto mb-2 opacity-20" />
+                        <p>No revenue impact data yet</p>
+                      </div>
+                    )}
+                  </div>
                 </CardContent>
               </Card>
-              <Card className="bg-gradient-to-br from-emerald-500/5 to-emerald-500/10">
-                <CardContent className="p-4">
-                  <p className="text-sm text-muted-foreground">Projected Recovery</p>
-                  <p className="text-3xl font-bold text-emerald-600">₹8.2L</p>
-                  <p className="text-xs text-emerald-600 mt-1">If top 5 issues fixed</p>
-                </CardContent>
-              </Card>
-              <Card className="bg-gradient-to-br from-primary/5 to-primary/10">
-                <CardContent className="p-4">
-                  <p className="text-sm text-muted-foreground">ROI of TRACEFLOW</p>
-                  <p className="text-3xl font-bold text-primary">4.2x</p>
-                  <p className="text-xs text-primary mt-1">In first 6 months</p>
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg">UX Issue Summary</CardTitle>
+                  <CardDescription>Overview of detected problems</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="flex justify-between items-center">
+                    <span>Critical Issues</span>
+                    <span className="font-bold text-destructive">{stats?.criticalIssues || 0}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span>Open Issues</span>
+                    <span className="font-bold">{stats?.openIssues || 0}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span>Rage Clicks (24h)</span>
+                    <span className="font-bold text-amber-500">{stats?.rageClicks24h || 0}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span>Dead Clicks (24h)</span>
+                    <span className="font-bold">{stats?.deadClicks24h || 0}</span>
+                  </div>
                 </CardContent>
               </Card>
             </div>
-            <Suspense fallback={<ComponentSkeleton />}>
-              <FormFieldAnalytics events={[]} />
-            </Suspense>
-          </div>
-        );
-
-      case "settings":
-        return subscriptionId ? (
-          <TraceflowAdminPanel subscriptionId={subscriptionId} />
-        ) : (
-          <div className="flex items-center justify-center h-64">
-            <p className="text-muted-foreground">Loading admin panel...</p>
           </div>
         );
 
@@ -441,6 +525,7 @@ export const TraceflowDashboardFull = () => {
             uxIssues={uxIssues || null}
             neuroRouterLogs={neuroRouterLogs || null}
             onViewSession={handleViewSession}
+            isLoading={sessionsLoading}
           />
         );
     }
@@ -448,33 +533,24 @@ export const TraceflowDashboardFull = () => {
 
   return (
     <div className="flex min-h-screen bg-background">
-      {/* Sidebar */}
       <TraceflowSidebar 
-        activeTab={activeTab}
-        onTabChange={setActiveTab}
+        activeTab={activeTab} 
+        onTabChange={setActiveTab} 
         isConnected={isConnected}
+        stats={sidebarStats}
       />
-
-      {/* Main Content */}
-      <div className="flex-1 flex flex-col min-w-0">
-        {/* Top Bar */}
+      
+      <main className="flex-1 flex flex-col min-w-0">
         <TraceflowTopBar 
           activeTab={activeTab}
           onRefresh={handleRefresh}
           isRefreshing={isRefreshing}
-          timeFilter={timeFilter}
-          onTimeFilterChange={setTimeFilter}
         />
-
-        {/* Content Area */}
-        <main className="flex-1 p-6 overflow-auto">
-          {sessionsLoading ? (
-            <ComponentSkeleton />
-          ) : (
-            renderContent()
-          )}
-        </main>
-      </div>
+        
+        <div className="flex-1 p-6 overflow-auto">
+          {renderContent()}
+        </div>
+      </main>
     </div>
   );
 };
