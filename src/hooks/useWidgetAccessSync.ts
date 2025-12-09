@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { EmployeeRole } from "./useEmployeeRole";
 
 const WIDGET_ACCESS_STORAGE_KEY = "tenant-widget-access-config";
+const SIDEBAR_ACCESS_STORAGE_KEY = "tenant-sidebar-access-config";
 
 interface RoleWidgetAccess {
   [widgetId: string]: boolean;
@@ -91,7 +92,70 @@ export const useWidgetAccessSync = (role: EmployeeRole) => {
   };
 };
 
-// Helper to dispatch custom event when config changes (for same-tab sync)
+// Sidebar access sync hook
+export const useSidebarAccessSync = (role: EmployeeRole) => {
+  const [sidebarConfig, setSidebarConfig] = useState<WidgetAccessConfig | null>(null);
+  const [lastUpdate, setLastUpdate] = useState<number>(Date.now());
+
+  const loadConfig = useCallback(() => {
+    try {
+      const saved = localStorage.getItem(SIDEBAR_ACCESS_STORAGE_KEY);
+      if (saved) {
+        setSidebarConfig(JSON.parse(saved));
+      } else {
+        setSidebarConfig(null);
+      }
+    } catch (e) {
+      console.error("Failed to load sidebar access config:", e);
+      setSidebarConfig(null);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadConfig();
+
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === SIDEBAR_ACCESS_STORAGE_KEY) {
+        loadConfig();
+        setLastUpdate(Date.now());
+      }
+    };
+
+    window.addEventListener("storage", handleStorageChange);
+
+    const handleCustomUpdate = () => {
+      loadConfig();
+      setLastUpdate(Date.now());
+    };
+    window.addEventListener("sidebar-access-updated", handleCustomUpdate);
+
+    return () => {
+      window.removeEventListener("storage", handleStorageChange);
+      window.removeEventListener("sidebar-access-updated", handleCustomUpdate);
+    };
+  }, [loadConfig]);
+
+  const isModuleEnabled = useCallback((moduleId: string): boolean => {
+    if (!sidebarConfig) return true;
+    const roleConfig = sidebarConfig[role];
+    if (!roleConfig) return true;
+    return roleConfig[moduleId] !== false;
+  }, [sidebarConfig, role]);
+
+  return {
+    sidebarConfig,
+    lastUpdate,
+    isModuleEnabled,
+    refreshConfig: loadConfig,
+  };
+};
+
+// Helper to dispatch custom event when widget config changes
 export const notifyWidgetAccessUpdate = () => {
   window.dispatchEvent(new CustomEvent("widget-access-updated"));
+};
+
+// Helper to dispatch custom event when sidebar config changes
+export const notifySidebarAccessUpdate = () => {
+  window.dispatchEvent(new CustomEvent("sidebar-access-updated"));
 };

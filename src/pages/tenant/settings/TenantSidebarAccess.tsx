@@ -4,14 +4,15 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { 
-  Save, RotateCcw, Users, Shield, Receipt, UserCheck, Menu,
+  Save, RotateCcw, Users, Shield, Receipt, UserCheck, Menu, Copy,
   LayoutDashboard, FolderKanban, FileText, HeadphonesIcon, Calendar,
-  Brain, Settings, Star, BookOpen, Server
+  Brain, Settings, Star, BookOpen, Server, ArrowRight
 } from "lucide-react";
 import { toast } from "sonner";
 import { EmployeeRole } from "@/hooks/useEmployeeRole";
-import { notifyWidgetAccessUpdate } from "@/hooks/useWidgetAccessSync";
+import { notifySidebarAccessUpdate } from "@/hooks/useWidgetAccessSync";
 
 export const SIDEBAR_ACCESS_STORAGE_KEY = "tenant-sidebar-access-config";
 
@@ -77,6 +78,7 @@ const TenantSidebarAccess: React.FC = () => {
   const [config, setConfig] = useState<SidebarAccessConfig>(getDefaultSidebarConfig);
   const [activeRole, setActiveRole] = useState<EmployeeRole>("staff");
   const [hasChanges, setHasChanges] = useState(false);
+  const [copyFromRole, setCopyFromRole] = useState<EmployeeRole | "">("");
 
   useEffect(() => {
     const saved = localStorage.getItem(SIDEBAR_ACCESS_STORAGE_KEY);
@@ -100,11 +102,22 @@ const TenantSidebarAccess: React.FC = () => {
     setHasChanges(true);
   };
 
+  const handleCopyFromRole = () => {
+    if (!copyFromRole) return;
+    setConfig(prev => ({
+      ...prev,
+      [activeRole]: { ...prev[copyFromRole] },
+    }));
+    setHasChanges(true);
+    toast.success(`Copied settings from ${roles.find(r => r.id === copyFromRole)?.name} to ${roles.find(r => r.id === activeRole)?.name}`);
+    setCopyFromRole("");
+  };
+
   const handleSave = () => {
     localStorage.setItem(SIDEBAR_ACCESS_STORAGE_KEY, JSON.stringify(config));
     setHasChanges(false);
-    notifyWidgetAccessUpdate();
-    toast.success("Sidebar access configuration saved successfully!");
+    notifySidebarAccessUpdate();
+    toast.success("Sidebar access configuration saved! Employees will see changes immediately.");
   };
 
   const handleReset = () => {
@@ -112,7 +125,7 @@ const TenantSidebarAccess: React.FC = () => {
     setConfig(defaultConfig);
     localStorage.removeItem(SIDEBAR_ACCESS_STORAGE_KEY);
     setHasChanges(false);
-    notifyWidgetAccessUpdate();
+    notifySidebarAccessUpdate();
     toast.info("Sidebar access reset to defaults");
   };
 
@@ -122,6 +135,7 @@ const TenantSidebarAccess: React.FC = () => {
 
   const currentRole = roles.find(r => r.id === activeRole);
   const RoleIcon = currentRole?.icon || Users;
+  const otherRoles = roles.filter(r => r.id !== activeRole);
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -170,18 +184,51 @@ const TenantSidebarAccess: React.FC = () => {
 
         {roles.map(role => (
           <TabsContent key={role.id} value={role.id} className="space-y-6">
-            {/* Role Summary Card */}
+            {/* Role Summary Card with Bulk Copy */}
             <Card className="border-gray-100 shadow-sm bg-gradient-to-br from-white to-gray-50">
               <CardContent className="p-6">
-                <div className="flex items-center gap-4">
-                  <div className={`w-14 h-14 rounded-2xl ${role.color} flex items-center justify-center shadow-lg`}>
-                    <RoleIcon className="w-7 h-7 text-white" />
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                  <div className="flex items-center gap-4">
+                    <div className={`w-14 h-14 rounded-2xl ${role.color} flex items-center justify-center shadow-lg`}>
+                      <RoleIcon className="w-7 h-7 text-white" />
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-semibold text-[#0F1E3A]">{role.name} Sidebar Modules</h3>
+                      <p className="text-sm text-[#6B7280]">
+                        {getEnabledCount(role.id)} of {sidebarModuleCatalog.length} modules visible
+                      </p>
+                    </div>
                   </div>
-                  <div>
-                    <h3 className="text-lg font-semibold text-[#0F1E3A]">{role.name} Sidebar Modules</h3>
-                    <p className="text-sm text-[#6B7280]">
-                      {getEnabledCount(role.id)} of {sidebarModuleCatalog.length} modules visible
-                    </p>
+                  
+                  {/* Bulk Copy Feature */}
+                  <div className="flex items-center gap-2 bg-[#F7F9FC] p-3 rounded-xl border border-gray-100">
+                    <Copy className="w-4 h-4 text-[#6B7280]" />
+                    <span className="text-sm text-[#6B7280]">Copy from:</span>
+                    <Select value={copyFromRole} onValueChange={(v) => setCopyFromRole(v as EmployeeRole)}>
+                      <SelectTrigger className="w-32 h-8 text-sm bg-white">
+                        <SelectValue placeholder="Select role" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {otherRoles.map(r => (
+                          <SelectItem key={r.id} value={r.id}>
+                            <div className="flex items-center gap-2">
+                              <r.icon className="w-3.5 h-3.5" />
+                              {r.name}
+                            </div>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <Button 
+                      size="sm" 
+                      variant="outline" 
+                      onClick={handleCopyFromRole}
+                      disabled={!copyFromRole}
+                      className="h-8 gap-1"
+                    >
+                      <ArrowRight className="w-3.5 h-3.5" />
+                      Apply
+                    </Button>
                   </div>
                 </div>
               </CardContent>

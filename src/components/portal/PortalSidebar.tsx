@@ -5,8 +5,8 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useClientTier } from "@/hooks/useClientTier";
 import { useEmployeeRole, isModuleAccessibleByRole, EmployeeRole } from "@/hooks/useEmployeeRole";
+import { useSidebarAccessSync } from "@/hooks/useWidgetAccessSync";
 import { TierUpgradePrompt, getRequiredTierForModule } from "@/components/portal/TierUpgradePrompt";
-import { SIDEBAR_ACCESS_STORAGE_KEY, SidebarAccessConfig, getDefaultSidebarConfig } from "@/pages/tenant/settings/TenantSidebarAccess";
 import cropxonIcon from "@/assets/cropxon-icon.png";
 import { 
   LayoutDashboard, FolderKanban, FileText, Receipt, HeadphonesIcon, Calendar,
@@ -63,38 +63,19 @@ export const PortalSidebar = ({ sidebarOpen, setSidebarOpen, user, profile, sign
   const location = useLocation();
   const { tier, isModuleAllowed } = useClientTier();
   const { role: employeeRole } = useEmployeeRole();
+  const { isModuleEnabled, lastUpdate } = useSidebarAccessSync(employeeRole);
 
   const isActive = (path: string) => {
     if (path === "/portal") return location.pathname === "/portal";
     return location.pathname.startsWith(path);
   };
 
-  // Get sidebar access configuration
-  const getSidebarAccessConfig = (): SidebarAccessConfig => {
-    try {
-      const saved = localStorage.getItem(SIDEBAR_ACCESS_STORAGE_KEY);
-      if (saved) return JSON.parse(saved);
-    } catch (e) {
-      console.error("Failed to load sidebar access config:", e);
-    }
-    return getDefaultSidebarConfig();
-  };
-
-  const sidebarConfig = getSidebarAccessConfig();
-
-  // Check if module is enabled by tenant admin for this role
-  const isModuleEnabledByTenant = (moduleId: string): boolean => {
-    const roleConfig = sidebarConfig[employeeRole];
-    if (!roleConfig) return true;
-    return roleConfig[moduleId] !== false;
-  };
-
-  // Group items by section, checking tier, role, and tenant admin access
+  // Group items by section, checking tier, role, and tenant admin access with real-time sync
   const sidebarSections = allSidebarItems.reduce((acc, item) => {
     const section = acc.find(s => s.title === item.section);
     const isTierAllowed = isModuleAllowed(item.name);
     const isRoleAllowed = isModuleAccessibleByRole(item.name, employeeRole);
-    const isTenantEnabled = isModuleEnabledByTenant(item.id);
+    const isTenantEnabled = isModuleEnabled(item.id);
     const itemWithAccess = { ...item, isTierAllowed, isRoleAllowed, isTenantEnabled };
     
     if (section) {
