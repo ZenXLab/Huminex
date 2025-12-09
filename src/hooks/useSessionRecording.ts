@@ -168,12 +168,13 @@ export const useSessionRecording = (options: UseSessionRecordingOptions = {}) =>
   const hasStartedRef = useRef(false);
   const lastEventCountRef = useRef(0);
 
-  // Save events to database - append mode
+  // Save events to database - upsert mode (consolidate into single session)
   const saveEvents = useCallback(async (isFinal = false) => {
     const newEventsCount = eventsRef.current.length;
     if (newEventsCount === 0 || newEventsCount === lastEventCountRef.current) return;
 
-    const eventsCopy = [...eventsRef.current];
+    // Get only new events since last save
+    const newEvents = eventsRef.current.slice(lastEventCountRef.current);
     lastEventCountRef.current = newEventsCount;
     
     const sessionId = sessionIdRef.current;
@@ -184,80 +185,82 @@ export const useSessionRecording = (options: UseSessionRecordingOptions = {}) =>
     // Track current page
     pagesVisitedRef.current.add(window.location.pathname);
 
-    const recordingData = {
-      session_id: sessionId,
-      visitor_id: visitorId,
-      device_fingerprint: generateDeviceFingerprint(),
-      ip_address: geolocationRef.current?.ip || null,
-      geolocation: geolocationRef.current || {},
-      user_agent: navigator.userAgent,
-      events: eventsCopy,
-      start_time: startTimeRef.current.toISOString(),
-      end_time: isFinal ? now.toISOString() : null,
-      duration_ms: duration,
-      page_count: pagesVisitedRef.current.size,
-      pages_visited: Array.from(pagesVisitedRef.current),
-      event_count: eventsCopy.length,
-      metadata: {
-        screenWidth: window.innerWidth,
-        screenHeight: window.innerHeight,
-        url: window.location.pathname,
-        privacySettings: privacy,
-      },
-      updated_at: now.toISOString(),
-    };
-
     try {
-      if (recordingIdRef.current) {
-        // Update existing record
+      // First, try to find existing session to merge with
+      const { data: existing } = await supabase
+        .from("session_recordings")
+        .select("id, events, pages_visited, event_count, start_time")
+        .eq("session_id", sessionId)
+        .maybeSingle();
+
+      if (existing) {
+        // Merge events with existing recording
+        const existingEvents = Array.isArray(existing.events) ? existing.events : [];
+        const existingPages = Array.isArray(existing.pages_visited) ? existing.pages_visited : [];
+        
+        // Add existing pages to our set
+        existingPages.forEach((p: string) => pagesVisitedRef.current.add(p));
+        
+        const mergedEvents = [...existingEvents, ...newEvents];
+        const mergedPages = Array.from(pagesVisitedRef.current);
+        
+        // Update start_time from original session
+        const originalStart = new Date(existing.start_time);
+        const totalDuration = now.getTime() - originalStart.getTime();
+
+        recordingIdRef.current = existing.id;
+        
         await supabase
           .from("session_recordings")
-          .update(recordingData)
-          .eq("id", recordingIdRef.current);
+          .update({
+            events: mergedEvents,
+            event_count: mergedEvents.length,
+            pages_visited: mergedPages,
+            page_count: mergedPages.length,
+            end_time: isFinal ? now.toISOString() : null,
+            duration_ms: totalDuration,
+            geolocation: geolocationRef.current || {},
+            updated_at: now.toISOString(),
+          })
+          .eq("id", existing.id);
+          
+        console.log(`[rrweb] Merged ${newEvents.length} events into session (total: ${mergedEvents.length})`);
       } else {
-        // Check if session already exists (page navigation within same session)
-        const { data: existing } = await supabase
+        // Create new session record
+        const { data } = await supabase
           .from("session_recordings")
-          .select("id, events, pages_visited")
-          .eq("session_id", sessionId)
-          .maybeSingle();
+          .insert({
+            session_id: sessionId,
+            visitor_id: visitorId,
+            device_fingerprint: generateDeviceFingerprint(),
+            ip_address: geolocationRef.current?.ip || null,
+            geolocation: geolocationRef.current || {},
+            user_agent: navigator.userAgent,
+            events: newEvents,
+            start_time: startTimeRef.current.toISOString(),
+            end_time: isFinal ? now.toISOString() : null,
+            duration_ms: duration,
+            page_count: pagesVisitedRef.current.size,
+            pages_visited: Array.from(pagesVisitedRef.current),
+            event_count: newEvents.length,
+            metadata: {
+              screenWidth: window.innerWidth,
+              screenHeight: window.innerHeight,
+              url: window.location.pathname,
+            },
+          })
+          .select("id")
+          .single();
 
-        if (existing) {
-          // Merge events with existing recording
-          const existingEvents = Array.isArray(existing.events) ? existing.events : [];
-          const existingPages = Array.isArray(existing.pages_visited) ? existing.pages_visited : [];
-          
-          // Add existing pages to our set
-          existingPages.forEach((p: string) => pagesVisitedRef.current.add(p));
-          
-          recordingData.events = [...existingEvents, ...eventsCopy];
-          recordingData.event_count = recordingData.events.length;
-          recordingData.pages_visited = Array.from(pagesVisitedRef.current);
-          recordingData.page_count = pagesVisitedRef.current.size;
-          
-          recordingIdRef.current = existing.id;
-          
-          await supabase
-            .from("session_recordings")
-            .update(recordingData)
-            .eq("id", existing.id);
-        } else {
-          // Create new record
-          const { data } = await supabase
-            .from("session_recordings")
-            .insert(recordingData)
-            .select("id")
-            .single();
-
-          if (data) {
-            recordingIdRef.current = data.id;
-          }
+        if (data) {
+          recordingIdRef.current = data.id;
+          console.log(`[rrweb] Created new session with ${newEvents.length} events`);
         }
       }
     } catch (error) {
       console.error("[rrweb] Failed to save:", error);
     }
-  }, [privacy]);
+  }, []);
 
   // Start recording
   const startRecording = useCallback(async () => {
