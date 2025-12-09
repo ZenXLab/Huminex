@@ -81,23 +81,33 @@ const GetQuote = () => {
 
   const fetchPricingData = async () => {
     try {
-      const [servicesRes, addonsRes, modifiersRes] = await Promise.all([
+      // Use Promise.allSettled to handle partial failures gracefully
+      const [servicesRes, addonsRes, modifiersRes] = await Promise.allSettled([
         supabase.from('service_pricing').select('*').eq('is_active', true),
         supabase.from('service_addons').select('*').eq('is_active', true),
         supabase.from('pricing_modifiers').select('*').eq('is_active', true),
       ]);
 
-      if (servicesRes.data) {
-        setServices(servicesRes.data.map(s => ({
+      // Process services
+      if (servicesRes.status === 'fulfilled' && servicesRes.value.data) {
+        setServices(servicesRes.value.data.map(s => ({
           ...s,
           features: Array.isArray(s.features) ? s.features : JSON.parse(s.features as string || '[]')
         })));
       }
-      if (addonsRes.data) setAddons(addonsRes.data);
-      if (modifiersRes.data) setModifiers(modifiersRes.data);
+      
+      // Process addons
+      if (addonsRes.status === 'fulfilled' && addonsRes.value.data) {
+        setAddons(addonsRes.value.data);
+      }
+      
+      // Process modifiers
+      if (modifiersRes.status === 'fulfilled' && modifiersRes.value.data) {
+        setModifiers(modifiersRes.value.data);
+      }
     } catch (error) {
       console.error('Error fetching pricing:', error);
-      toast.error('Failed to load pricing data');
+      // Don't show error toast - let the page render anyway
     } finally {
       setLoading(false);
     }
