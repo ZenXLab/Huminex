@@ -134,45 +134,46 @@ export const useSessionRecording = (options: UseSessionRecordingOptions = {}) =>
     if (isPageExcluded(privacy.excludedPages)) return;
 
     try {
-      // Lazy load rrweb only when needed
-      if (!rrwebLoadedRef.current) {
-        const rrweb = await import("rrweb");
-        rrwebLoadedRef.current = true;
-        
-        startTimeRef.current = new Date();
-        eventsRef.current = [];
-        recordingIdRef.current = null;
+      const rrweb = await import("rrweb");
+      rrwebLoadedRef.current = true;
+      
+      startTimeRef.current = new Date();
+      eventsRef.current = [];
+      recordingIdRef.current = null;
 
-        const blockSelectors = privacy.excludedSelectors.join(",");
+      const blockSelectors = privacy.excludedSelectors.join(",");
 
-        stopFnRef.current = rrweb.record({
-          emit: (event) => {
-            eventsRef.current.push(event);
-          },
-          checkoutEveryNms,
-          sampling: {
-            mousemove: false, // Disable for performance
-            mouseInteraction: true,
-            scroll: 300, // Reduce frequency
-            media: 800,
-            input: "last",
-          },
-          recordCanvas: false,
-          collectFonts: false,
-          inlineStylesheet: false, // Disable for performance
-          maskAllInputs: privacy.maskAllInputs,
-          blockSelector: blockSelectors || undefined,
-        });
+      stopFnRef.current = rrweb.record({
+        emit: (event) => {
+          eventsRef.current.push(event);
+        },
+        checkoutEveryNms,
+        sampling: {
+          mousemove: 50, // Capture mouse movements at 50ms intervals
+          mouseInteraction: true,
+          scroll: 150, // More frequent scroll capture
+          media: 800,
+          input: "last",
+        },
+        recordCanvas: privacy.recordCanvas,
+        collectFonts: privacy.collectFonts,
+        inlineStylesheet: privacy.inlineStylesheet,
+        maskAllInputs: privacy.maskAllInputs,
+        blockSelector: blockSelectors || undefined,
+      });
 
-        setIsRecording(true);
+      setIsRecording(true);
+      console.log("[rrweb] Recording started for session:", sessionIdRef.current);
 
-        // Save events less frequently (30 seconds)
-        saveIntervalRef.current = setInterval(() => {
+      // Save events every 15 seconds for more granular capture
+      saveIntervalRef.current = setInterval(() => {
+        if (eventsRef.current.length > 0) {
+          console.log("[rrweb] Auto-saving", eventsRef.current.length, "events");
           saveEvents(false);
-        }, 30000);
-      }
-    } catch {
-      // rrweb failed to load - silently fail
+        }
+      }, 15000);
+    } catch (err) {
+      console.error("[rrweb] Failed to start recording:", err);
     }
   }, [checkoutEveryNms, saveEvents, privacy]);
 
