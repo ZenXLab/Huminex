@@ -1,15 +1,17 @@
 import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { 
   FileText, Download, MessageCircle, ThumbsUp, LogIn, 
   CheckCircle, Shield, Phone, Mail, Globe, IndianRupee, 
-  Sparkles, Building2, Hash, Calendar, Receipt, X
+  Sparkles, Building2, Hash, Calendar, Receipt, Send, Loader2, CreditCard
 } from "lucide-react";
 import { useClickstream } from "@/hooks/useClickstream";
 import { useAuth } from "@/hooks/useAuth";
 import { useNavigate } from "react-router-dom";
 import { toast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 interface PlanDetails {
   name: string;
@@ -45,6 +47,10 @@ export const InvoicePreviewModal = ({
   const { user } = useAuth();
   const navigate = useNavigate();
   const [invoiceId, setInvoiceId] = useState("");
+  const [emailInput, setEmailInput] = useState("");
+  const [isSendingEmail, setIsSendingEmail] = useState(false);
+  const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
+  const [isProcessingPayment, setIsProcessingPayment] = useState(false);
 
   const currency = region === 'india' ? '₹' : '$';
   const currencyIcon = region === 'india' ? IndianRupee : Globe;
@@ -71,14 +77,70 @@ export const InvoicePreviewModal = ({
   const subtotal = planPrice + addonsTotal;
   
   // Tax calculations
-  const gstRate = region === 'india' ? 0.18 : 0; // 18% GST for India
+  const gstRate = region === 'india' ? 0.18 : 0;
   const gstAmount = region === 'india' ? subtotal * gstRate : 0;
   const totalAmount = region === 'india' ? subtotal + gstAmount : subtotal;
   
-  // For global, price is already tax-inclusive
   const taxLabel = region === 'india' ? 'GST (18%)' : 'Tax Included';
 
-  const handleDownload = () => {
+  const getInvoiceData = () => ({
+    invoiceId,
+    planName: plan?.name || 'No Plan Selected',
+    planPrice,
+    addons: addons.map(a => ({ name: a.name, price: a.price })),
+    addonsTotal,
+    subtotal,
+    taxAmount: gstAmount,
+    totalAmount,
+    region,
+    isAnnual,
+    currency,
+  });
+
+  // Send email functionality
+  const handleSendEmail = async () => {
+    if (!emailInput || !emailInput.includes('@')) {
+      toast({
+        title: "Invalid Email",
+        description: "Please enter a valid email address.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setIsSendingEmail(true);
+    trackEvent("invoice_email_send_clicked", {
+      invoiceId,
+      email: emailInput,
+      region
+    });
+
+    try {
+      const { data, error } = await supabase.functions.invoke('send-invoice-email', {
+        body: { ...getInvoiceData(), email: emailInput }
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "Email Sent!",
+        description: `Invoice preview sent to ${emailInput}`
+      });
+      setEmailInput("");
+    } catch (error: any) {
+      console.error("Email send error:", error);
+      toast({
+        title: "Failed to Send",
+        description: error.message || "Could not send email. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsSendingEmail(false);
+    }
+  };
+
+  // PDF download functionality
+  const handleDownload = async () => {
     trackEvent("invoice_download_attempted", {
       invoiceId,
       isLoggedIn: !!user,
@@ -97,10 +159,145 @@ export const InvoicePreviewModal = ({
       return;
     }
 
-    toast({
-      title: "Invoice Downloaded",
-      description: `Invoice ${invoiceId} has been downloaded.`
+    setIsGeneratingPdf(true);
+
+    try {
+      const { data, error } = await supabase.functions.invoke('generate-invoice-pdf', {
+        body: { 
+          ...getInvoiceData(), 
+          customerEmail: user.email,
+          customerName: user.user_metadata?.full_name || user.email 
+        }
+      });
+
+      if (error) throw error;
+
+      // Create a blob from the HTML and download
+      const blob = new Blob([data.html], { type: 'text/html' });
+      const url = URL.createObjectURL(blob);
+      
+      // Open in new window for printing/saving as PDF
+      const printWindow = window.open(url, '_blank');
+      if (printWindow) {
+        printWindow.onload = () => {
+          printWindow.print();
+        };
+      }
+
+      toast({
+        title: "Invoice Generated",
+        description: "Your invoice is ready. Use your browser's print dialog to save as PDF."
+      });
+    } catch (error: any) {
+      console.error("PDF generation error:", error);
+      toast({
+        title: "Generation Failed",
+        description: error.message || "Could not generate PDF. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsGeneratingPdf(false);
+    }
+  };
+
+  // Razorpay payment functionality
+  const handleLoginAndPay = async () => {
+    trackEvent("invoice_login_pay_clicked", {
+      invoiceId,
+      region,
+      plan: plan?.name,
+      totalAmount,
+      isLoggedIn: !!user
     });
+
+    if (!user) {
+      navigate("/portal/login");
+      onClose();
+      return;
+    }
+
+    if (!plan) {
+      toast({
+        title: "No Plan Selected",
+        description: "Please select a plan before proceeding to payment.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setIsProcessingPayment(true);
+
+    try {
+      // Create Razorpay order
+      const { data, error } = await supabase.functions.invoke('create-razorpay-order', {
+        body: {
+          amount: totalAmount,
+          currency: currency,
+          invoiceId,
+          planName: plan.name,
+          customerEmail: user.email,
+          customerName: user.user_metadata?.full_name || user.email
+        }
+      });
+
+      if (error) throw error;
+
+      // Load Razorpay script if not already loaded
+      if (!(window as any).Razorpay) {
+        const script = document.createElement('script');
+        script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+        script.async = true;
+        document.body.appendChild(script);
+        await new Promise(resolve => script.onload = resolve);
+      }
+
+      // Initialize Razorpay checkout
+      const options = {
+        key: data.keyId,
+        amount: data.amount,
+        currency: data.currency,
+        name: 'ATLAS by CropXon',
+        description: `${plan.name} - ${isAnnual ? 'Annual' : 'Monthly'} Plan`,
+        order_id: data.orderId,
+        handler: function(response: any) {
+          trackEvent("payment_success", {
+            invoiceId,
+            orderId: data.orderId,
+            paymentId: response.razorpay_payment_id
+          });
+          toast({
+            title: "Payment Successful!",
+            description: "Thank you for your purchase. You will receive a confirmation email shortly."
+          });
+          onClose();
+          navigate("/portal");
+        },
+        prefill: {
+          email: user.email,
+          name: user.user_metadata?.full_name || ''
+        },
+        theme: {
+          color: '#00363D'
+        },
+        modal: {
+          ondismiss: function() {
+            trackEvent("payment_cancelled", { invoiceId, orderId: data.orderId });
+            setIsProcessingPayment(false);
+          }
+        }
+      };
+
+      const razorpay = new (window as any).Razorpay(options);
+      razorpay.open();
+    } catch (error: any) {
+      console.error("Payment error:", error);
+      toast({
+        title: "Payment Failed",
+        description: error.message || "Could not initiate payment. Please try again.",
+        variant: "destructive"
+      });
+      setIsProcessingPayment(false);
+    }
   };
 
   const handleSatisfied = () => {
@@ -125,28 +322,6 @@ export const InvoicePreviewModal = ({
     });
     navigate("/contact");
     onClose();
-  };
-
-  const handleLoginAndPay = () => {
-    trackEvent("invoice_login_pay_clicked", {
-      invoiceId,
-      region,
-      plan: plan?.name,
-      totalAmount,
-      isLoggedIn: !!user
-    });
-
-    if (!user) {
-      navigate("/portal/login");
-      onClose();
-      return;
-    }
-
-    toast({
-      title: "Proceeding to Payment",
-      description: "Redirecting to secure payment gateway..."
-    });
-    // Would navigate to payment page
   };
 
   const maskValue = (value: string) => {
@@ -309,6 +484,40 @@ export const InvoicePreviewModal = ({
             </div>
           </div>
 
+          {/* Email Invoice Section */}
+          <div className="bg-card rounded-xl border border-border p-5">
+            <h4 className="text-sm font-bold text-foreground uppercase tracking-wider mb-3 flex items-center gap-2">
+              <Mail className="w-4 h-4" />
+              Email Invoice Preview
+            </h4>
+            <div className="flex gap-2">
+              <Input
+                type="email"
+                placeholder="Enter your email address"
+                value={emailInput}
+                onChange={(e) => setEmailInput(e.target.value)}
+                className="flex-1"
+              />
+              <Button 
+                onClick={handleSendEmail}
+                disabled={isSendingEmail || !emailInput}
+                className="bg-primary hover:bg-primary/90"
+              >
+                {isSendingEmail ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <>
+                    <Send className="w-4 h-4 mr-2" />
+                    Send
+                  </>
+                )}
+              </Button>
+            </div>
+            <p className="text-xs text-muted-foreground mt-2">
+              Receive a copy of this invoice preview in your inbox
+            </p>
+          </div>
+
           {/* Masked Details */}
           <div className="bg-secondary/30 rounded-xl p-4 border border-border">
             <p className="text-xs text-muted-foreground text-center">
@@ -366,9 +575,14 @@ export const InvoicePreviewModal = ({
               onClick={handleDownload}
               variant="outline"
               className="flex-1 max-w-xs"
+              disabled={isGeneratingPdf}
             >
-              <Download className="w-4 h-4 mr-2" />
-              {user ? 'Download Invoice' : 'Login to Download'}
+              {isGeneratingPdf ? (
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              ) : (
+                <Download className="w-4 h-4 mr-2" />
+              )}
+              {user ? 'Download Invoice PDF' : 'Login to Download'}
             </Button>
           </div>
 
@@ -386,8 +600,13 @@ export const InvoicePreviewModal = ({
                 onClick={handleLoginAndPay}
                 size="lg"
                 className="bg-white text-primary hover:bg-white/90 font-bold text-lg px-8 py-6 rounded-xl shadow-lg"
+                disabled={isProcessingPayment}
               >
-                <LogIn className="w-5 h-5 mr-2" />
+                {isProcessingPayment ? (
+                  <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                ) : (
+                  <CreditCard className="w-5 h-5 mr-2" />
+                )}
                 {user ? 'Proceed to Payment' : 'Login & Pay'}
               </Button>
             </div>
