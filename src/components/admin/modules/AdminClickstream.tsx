@@ -23,6 +23,9 @@ import { ClickstreamLayout } from "./clickstream/ClickstreamLayout";
 import { PrivacyControls, defaultPrivacySettings, PrivacySettings } from "./clickstream/PrivacyControls";
 import { GeoAnalytics } from "./clickstream/GeoAnalytics";
 import { ExportModal } from "./clickstream/ExportModal";
+import { FormFieldAnalytics } from "./clickstream/FormFieldAnalytics";
+import { AIStruggleDetection } from "./clickstream/AIStruggleDetection";
+import { ClickstreamComparisonTable } from "./clickstream/ClickstreamComparisonTable";
 
 export const AdminClickstream = () => {
   const [eventFilter, setEventFilter] = useState<string>("all");
@@ -418,6 +421,15 @@ export const AdminClickstream = () => {
             }}
           />
         );
+
+      case "form-analytics":
+        return <FormFieldAnalytics events={events || []} />;
+
+      case "ai-struggle":
+        return <AIStruggleDetection events={events || []} />;
+
+      case "comparison":
+        return <ClickstreamComparisonTable />;
 
       default:
         return <div className="text-center py-12 text-muted-foreground">Select a section from the sidebar</div>;

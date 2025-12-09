@@ -64,3 +64,6 @@ verify_jwt = true
 
 [functions.download-invoice-pdf]
 verify_jwt = true
+
+[functions.analyze-user-struggles]
+verify_jwt = true
