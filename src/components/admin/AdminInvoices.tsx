@@ -458,18 +458,22 @@ export const AdminInvoices = () => {
           </DialogHeader>
           
           {selectedInvoice && (
-            <Tabs defaultValue="details" className="w-full" onValueChange={(val) => {
+            <Tabs defaultValue="details" className="w-full" onValueChange={async (val) => {
               if (val === 'downloads' && selectedInvoice) {
                 setLoadingDownloads(true);
-                supabase
-                  .from('invoice_downloads')
-                  .select('*')
-                  .eq('invoice_id', selectedInvoice.id)
-                  .order('created_at', { ascending: false })
-                  .then(({ data, error }) => {
-                    if (!error) setInvoiceDownloads(data || []);
-                    setLoadingDownloads(false);
-                  });
+                try {
+                  // Use raw fetch since table may not exist in types yet
+                  const { data, error } = await supabase
+                    .from('invoice_downloads' as any)
+                    .select('*')
+                    .eq('invoice_id', selectedInvoice.id)
+                    .order('created_at', { ascending: false });
+                  if (!error) setInvoiceDownloads(data || []);
+                } catch (err) {
+                  console.log('Downloads table may not exist yet');
+                  setInvoiceDownloads([]);
+                }
+                setLoadingDownloads(false);
               }
             }}>
               <TabsList className="grid w-full grid-cols-3">
@@ -633,6 +637,80 @@ export const AdminInvoices = () => {
                     <p className="text-sm text-muted-foreground mt-1">
                       Payment details will appear here once the invoice is paid
                     </p>
+                  </div>
+                )}
+              </TabsContent>
+
+              <TabsContent value="downloads" className="space-y-4 mt-4">
+                {loadingDownloads ? (
+                  <div className="flex items-center justify-center py-8">
+                    <Loader2 className="h-6 w-6 animate-spin text-primary" />
+                  </div>
+                ) : invoiceDownloads.length === 0 ? (
+                  <div className="p-8 text-center">
+                    <FileDown className="h-12 w-12 mx-auto text-muted-foreground/50 mb-4" />
+                    <p className="text-muted-foreground">No downloads recorded yet</p>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      Download history will appear here when PDFs are downloaded
+                    </p>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <h4 className="font-semibold text-foreground flex items-center gap-2">
+                        <History className="h-4 w-4 text-primary" />
+                        Download History
+                      </h4>
+                      <Badge variant="secondary">{invoiceDownloads.length} downloads</Badge>
+                    </div>
+                    <div className="space-y-2">
+                      {invoiceDownloads.map((download: any) => (
+                        <div 
+                          key={download.id} 
+                          className="p-4 rounded-lg bg-muted/30 border border-border/50"
+                        >
+                          <div className="flex items-start justify-between">
+                            <div className="space-y-1">
+                              <div className="flex items-center gap-2">
+                                <User className="h-4 w-4 text-muted-foreground" />
+                                <span className="font-medium text-sm">
+                                  {download.downloaded_by_name || download.downloaded_by_email || 'Anonymous'}
+                                </span>
+                              </div>
+                              {download.downloaded_by_email && (
+                                <p className="text-xs text-muted-foreground pl-6">
+                                  {download.downloaded_by_email}
+                                </p>
+                              )}
+                            </div>
+                            <Badge variant="outline" className="text-xs">
+                              {download.download_type?.toUpperCase() || 'PDF'}
+                            </Badge>
+                          </div>
+                          <div className="mt-3 pt-3 border-t border-border/50 grid grid-cols-2 gap-3 text-xs">
+                            <div className="flex items-center gap-2 text-muted-foreground">
+                              <Clock className="h-3 w-3" />
+                              {new Date(download.created_at).toLocaleString('en-IN', {
+                                day: '2-digit',
+                                month: 'short',
+                                year: 'numeric',
+                                hour: '2-digit',
+                                minute: '2-digit'
+                              })}
+                            </div>
+                            <div className="flex items-center gap-2 text-muted-foreground">
+                              <Globe className="h-3 w-3" />
+                              {download.ip_address || 'Unknown IP'}
+                            </div>
+                          </div>
+                          {download.user_agent && (
+                            <p className="text-[10px] text-muted-foreground/70 mt-2 truncate">
+                              {download.user_agent.slice(0, 80)}...
+                            </p>
+                          )}
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 )}
               </TabsContent>
