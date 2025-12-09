@@ -1,4 +1,4 @@
-import { ReactNode, useState, useCallback } from "react";
+import { ReactNode, useState, useCallback, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import cropxonIcon from "@/assets/cropxon-icon.png";
 import { AdminNotificationBell } from "./AdminNotificationBell";
-import { prefetchAdminModule } from "@/lib/adminPrefetch";
+import { prefetchAdminModule, prefetchCriticalModulesOnIdle } from "@/lib/adminPrefetch";
 import { SyncIndicator } from "@/components/ui/sync-indicator";
 import { 
   LayoutDashboard, 
@@ -230,6 +230,11 @@ export const AdminLayout = ({ children }: AdminLayoutProps) => {
   const [openSections, setOpenSections] = useState<string[]>(
     navSections.map(s => s.title) // All sections open by default
   );
+
+  // Prefetch critical modules on idle for instant navigation
+  useEffect(() => {
+    prefetchCriticalModulesOnIdle();
+  }, []);
 
   const handleSignOut = async () => {
     await supabase.auth.signOut();

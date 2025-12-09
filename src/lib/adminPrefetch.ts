@@ -118,3 +118,37 @@ export const isModulePrefetched = (path: string): boolean => {
 export const getPrefetchedCount = (): number => {
   return prefetchedModules.size;
 };
+
+/**
+ * Critical modules to prefetch on idle for instant navigation
+ */
+const criticalModules = [
+  "/admin",
+  "/admin/analytics",
+  "/admin/tenants",
+  "/admin/clickstream",
+  "/admin/quotes",
+  "/admin/invoices",
+];
+
+/**
+ * Prefetch critical admin modules when browser is idle
+ * This ensures the most common modules are ready before user navigates
+ */
+export const prefetchCriticalModulesOnIdle = (): void => {
+  if (typeof window === "undefined") return;
+  
+  const prefetchAll = () => {
+    criticalModules.forEach((path, index) => {
+      // Stagger prefetching to avoid blocking
+      setTimeout(() => prefetchAdminModule(path), index * 100);
+    });
+  };
+
+  // Use requestIdleCallback if available, otherwise setTimeout
+  if ("requestIdleCallback" in window) {
+    (window as any).requestIdleCallback(prefetchAll, { timeout: 3000 });
+  } else {
+    setTimeout(prefetchAll, 1000);
+  }
+};
