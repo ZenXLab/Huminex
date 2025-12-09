@@ -107,28 +107,85 @@ const TenantSidebarAccess: React.FC = () => {
       }
     }
     
-    // Load activity logs
-    const savedLogs = localStorage.getItem(SIDEBAR_ACCESS_LOG_KEY);
-    if (savedLogs) {
-      try {
-        setActivityLogs(JSON.parse(savedLogs));
-      } catch (e) {
-        console.error("Failed to load activity logs:", e);
-      }
-    }
+    // Load activity logs from database
+    loadActivityLogs();
   }, []);
 
-  const addLogEntry = (entry: Omit<AccessLogEntry, 'id' | 'timestamp' | 'adminName'>) => {
-    const newEntry: AccessLogEntry = {
-      ...entry,
-      id: crypto.randomUUID(),
-      timestamp: new Date().toISOString(),
-      adminName: 'Tenant Admin', // In production, get from auth context
-    };
-    
-    const updatedLogs = [newEntry, ...activityLogs].slice(0, 100); // Keep last 100 entries
-    setActivityLogs(updatedLogs);
-    localStorage.setItem(SIDEBAR_ACCESS_LOG_KEY, JSON.stringify(updatedLogs));
+  const loadActivityLogs = async () => {
+    try {
+      const { supabase } = await import('@/integrations/supabase/client');
+      const { data, error } = await supabase
+        .from('sidebar_access_logs')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(100);
+      
+      if (error) {
+        console.error("Failed to load activity logs from database:", error);
+        // Fallback to localStorage
+        const savedLogs = localStorage.getItem(SIDEBAR_ACCESS_LOG_KEY);
+        if (savedLogs) {
+          setActivityLogs(JSON.parse(savedLogs));
+        }
+        return;
+      }
+      
+      // Transform database records to local format
+      const logs: AccessLogEntry[] = (data || []).map(log => ({
+        id: log.id,
+        timestamp: log.created_at,
+        actionType: log.action_type as AccessLogEntry['actionType'],
+        roleAffected: log.role_affected,
+        moduleId: log.module_id || undefined,
+        previousValue: log.previous_value ?? undefined,
+        newValue: log.new_value ?? undefined,
+        copyFromRole: log.copy_from_role || undefined,
+        adminName: 'Tenant Admin',
+      }));
+      
+      setActivityLogs(logs);
+    } catch (e) {
+      console.error("Failed to load activity logs:", e);
+    }
+  };
+
+  const addLogEntry = async (entry: Omit<AccessLogEntry, 'id' | 'timestamp' | 'adminName'>) => {
+    try {
+      const { supabase } = await import('@/integrations/supabase/client');
+      
+      // Insert into database
+      const { error } = await supabase
+        .from('sidebar_access_logs')
+        .insert({
+          action_type: entry.actionType,
+          role_affected: entry.roleAffected,
+          module_id: entry.moduleId || null,
+          previous_value: entry.previousValue ?? null,
+          new_value: entry.newValue ?? null,
+          copy_from_role: entry.copyFromRole || null,
+          metadata: {},
+        });
+      
+      if (error) {
+        console.error("Failed to save log to database:", error);
+      }
+      
+      // Also update local state immediately for UI responsiveness
+      const newEntry: AccessLogEntry = {
+        ...entry,
+        id: crypto.randomUUID(),
+        timestamp: new Date().toISOString(),
+        adminName: 'Tenant Admin',
+      };
+      
+      const updatedLogs = [newEntry, ...activityLogs].slice(0, 100);
+      setActivityLogs(updatedLogs);
+      
+      // Keep localStorage as backup
+      localStorage.setItem(SIDEBAR_ACCESS_LOG_KEY, JSON.stringify(updatedLogs));
+    } catch (e) {
+      console.error("Failed to add log entry:", e);
+    }
   };
 
   const handleToggle = (moduleId: string, enabled: boolean) => {

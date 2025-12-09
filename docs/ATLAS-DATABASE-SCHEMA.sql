@@ -2,8 +2,8 @@
 -- ATLAS Database Schema Documentation
 -- ============================================================================
 -- 
--- > **Version**: 3.6.0  
--- > **Last Updated**: December 7, 2025 @ 22:30 UTC  
+-- > **Version**: 3.7.0  
+-- > **Last Updated**: December 9, 2025 @ 10:15 UTC  
 -- > **Author**: CropXon ATLAS Team
 --
 -- ============================================================================
@@ -11,9 +11,12 @@
 -- ============================================================================
 
 -- ============================================================================
--- 📊 DATABASE SCHEMA SUMMARY (66 Tables)
+-- 📊 DATABASE SCHEMA SUMMARY (67 Tables)
 -- ============================================================================
 --
+-- | # | Table Name | Status | Category | Purpose/Description |
+-- |---|------------|--------|----------|---------------------|
+-- | 67 | sidebar_access_logs | ✅ Live | Admin | Sidebar access change audit logs |
 -- | # | Table Name | Status | Category | Purpose/Description |
 -- |---|------------|--------|----------|---------------------|
 -- | 1 | profiles | ✅ Live | Core | User profile data (name, email, phone, company) |
@@ -2464,16 +2467,101 @@ CREATE TRIGGER update_ab_experiments_updated_at
 
 
 -- ============================================================================
+-- PART 26: SIDEBAR ACCESS AUDIT LOGS
+-- ============================================================================
+
+-- 26.1 Sidebar Access Logs Table
+CREATE TABLE IF NOT EXISTS public.sidebar_access_logs (
+  id UUID NOT NULL DEFAULT gen_random_uuid() PRIMARY KEY,
+  tenant_id UUID REFERENCES public.client_tenants(id) ON DELETE CASCADE,
+  admin_user_id UUID,
+  action_type TEXT NOT NULL DEFAULT 'update', -- update, copy, reset, bulk_enable, bulk_disable
+  role_affected TEXT NOT NULL,
+  module_id TEXT,
+  previous_value BOOLEAN,
+  new_value BOOLEAN,
+  copy_from_role TEXT,
+  metadata JSONB DEFAULT '{}',
+  created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now()
+);
+
+-- Enable RLS
+ALTER TABLE public.sidebar_access_logs ENABLE ROW LEVEL SECURITY;
+
+-- RLS Policies
+CREATE POLICY "Tenant admins can view their logs"
+  ON public.sidebar_access_logs
+  FOR SELECT
+  USING (
+    tenant_id IN (
+      SELECT tenant_id FROM public.client_tenant_users 
+      WHERE user_id = auth.uid() AND role IN ('super_admin', 'admin')
+    )
+    OR EXISTS (SELECT 1 FROM public.user_roles WHERE user_id = auth.uid() AND role = 'admin')
+  );
+
+CREATE POLICY "Tenant admins can insert logs"
+  ON public.sidebar_access_logs
+  FOR INSERT
+  WITH CHECK (
+    tenant_id IN (
+      SELECT tenant_id FROM public.client_tenant_users 
+      WHERE user_id = auth.uid() AND role IN ('super_admin', 'admin')
+    )
+    OR EXISTS (SELECT 1 FROM public.user_roles WHERE user_id = auth.uid() AND role = 'admin')
+  );
+
+-- Indexes
+CREATE INDEX idx_sidebar_access_logs_tenant ON public.sidebar_access_logs(tenant_id);
+CREATE INDEX idx_sidebar_access_logs_created ON public.sidebar_access_logs(created_at DESC);
+CREATE INDEX idx_sidebar_access_logs_admin ON public.sidebar_access_logs(admin_user_id);
+CREATE INDEX idx_sidebar_access_logs_role ON public.sidebar_access_logs(role_affected);
+CREATE INDEX idx_sidebar_access_logs_action ON public.sidebar_access_logs(action_type);
+
+-- 26.2 Sidebar Access Log Trigger Function
+CREATE OR REPLACE FUNCTION public.log_sidebar_access_change()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+BEGIN
+  INSERT INTO public.sidebar_access_logs (
+    tenant_id,
+    admin_user_id,
+    action_type,
+    role_affected,
+    module_id,
+    previous_value,
+    new_value,
+    metadata
+  ) VALUES (
+    NEW.tenant_id,
+    auth.uid(),
+    'update',
+    TG_ARGV[0],
+    NEW.module_id,
+    NULL,
+    NEW.is_enabled,
+    jsonb_build_object('triggered_by', 'database_trigger')
+  );
+  
+  RETURN NEW;
+END;
+$$;
+
+
+-- ============================================================================
 -- 🏁 END OF SCHEMA
 -- ============================================================================
 --
 -- SUMMARY:
--- ✅ 65 Tables defined (40 live + 25 pending migration)
--- ✅ 8 Database functions
+-- ✅ 67 Tables defined (41 live + 26 pending migration)
+-- ✅ 9 Database functions (including log_sidebar_access_change)
 -- ✅ 3 Triggers
 -- ✅ 15 Enums/Types
--- ✅ 85+ RLS policies
--- ✅ 60+ Indexes
+-- ✅ 87+ RLS policies
+-- ✅ 65+ Indexes
 -- ✅ Realtime enabled on key tables
 --
 -- NEXT STEPS:
