@@ -69,10 +69,6 @@ const LazyComponents = {
   featureFlags: lazy(() => import("@/components/admin/modules/AdminFeatureFlags").then(m => ({ default: m.AdminFeatureFlags }))),
   notifications: lazy(() => import("@/components/admin/AdminNotificationSystem").then(m => ({ default: m.AdminNotificationSystem }))),
   notificationPrefs: lazy(() => import("@/components/admin/AdminNotificationPreferences").then(m => ({ default: m.AdminNotificationPreferences }))),
-  // TRACEFLOW DXI Engine
-  traceflowDashboard: lazy(() => import("@/components/traceflow/TraceflowDashboard")),
-  traceflowSessions: lazy(() => import("@/components/traceflow/TraceflowSessionReplay")),
-  traceflowUX: lazy(() => import("@/components/traceflow/TraceflowUXIntelligence")),
 };
 
 // Get module name from path for loading indicator
@@ -184,12 +180,6 @@ const AdminPage = () => {
     if (path.startsWith("/admin/notifications/preferences")) return <LazyComponents.notificationPrefs />;
     if (path.startsWith("/admin/notifications")) return <LazyComponents.notifications />;
     if (path.startsWith("/admin/settings")) return <LazyComponents.settings />;
-    
-    // TRACEFLOW DXI Engine Routes
-    if (path === "/admin/traceflow") return <LazyComponents.traceflowDashboard />;
-    if (path.startsWith("/admin/traceflow/sessions")) return <LazyComponents.traceflowSessions />;
-    if (path.startsWith("/admin/traceflow/ux")) return <LazyComponents.traceflowUX />;
-    if (path.startsWith("/admin/traceflow")) return <LazyComponents.traceflowDashboard />;
     
     return <AdminOverview />;
   }, [location.pathname]);

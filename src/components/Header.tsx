@@ -272,6 +272,22 @@ export const Header = ({ onQuoteClick }: HeaderProps) => {
 
           {/* Desktop Navigation */}
           <div className="hidden lg:flex items-center gap-0.5" role="menubar">
+            {/* TRACEFLOW Flagship Product */}
+            <Link 
+              to="/traceflow"
+              className="relative flex items-center gap-1.5 px-3 py-2 text-foreground font-semibold text-sm rounded-lg transition-all duration-200 group bg-gradient-to-r from-[#0B3D91]/10 to-[#00C2D8]/10 hover:from-[#0B3D91]/20 hover:to-[#00C2D8]/20 border border-[#00C2D8]/20"
+            >
+              <div className="absolute -top-1 -right-1">
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#FF8A00] opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-[#FF8A00]"></span>
+                </span>
+              </div>
+              <Zap className="w-4 h-4 text-[#00C2D8]" />
+              <span className="bg-gradient-to-r from-[#0B3D91] to-[#00C2D8] bg-clip-text text-transparent">TRACEFLOW</span>
+              <span className="text-[9px] font-bold text-[#FF8A00] uppercase tracking-wide">DXI</span>
+            </Link>
+
             {/* Features Dropdown */}
             <div 
               className="relative"
@@ -565,6 +581,25 @@ export const Header = ({ onQuoteClick }: HeaderProps) => {
           }`}
         >
           <div className="py-4">
+            {/* TRACEFLOW Flagship Link - Mobile */}
+            <Link
+              to="/traceflow"
+              onClick={() => setMobileMenuOpen(false)}
+              className="flex items-center gap-3 mx-4 mb-4 px-4 py-3 rounded-xl bg-gradient-to-r from-[#0B3D91]/10 to-[#00C2D8]/10 border border-[#00C2D8]/20"
+            >
+              <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-[#0B3D91] to-[#00C2D8] flex items-center justify-center">
+                <Zap className="w-5 h-5 text-white" />
+              </div>
+              <div className="flex-1">
+                <div className="flex items-center gap-2">
+                  <span className="font-semibold bg-gradient-to-r from-[#0B3D91] to-[#00C2D8] bg-clip-text text-transparent">TRACEFLOW</span>
+                  <span className="text-[9px] font-bold text-[#FF8A00] uppercase tracking-wide px-1.5 py-0.5 bg-[#FF8A00]/10 rounded">DXI</span>
+                </div>
+                <span className="text-xs text-muted-foreground">Digital Experience Intelligence</span>
+              </div>
+              <ChevronRight className="w-4 h-4 text-muted-foreground" />
+            </Link>
+
             {/* Mobile Sections */}
             {renderMobileSection("Features", modules, "features", Sparkles)}
             {renderMobileSection("Industries", industries, "industries", Globe)}

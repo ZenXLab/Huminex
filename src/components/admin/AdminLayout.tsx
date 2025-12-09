@@ -88,16 +88,6 @@ interface NavSection {
 // Comprehensive Admin Sidebar Navigation for full SaaS Operations
 const navSections: NavSection[] = [
   {
-    title: "TRACEFLOW",
-    icon: Zap,
-    color: "text-cyan-500",
-    items: [
-      { name: "TRACEFLOW Dashboard", href: "/admin/traceflow", icon: Zap, badge: "Flagship", badgeVariant: "default" as const },
-      { name: "Session Replay", href: "/admin/traceflow/sessions", icon: Activity, badge: "Live" },
-      { name: "UX Intelligence", href: "/admin/traceflow/ux", icon: Target },
-    ]
-  },
-  {
     title: "Command Center",
     icon: LayoutDashboard,
     color: "text-blue-500",
