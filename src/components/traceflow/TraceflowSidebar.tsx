@@ -32,7 +32,9 @@ import {
   Smartphone,
   AlertTriangle,
   TrendingUp,
-  MessageSquare
+  MessageSquare,
+  ArrowDown,
+  Shield
 } from "lucide-react";
 
 interface SidebarItem {
@@ -76,7 +78,9 @@ const sidebarSections: SidebarSection[] = [
     icon: Layers,
     defaultOpen: true,
     items: [
+      { icon: MousePointer, label: "Click Analysis", id: "click-analysis", description: "Detailed click breakdown by element" },
       { icon: Thermometer, label: "Click Heatmaps", id: "heatmaps", description: "Visual click distribution analysis" },
+      { icon: ArrowDown, label: "Scroll Depth", id: "scroll-depth", description: "Track how far users scroll" },
       { icon: AlertTriangle, label: "Frustration Detection", id: "frustration", description: "Rage clicks, dead clicks, errors" },
       { icon: FormInput, label: "Form Analytics", id: "forms", description: "Field abandonment & completion rates" },
       { icon: Layers, label: "UX Issues", id: "ux", description: "AI-detected UI problems" },
@@ -124,6 +128,8 @@ const sidebarSections: SidebarSection[] = [
     defaultOpen: false,
     items: [
       { icon: Code2, label: "SDK Integration", id: "sdk", description: "Install TRACEFLOW in minutes" },
+      { icon: Activity, label: "Recent Events", id: "recent-events", description: "Real-time event feed" },
+      { icon: Shield, label: "Privacy Controls", id: "privacy", description: "Data masking & compliance" },
       { icon: Settings, label: "Settings", id: "settings", description: "Team, billing & configuration" },
     ]
   },

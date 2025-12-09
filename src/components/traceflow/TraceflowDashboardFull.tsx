@@ -32,6 +32,10 @@ import { TraceflowAdminPanel } from "./TraceflowAdminPanel";
 import { TraceflowSidebar } from "./TraceflowSidebar";
 import { TraceflowTopBar } from "./TraceflowTopBar";
 import { TraceflowOverviewTab } from "./TraceflowOverviewTab";
+import { TraceflowClickAnalysis } from "./TraceflowClickAnalysis";
+import { TraceflowScrollDepth } from "./TraceflowScrollDepth";
+import { TraceflowRecentEvents } from "./TraceflowRecentEvents";
+import { TraceflowPrivacyControls } from "./TraceflowPrivacyControls";
 import { useTraceflowAuth } from "@/hooks/useTraceflowAuth";
 import { useTraceflowRealtime } from "@/hooks/useTraceflowRBAC";
 
@@ -117,6 +121,18 @@ export const TraceflowDashboardFull = () => {
 
       case "settings":
         return <TraceflowAdminPanel subscriptionId={subscriptionId || ""} />;
+
+      case "click-analysis":
+        return <TraceflowClickAnalysis />;
+
+      case "scroll-depth":
+        return <TraceflowScrollDepth />;
+
+      case "recent-events":
+        return <TraceflowRecentEvents />;
+
+      case "privacy":
+        return <TraceflowPrivacyControls />;
 
       case "capture":
         return (
