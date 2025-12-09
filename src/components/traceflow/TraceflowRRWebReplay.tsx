@@ -33,7 +33,11 @@ import {
   Wifi,
   WifiOff,
   Sparkles,
-  MousePointer
+  MousePointer,
+  MapPin,
+  User,
+  Globe,
+  Layers
 } from "lucide-react";
 import { format, isWithinInterval, parseISO } from "date-fns";
 import { motion, AnimatePresence } from "framer-motion";
@@ -45,6 +49,18 @@ import { toast } from "sonner";
 interface SessionRecording {
   id: string;
   session_id: string;
+  visitor_id?: string;
+  device_fingerprint?: string;
+  ip_address?: string;
+  geolocation?: {
+    city?: string;
+    country?: string;
+    country_code?: string;
+    latitude?: number;
+    longitude?: number;
+  };
+  user_agent?: string;
+  pages_visited?: string[];
   events: any[];
   start_time: string;
   end_time: string | null;
@@ -427,13 +443,29 @@ export const TraceflowRRWebReplay = () => {
                       )}
                     >
                       <div className="flex items-center justify-between mb-1">
-                        <span className="font-mono text-xs text-muted-foreground">
-                          #{recording.session_id.slice(0, 8)}
-                        </span>
+                        <div className="flex items-center gap-1">
+                          {recording.visitor_id && (
+                            <User className="h-3 w-3 text-[#0B3D91]" />
+                          )}
+                          <span className="font-mono text-xs text-muted-foreground">
+                            #{recording.session_id.slice(0, 8)}
+                          </span>
+                        </div>
                         <Badge variant="outline" className="text-[10px]">
                           {recording.event_count || 0} events
                         </Badge>
                       </div>
+                      
+                      {/* Visitor & Location Info */}
+                      {(recording.geolocation?.city || recording.geolocation?.country) && (
+                        <div className="flex items-center gap-1 mb-1">
+                          <MapPin className="h-3 w-3 text-emerald-500" />
+                          <span className="text-[10px] text-emerald-600 font-medium">
+                            {[recording.geolocation.city, recording.geolocation.country_code].filter(Boolean).join(", ")}
+                          </span>
+                        </div>
+                      )}
+                      
                       <div className="flex items-center gap-2 text-sm">
                         <Clock className="h-3 w-3 text-muted-foreground" />
                         <span className="text-xs">
@@ -444,7 +476,16 @@ export const TraceflowRRWebReplay = () => {
                           {formatDuration(recording.duration_ms)}
                         </span>
                       </div>
-                      {recording.metadata?.url && (
+                      
+                      {/* Pages visited */}
+                      {recording.pages_visited && recording.pages_visited.length > 0 ? (
+                        <div className="flex items-center gap-1 mt-1">
+                          <Layers className="h-3 w-3 text-muted-foreground" />
+                          <span className="text-[10px] text-muted-foreground truncate">
+                            {recording.pages_visited.length} page{recording.pages_visited.length > 1 ? 's' : ''}: {recording.pages_visited[recording.pages_visited.length - 1]}
+                          </span>
+                        </div>
+                      ) : recording.metadata?.url && (
                         <div className="flex items-center gap-1 mt-1">
                           <MousePointer className="h-3 w-3 text-muted-foreground" />
                           <span className="text-[10px] text-muted-foreground truncate">

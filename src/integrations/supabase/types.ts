@@ -1672,42 +1672,60 @@ export type Database = {
       session_recordings: {
         Row: {
           created_at: string
+          device_fingerprint: string | null
           duration_ms: number | null
           end_time: string | null
           event_count: number | null
           events: Json
+          geolocation: Json | null
           id: string
+          ip_address: string | null
           metadata: Json | null
           page_count: number | null
+          pages_visited: Json | null
           session_id: string
           start_time: string
           updated_at: string
+          user_agent: string | null
+          visitor_id: string | null
         }
         Insert: {
           created_at?: string
+          device_fingerprint?: string | null
           duration_ms?: number | null
           end_time?: string | null
           event_count?: number | null
           events?: Json
+          geolocation?: Json | null
           id?: string
+          ip_address?: string | null
           metadata?: Json | null
           page_count?: number | null
+          pages_visited?: Json | null
           session_id: string
           start_time?: string
           updated_at?: string
+          user_agent?: string | null
+          visitor_id?: string | null
         }
         Update: {
           created_at?: string
+          device_fingerprint?: string | null
           duration_ms?: number | null
           end_time?: string | null
           event_count?: number | null
           events?: Json
+          geolocation?: Json | null
           id?: string
+          ip_address?: string | null
           metadata?: Json | null
           page_count?: number | null
+          pages_visited?: Json | null
           session_id?: string
           start_time?: string
           updated_at?: string
+          user_agent?: string | null
+          visitor_id?: string | null
         }
         Relationships: []
       }

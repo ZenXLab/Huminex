@@ -13,9 +13,20 @@ interface PrivacySettings {
   inlineStylesheet: boolean;
 }
 
+interface GeolocationData {
+  ip: string;
+  city: string;
+  region: string;
+  country: string;
+  country_code: string;
+  latitude: number;
+  longitude: number;
+  timezone: string;
+  org: string;
+}
+
 interface UseSessionRecordingOptions {
   enabled?: boolean;
-  sampleRate?: number;
   checkoutEveryNms?: number;
   privacySettings?: Partial<PrivacySettings>;
 }
@@ -25,20 +36,76 @@ const defaultPrivacySettings: PrivacySettings = {
   maskPasswords: true,
   maskEmails: false,
   maskCreditCards: true,
-  excludedPages: ["/admin/*", "/traceflow/*"], // Exclude admin and traceflow pages
+  excludedPages: ["/admin/*", "/traceflow/*"],
   excludedSelectors: [".sensitive", "[data-private]", ".credit-card"],
   recordCanvas: false,
   collectFonts: false,
   inlineStylesheet: true,
 };
 
-// Generate or retrieve session ID
+// Generate device fingerprint from browser characteristics
+const generateDeviceFingerprint = (): string => {
+  const components = [
+    navigator.userAgent,
+    navigator.language,
+    screen.width + "x" + screen.height,
+    screen.colorDepth,
+    new Date().getTimezoneOffset(),
+    navigator.hardwareConcurrency || 0,
+    navigator.maxTouchPoints || 0,
+    // Canvas fingerprint (simplified)
+    (() => {
+      try {
+        const canvas = document.createElement("canvas");
+        const ctx = canvas.getContext("2d");
+        if (ctx) {
+          ctx.textBaseline = "top";
+          ctx.font = "14px Arial";
+          ctx.fillText("fingerprint", 0, 0);
+          return canvas.toDataURL().slice(-50);
+        }
+      } catch {
+        return "no-canvas";
+      }
+      return "no-canvas";
+    })(),
+  ];
+  
+  // Create hash from components
+  const str = components.join("|");
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    const char = str.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash = hash & hash;
+  }
+  return Math.abs(hash).toString(36);
+};
+
+// Get or create visitor ID (persistent across sessions)
+const getVisitorId = (): string => {
+  const storageKey = "traceflow_visitor_id";
+  let visitorId = localStorage.getItem(storageKey);
+  
+  if (!visitorId) {
+    const fingerprint = generateDeviceFingerprint();
+    visitorId = `v_${fingerprint}_${Date.now().toString(36)}`;
+    localStorage.setItem(storageKey, visitorId);
+  }
+  
+  return visitorId;
+};
+
+// Get session ID (persists until browser/tab closes)
 const getSessionId = (): string => {
-  let sessionId = sessionStorage.getItem("rrweb_session_id");
+  const storageKey = "rrweb_session_id";
+  let sessionId = sessionStorage.getItem(storageKey);
+  
   if (!sessionId) {
     sessionId = `${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
-    sessionStorage.setItem("rrweb_session_id", sessionId);
+    sessionStorage.setItem(storageKey, sessionId);
   }
+  
   return sessionId;
 };
 
@@ -51,6 +118,32 @@ const isPageExcluded = (excludedPages: string[]): boolean => {
     }
     return currentPath === pattern;
   });
+};
+
+// Fetch geolocation from IP
+const fetchGeolocation = async (): Promise<GeolocationData | null> => {
+  try {
+    const response = await fetch("https://ipapi.co/json/", {
+      signal: AbortSignal.timeout(5000),
+    });
+    if (response.ok) {
+      const data = await response.json();
+      return {
+        ip: data.ip,
+        city: data.city,
+        region: data.region,
+        country: data.country_name,
+        country_code: data.country_code,
+        latitude: data.latitude,
+        longitude: data.longitude,
+        timezone: data.timezone,
+        org: data.org,
+      };
+    }
+  } catch {
+    // Silently fail
+  }
+  return null;
 };
 
 export const useSessionRecording = (options: UseSessionRecordingOptions = {}) => {
@@ -66,38 +159,46 @@ export const useSessionRecording = (options: UseSessionRecordingOptions = {}) =>
   const stopFnRef = useRef<(() => void) | null>(null);
   const recordingIdRef = useRef<string | null>(null);
   const sessionIdRef = useRef<string>(getSessionId());
+  const visitorIdRef = useRef<string>(getVisitorId());
   const startTimeRef = useRef<Date>(new Date());
   const saveIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const geolocationRef = useRef<GeolocationData | null>(null);
+  const pagesVisitedRef = useRef<Set<string>>(new Set());
   const [isRecording, setIsRecording] = useState(false);
   const hasStartedRef = useRef(false);
+  const lastEventCountRef = useRef(0);
 
-  // Save events to database with error handling
+  // Save events to database - append mode
   const saveEvents = useCallback(async (isFinal = false) => {
-    if (eventsRef.current.length === 0) return;
+    const newEventsCount = eventsRef.current.length;
+    if (newEventsCount === 0 || newEventsCount === lastEventCountRef.current) return;
 
     const eventsCopy = [...eventsRef.current];
+    lastEventCountRef.current = newEventsCount;
+    
     const sessionId = sessionIdRef.current;
+    const visitorId = visitorIdRef.current;
     const now = new Date();
     const duration = now.getTime() - startTimeRef.current.getTime();
 
-    // Count unique pages from meta events
-    const pages = new Set<string>();
-    eventsCopy.forEach((event) => {
-      if (event.type === 4 && event.data?.href) { // EventType.Meta = 4
-        pages.add(event.data.href);
-      }
-    });
+    // Track current page
+    pagesVisitedRef.current.add(window.location.pathname);
 
     const recordingData = {
       session_id: sessionId,
+      visitor_id: visitorId,
+      device_fingerprint: generateDeviceFingerprint(),
+      ip_address: geolocationRef.current?.ip || null,
+      geolocation: geolocationRef.current || {},
+      user_agent: navigator.userAgent,
       events: eventsCopy,
       start_time: startTimeRef.current.toISOString(),
       end_time: isFinal ? now.toISOString() : null,
       duration_ms: duration,
-      page_count: Math.max(1, pages.size),
+      page_count: pagesVisitedRef.current.size,
+      pages_visited: Array.from(pagesVisitedRef.current),
       event_count: eventsCopy.length,
       metadata: {
-        userAgent: navigator.userAgent,
         screenWidth: window.innerWidth,
         screenHeight: window.innerHeight,
         url: window.location.pathname,
@@ -108,39 +209,73 @@ export const useSessionRecording = (options: UseSessionRecordingOptions = {}) =>
 
     try {
       if (recordingIdRef.current) {
+        // Update existing record
         await supabase
           .from("session_recordings")
           .update(recordingData)
           .eq("id", recordingIdRef.current);
       } else {
-        const { data } = await supabase
+        // Check if session already exists (page navigation within same session)
+        const { data: existing } = await supabase
           .from("session_recordings")
-          .insert(recordingData)
-          .select("id")
-          .single();
+          .select("id, events, pages_visited")
+          .eq("session_id", sessionId)
+          .maybeSingle();
 
-        if (data) {
-          recordingIdRef.current = data.id;
+        if (existing) {
+          // Merge events with existing recording
+          const existingEvents = Array.isArray(existing.events) ? existing.events : [];
+          const existingPages = Array.isArray(existing.pages_visited) ? existing.pages_visited : [];
+          
+          // Add existing pages to our set
+          existingPages.forEach((p: string) => pagesVisitedRef.current.add(p));
+          
+          recordingData.events = [...existingEvents, ...eventsCopy];
+          recordingData.event_count = recordingData.events.length;
+          recordingData.pages_visited = Array.from(pagesVisitedRef.current);
+          recordingData.page_count = pagesVisitedRef.current.size;
+          
+          recordingIdRef.current = existing.id;
+          
+          await supabase
+            .from("session_recordings")
+            .update(recordingData)
+            .eq("id", existing.id);
+        } else {
+          // Create new record
+          const { data } = await supabase
+            .from("session_recordings")
+            .insert(recordingData)
+            .select("id")
+            .single();
+
+          if (data) {
+            recordingIdRef.current = data.id;
+          }
         }
       }
-    } catch {
-      // Silently fail to avoid console spam
+    } catch (error) {
+      console.error("[rrweb] Failed to save:", error);
     }
   }, [privacy]);
 
-  // Start recording - lazy load rrweb to avoid blocking
+  // Start recording
   const startRecording = useCallback(async () => {
-    if (stopFnRef.current || hasStartedRef.current) return; // Already recording or started
+    if (stopFnRef.current || hasStartedRef.current) return;
     if (isPageExcluded(privacy.excludedPages)) return;
 
     hasStartedRef.current = true;
 
     try {
+      // Fetch geolocation in background
+      fetchGeolocation().then(geo => {
+        geolocationRef.current = geo;
+      });
+
       const rrweb = await import("rrweb");
       
       startTimeRef.current = new Date();
-      eventsRef.current = [];
-      recordingIdRef.current = null;
+      pagesVisitedRef.current.add(window.location.pathname);
 
       const blockSelectors = privacy.excludedSelectors.join(",");
 
@@ -150,7 +285,7 @@ export const useSessionRecording = (options: UseSessionRecordingOptions = {}) =>
         },
         checkoutEveryNms,
         sampling: {
-          mousemove: false, // Disable mousemove to reduce noise and errors
+          mousemove: false,
           mouseInteraction: true,
           scroll: 200,
           media: 800,
@@ -161,20 +296,19 @@ export const useSessionRecording = (options: UseSessionRecordingOptions = {}) =>
         inlineStylesheet: privacy.inlineStylesheet,
         maskAllInputs: privacy.maskAllInputs,
         blockSelector: blockSelectors || undefined,
-        // Add error handling for problematic nodes
         blockClass: 'rrweb-block',
       });
 
       setIsRecording(true);
-      console.log("[rrweb] Recording started for session:", sessionIdRef.current);
+      console.log("[rrweb] Recording started for visitor:", visitorIdRef.current, "session:", sessionIdRef.current);
 
-      // Save events every 15 seconds
+      // Save events every 10 seconds for continuous recording
       saveIntervalRef.current = setInterval(() => {
-        if (eventsRef.current.length > 0) {
-          console.log("[rrweb] Auto-saving", eventsRef.current.length, "events");
+        if (eventsRef.current.length > lastEventCountRef.current) {
           saveEvents(false);
         }
-      }, 15000);
+      }, 10000);
+      
     } catch (err) {
       console.error("[rrweb] Failed to start recording:", err);
       hasStartedRef.current = false;
@@ -201,28 +335,54 @@ export const useSessionRecording = (options: UseSessionRecordingOptions = {}) =>
   useEffect(() => {
     if (!enabled) return;
     
-    // Only start once - delay to not block initial page load
+    // Start recording after short delay
     const timeout = setTimeout(() => {
       if (!hasStartedRef.current) {
         startRecording();
       }
-    }, 2000);
+    }, 1500);
 
-    const handleUnload = () => stopRecording();
+    const handleUnload = () => {
+      // Final save before page unload
+      if (eventsRef.current.length > 0) {
+        const blob = new Blob([JSON.stringify({
+          session_id: sessionIdRef.current,
+          events: eventsRef.current,
+          final: true
+        })], { type: 'application/json' });
+        
+        // Use sendBeacon for reliable delivery on unload
+        navigator.sendBeacon?.(
+          `${import.meta.env.VITE_SUPABASE_URL}/rest/v1/session_recordings?on_conflict=session_id`,
+          blob
+        );
+      }
+      stopRecording();
+    };
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'hidden') {
+        // Save when tab becomes hidden
+        saveEvents(false);
+      }
+    };
 
     window.addEventListener("beforeunload", handleUnload);
     window.addEventListener("pagehide", handleUnload);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
 
     return () => {
       clearTimeout(timeout);
       window.removeEventListener("beforeunload", handleUnload);
       window.removeEventListener("pagehide", handleUnload);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
       stopRecording();
     };
-  }, [enabled, startRecording, stopRecording]);
+  }, [enabled, startRecording, stopRecording, saveEvents]);
 
   return {
     sessionId: sessionIdRef.current,
+    visitorId: visitorIdRef.current,
     startRecording,
     stopRecording,
     eventCount: eventsRef.current.length,
