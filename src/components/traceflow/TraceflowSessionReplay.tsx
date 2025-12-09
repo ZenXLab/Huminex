@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -31,68 +31,158 @@ import {
   EyeOff,
   ChevronRight,
   FileCode,
-  Bug
+  Bug,
+  Loader2
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useTraceflowSessions, useTraceflowEvents, useTraceflowSession } from "@/hooks/useTraceflow";
+import { useSessionSummary, useRootCauseAnalysis, useCodeFixSuggestion } from "@/hooks/useNeuroRouter";
+import { toast } from "sonner";
+import { format } from "date-fns";
 
-const timelineEvents = [
-  { time: "0:00", type: "pageview", label: "Page Load", page: "/checkout" },
-  { time: "0:12", type: "click", label: "Add to Cart Button" },
-  { time: "0:18", type: "input", label: "Email Input Focus" },
-  { time: "0:34", type: "error", label: "Validation Error" },
-  { time: "0:45", type: "rage_click", label: "Rage Click Detected" },
-  { time: "1:02", type: "api_error", label: "API 500 Error" },
-  { time: "1:15", type: "click", label: "Retry Button" },
-  { time: "1:28", type: "success", label: "Form Submitted" },
-];
+interface TimelineEvent {
+  time: string;
+  type: string;
+  label: string;
+  page?: string;
+}
 
-const aiSummary = {
-  tldr: "User experienced checkout friction due to OTP validation failure. Rage clicks detected on submit button. Root cause traced to API timeout.",
-  keyMoments: [
-    { time: "0:34", description: "First validation error appeared" },
-    { time: "0:45", description: "User showed frustration (rage clicks)" },
-    { time: "1:02", description: "Backend API returned 500 error" },
-  ],
+interface AISummary {
+  tldr: string;
+  keyMoments: { time: string; description: string }[];
   rootCause: {
-    description: "Payment gateway timeout causing validation state mismatch",
-    code: "ComponentX at /src/components/Checkout/OTPInput.tsx::line53",
-    commit: "abc123f",
-    confidence: 92
-  },
+    description: string;
+    code: string;
+    commit: string;
+    confidence: number;
+  };
   suggestedFix: {
-    description: "Add retry logic with exponential backoff for OTP validation API calls",
-    code: `// Suggested fix in OTPInput.tsx
-const validateOTP = async (otp: string) => {
-  return await retryWithBackoff(
-    () => api.validateOTP(otp),
-    { maxRetries: 3, initialDelay: 1000 }
-  );
-};`,
-    confidence: 87
-  }
-};
+    description: string;
+    code: string;
+    confidence: number;
+  };
+}
 
 export const TraceflowSessionReplay = () => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [playbackSpeed, setPlaybackSpeed] = useState(1);
-  const [currentTime, setCurrentTime] = useState(45);
+  const [currentTime, setCurrentTime] = useState(0);
   const [showNetwork, setShowNetwork] = useState(true);
   const [showErrors, setShowErrors] = useState(true);
   const [showDOMHighlight, setShowDOMHighlight] = useState(true);
   const [deviceView, setDeviceView] = useState<"desktop" | "tablet" | "mobile">("mobile");
+  const [selectedSessionId, setSelectedSessionId] = useState<string | null>(null);
+  const [aiSummary, setAiSummary] = useState<AISummary | null>(null);
+
+  // Fetch real sessions
+  const { data: sessions, isLoading: sessionsLoading } = useTraceflowSessions({ limit: 20 });
+  const { data: sessionData } = useTraceflowSession(selectedSessionId || "");
+  const { data: events, isLoading: eventsLoading } = useTraceflowEvents(selectedSessionId || "");
+
+  // AI analysis hooks
+  const sessionSummary = useSessionSummary();
+  const rootCauseAnalysis = useRootCauseAnalysis();
+  const codeFix = useCodeFixSuggestion();
+
+  // Auto-select first session
+  useEffect(() => {
+    if (sessions && sessions.length > 0 && !selectedSessionId) {
+      setSelectedSessionId(sessions[0].session_id);
+    }
+  }, [sessions, selectedSessionId]);
+
+  // Transform events to timeline format
+  const timelineEvents: TimelineEvent[] = (events || []).map((e, i) => {
+    const seconds = Math.floor((new Date(e.timestamp).getTime() - new Date(events![0]?.timestamp || e.timestamp).getTime()) / 1000);
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return {
+      time: `${mins}:${secs.toString().padStart(2, '0')}`,
+      type: e.event_type,
+      label: e.element_text || e.element_selector || e.event_type,
+      page: e.page_url || undefined,
+    };
+  });
+
+  // Run AI analysis
+  const handleRunAnalysis = async () => {
+    if (!events || events.length === 0 || !sessionData) {
+      toast.error("No session data to analyze");
+      return;
+    }
+
+    try {
+      toast.info("Running AI analysis...");
+      
+      const summaryResult = await sessionSummary.analyze(events, {
+        frustration_score: sessionData.frustration_score,
+        rage_clicks: sessionData.rage_click_count,
+        dead_clicks: sessionData.dead_click_count,
+        errors: sessionData.error_count,
+      });
+
+      // Parse AI response
+      const summary = summaryResult.content;
+      
+      setAiSummary({
+        tldr: summary.slice(0, 300),
+        keyMoments: timelineEvents
+          .filter(e => e.type === "rage_click" || e.type === "error" || e.type === "dead_click")
+          .slice(0, 3)
+          .map(e => ({ time: e.time, description: e.label })),
+        rootCause: {
+          description: sessionData.ai_root_cause || "Analysis pending - click 'Analyze Root Cause' for detailed diagnosis",
+          code: "Component analysis required",
+          commit: "N/A",
+          confidence: 75,
+        },
+        suggestedFix: {
+          description: sessionData.ai_suggested_fix || "Fix suggestions will appear after root cause analysis",
+          code: "// Suggested fix will appear here",
+          confidence: 70,
+        },
+      });
+
+      toast.success(`Analysis complete! Used ${summaryResult.llm_used}/${summaryResult.model_used}`);
+    } catch (error) {
+      toast.error("Failed to run AI analysis");
+      console.error(error);
+    }
+  };
 
   const getEventIcon = (type: string) => {
     switch (type) {
       case "pageview": return <Eye className="h-3 w-3" />;
+      case "session_start": return <Eye className="h-3 w-3" />;
       case "click": return <MousePointer className="h-3 w-3" />;
       case "input": return <Code className="h-3 w-3" />;
+      case "scroll": return <Activity className="h-3 w-3" />;
       case "error": return <AlertTriangle className="h-3 w-3 text-amber-500" />;
       case "rage_click": return <Zap className="h-3 w-3 text-red-500" />;
+      case "dead_click": return <MousePointer className="h-3 w-3 text-amber-500" />;
       case "api_error": return <Bug className="h-3 w-3 text-red-500" />;
       case "success": return <Activity className="h-3 w-3 text-emerald-500" />;
       default: return <Activity className="h-3 w-3" />;
     }
   };
+
+  const totalDuration = events && events.length > 1
+    ? Math.floor((new Date(events[events.length - 1].timestamp).getTime() - new Date(events[0].timestamp).getTime()) / 1000)
+    : 0;
+
+  const formatDuration = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  };
+
+  if (sessionsLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-[#0B3D91]" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50/30">
@@ -100,23 +190,49 @@ export const TraceflowSessionReplay = () => {
       <div className="border-b bg-white/80 backdrop-blur-sm sticky top-0 z-10">
         <div className="flex items-center justify-between px-6 py-3">
           <div className="flex items-center gap-4">
-            <Button variant="ghost" size="sm">
-              <ChevronRight className="h-4 w-4 rotate-180 mr-1" />
-              Back to Sessions
-            </Button>
+            <select
+              value={selectedSessionId || ""}
+              onChange={(e) => setSelectedSessionId(e.target.value)}
+              className="text-sm border rounded-lg px-3 py-1.5 bg-white"
+            >
+              {sessions?.map((s) => (
+                <option key={s.session_id} value={s.session_id}>
+                  {s.session_id.slice(0, 12)}... ({s.event_count} events)
+                </option>
+              ))}
+            </select>
             <div className="h-4 w-px bg-border" />
             <div>
               <div className="flex items-center gap-2">
-                <span className="font-semibold text-sm">Session #sess_abc123</span>
-                <Badge variant="destructive" className="text-[10px]">Has Errors</Badge>
+                <span className="font-semibold text-sm">
+                  Session #{selectedSessionId?.slice(0, 8) || "..."}
+                </span>
+                {sessionData?.error_count && sessionData.error_count > 0 && (
+                  <Badge variant="destructive" className="text-[10px]">Has Errors</Badge>
+                )}
+                {sessionData?.frustration_score && sessionData.frustration_score > 50 && (
+                  <Badge className="bg-amber-500 text-white text-[10px]">High Frustration</Badge>
+                )}
               </div>
-              <span className="text-xs text-muted-foreground">Dec 9, 2025 • 4:32 duration • Mobile iOS</span>
+              <span className="text-xs text-muted-foreground">
+                {sessionData ? format(new Date(sessionData.created_at), "MMM d, yyyy • HH:mm") : "..."} • 
+                {formatDuration(totalDuration)} duration • {sessionData?.device_type || "Unknown"} {sessionData?.browser || ""}
+              </span>
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm">
-              <ExternalLink className="h-3 w-3 mr-1" />
-              Share
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={handleRunAnalysis}
+              disabled={sessionSummary.isPending}
+            >
+              {sessionSummary.isPending ? (
+                <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+              ) : (
+                <Sparkles className="h-3 w-3 mr-1" />
+              )}
+              Analyze with AI
             </Button>
             <Button className="bg-gradient-to-r from-[#0B3D91] to-[#00C2D8] text-white">
               <GitBranch className="h-3 w-3 mr-1" />
@@ -149,12 +265,12 @@ export const TraceflowSessionReplay = () => {
             
             <div className="space-y-3">
               <div className="flex items-center justify-between text-xs text-muted-foreground">
-                <span>0:45</span>
-                <span>4:32</span>
+                <span>{formatDuration(currentTime)}</span>
+                <span>{formatDuration(totalDuration)}</span>
               </div>
               <Slider 
                 value={[currentTime]} 
-                max={272} 
+                max={totalDuration || 1} 
                 step={1}
                 onValueChange={(v) => setCurrentTime(v[0])}
                 className="cursor-pointer"
@@ -186,23 +302,33 @@ export const TraceflowSessionReplay = () => {
             <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
               Event Timeline
             </h3>
-            <div className="space-y-1">
-              {timelineEvents.map((event, index) => (
-                <button
-                  key={index}
-                  className={cn(
-                    "w-full flex items-center gap-3 p-2 rounded-lg text-left transition-all hover:bg-muted/50",
-                    event.type === "rage_click" || event.type === "api_error" 
-                      ? "bg-red-50 border border-red-200" 
-                      : ""
-                  )}
-                >
-                  <span className="text-xs font-mono text-muted-foreground w-8">{event.time}</span>
-                  {getEventIcon(event.type)}
-                  <span className="text-xs truncate flex-1">{event.label}</span>
-                </button>
-              ))}
-            </div>
+            {eventsLoading ? (
+              <div className="flex justify-center py-8">
+                <Loader2 className="h-5 w-5 animate-spin" />
+              </div>
+            ) : timelineEvents.length === 0 ? (
+              <div className="text-center py-8 text-sm text-muted-foreground">
+                No events in this session
+              </div>
+            ) : (
+              <div className="space-y-1">
+                {timelineEvents.map((event, index) => (
+                  <button
+                    key={index}
+                    className={cn(
+                      "w-full flex items-center gap-3 p-2 rounded-lg text-left transition-all hover:bg-muted/50",
+                      event.type === "rage_click" || event.type === "dead_click" || event.type === "error"
+                        ? "bg-red-50 border border-red-200" 
+                        : ""
+                    )}
+                  >
+                    <span className="text-xs font-mono text-muted-foreground w-8">{event.time}</span>
+                    {getEventIcon(event.type)}
+                    <span className="text-xs truncate flex-1">{event.label}</span>
+                  </button>
+                ))}
+              </div>
+            )}
           </ScrollArea>
 
           {/* Overlay Toggles */}
@@ -313,16 +439,39 @@ export const TraceflowSessionReplay = () => {
             <TabsContent value="summary" className="flex-1 overflow-hidden">
               <ScrollArea className="h-full">
                 <div className="p-4 space-y-4">
-                  {/* TL;DR */}
-                  <Card className="bg-gradient-to-br from-[#0B3D91]/5 to-[#00C2D8]/10 border-0">
-                    <CardContent className="p-4">
-                      <div className="flex items-center gap-2 mb-2">
-                        <Sparkles className="h-4 w-4 text-[#0B3D91]" />
-                        <span className="text-xs font-semibold uppercase tracking-wider text-[#0B3D91]">TL;DR</span>
-                      </div>
-                      <p className="text-sm leading-relaxed">{aiSummary.tldr}</p>
-                    </CardContent>
-                  </Card>
+                  {!aiSummary ? (
+                    <Card className="bg-gradient-to-br from-slate-50 to-slate-100 border-0">
+                      <CardContent className="p-6 text-center">
+                        <Sparkles className="h-8 w-8 text-[#0B3D91] mx-auto mb-3 opacity-50" />
+                        <p className="text-sm text-muted-foreground mb-3">
+                          Click "Analyze with AI" to generate insights for this session
+                        </p>
+                        <Button 
+                          onClick={handleRunAnalysis}
+                          disabled={sessionSummary.isPending}
+                          className="bg-gradient-to-r from-[#0B3D91] to-[#00C2D8]"
+                        >
+                          {sessionSummary.isPending ? (
+                            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                          ) : (
+                            <Sparkles className="h-4 w-4 mr-2" />
+                          )}
+                          Run AI Analysis
+                        </Button>
+                      </CardContent>
+                    </Card>
+                  ) : (
+                    <>
+                      {/* TL;DR */}
+                      <Card className="bg-gradient-to-br from-[#0B3D91]/5 to-[#00C2D8]/10 border-0">
+                        <CardContent className="p-4">
+                          <div className="flex items-center gap-2 mb-2">
+                            <Sparkles className="h-4 w-4 text-[#0B3D91]" />
+                            <span className="text-xs font-semibold uppercase tracking-wider text-[#0B3D91]">TL;DR</span>
+                          </div>
+                          <p className="text-sm leading-relaxed">{aiSummary.tldr}</p>
+                        </CardContent>
+                      </Card>
 
                   {/* Key Moments */}
                   <div>
@@ -391,11 +540,13 @@ export const TraceflowSessionReplay = () => {
                     </CardContent>
                   </Card>
 
-                  {/* Create Ticket */}
-                  <Button className="w-full bg-gradient-to-r from-[#0B3D91] to-[#00C2D8] text-white">
-                    <GitBranch className="h-4 w-4 mr-2" />
-                    Create Jira Ticket with Full Context
-                  </Button>
+                      {/* Create Ticket */}
+                      <Button className="w-full bg-gradient-to-r from-[#0B3D91] to-[#00C2D8] text-white">
+                        <GitBranch className="h-4 w-4 mr-2" />
+                        Create Jira Ticket with Full Context
+                      </Button>
+                    </>
+                  )}
                 </div>
               </ScrollArea>
             </TabsContent>

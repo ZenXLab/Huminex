@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -17,74 +17,62 @@ import {
   Calendar,
   Filter,
   ChevronRight,
-  MapPin
+  MapPin,
+  Loader2,
+  Sparkles
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useTraceflowUXIssues, useTraceflowHeatmap } from "@/hooks/useTraceflow";
+import { useUXIssueDetection } from "@/hooks/useNeuroRouter";
+import { toast } from "sonner";
+import { formatDistanceToNow } from "date-fns";
 
-const issueHotspots = [
-  {
-    id: "1",
-    component: "OTPInput",
-    page: "/checkout",
-    severity: "critical",
-    occurrences: 1247,
-    impactedRevenue: "₹2.1M",
-    firstSeen: "2 days ago",
-    issues: ["Rage clicks", "Input failures", "API timeouts"]
-  },
-  {
-    id: "2",
-    component: "PricingTable",
-    page: "/pricing",
-    severity: "high",
-    occurrences: 892,
-    impactedRevenue: "₹890K",
-    firstSeen: "1 week ago",
-    issues: ["Confusion clicks", "Scroll abandonment"]
-  },
-  {
-    id: "3",
-    component: "PaymentForm",
-    page: "/checkout/payment",
-    severity: "high",
-    occurrences: 654,
-    impactedRevenue: "₹540K",
-    firstSeen: "3 days ago",
-    issues: ["Form errors", "Gateway timeouts"]
-  },
-  {
-    id: "4",
-    component: "SearchBar",
-    page: "/products",
-    severity: "medium",
-    occurrences: 423,
-    impactedRevenue: "₹120K",
-    firstSeen: "5 days ago",
-    issues: ["Dead clicks", "No results frustration"]
-  },
-  {
-    id: "5",
-    component: "MobileNav",
-    page: "Global",
-    severity: "medium",
-    occurrences: 312,
-    impactedRevenue: "₹80K",
-    firstSeen: "1 week ago",
-    issues: ["Touch target issues", "Overlay conflicts"]
-  }
-];
-
-const mockHeatmapData = [
-  { x: 45, y: 30, intensity: 95, type: "rage" },
-  { x: 60, y: 55, intensity: 75, type: "dead" },
-  { x: 25, y: 70, intensity: 60, type: "confusion" },
-  { x: 80, y: 40, intensity: 50, type: "normal" },
-  { x: 35, y: 85, intensity: 85, type: "error" },
-];
+interface IssueHotspot {
+  id: string;
+  component: string;
+  page: string;
+  severity: string;
+  occurrences: number;
+  impactedRevenue: string;
+  firstSeen: string;
+  issues: string[];
+}
 
 export const TraceflowUXIntelligence = () => {
-  const [selectedIssue, setSelectedIssue] = useState<string | null>("1");
+  const [selectedIssue, setSelectedIssue] = useState<string | null>(null);
   const [activeView, setActiveView] = useState<"heatmap" | "list">("heatmap");
+  const [selectedPage, setSelectedPage] = useState<string>("/");
+
+  // Fetch real UX issues
+  const { data: uxIssues, isLoading: issuesLoading } = useTraceflowUXIssues({ limit: 20, status: "open" });
+  const { data: heatmapData } = useTraceflowHeatmap(selectedPage);
+  const uxAnalysis = useUXIssueDetection();
+
+  // Transform UX issues to display format
+  const issueHotspots: IssueHotspot[] = useMemo(() => {
+    if (!uxIssues) return [];
+    return uxIssues.map((issue) => ({
+      id: issue.id,
+      component: issue.element_selector?.split(" ").pop() || "Unknown",
+      page: issue.page_url,
+      severity: issue.severity,
+      occurrences: issue.occurrence_count,
+      impactedRevenue: `₹${Math.round(issue.estimated_revenue_impact / 1000)}K`,
+      firstSeen: formatDistanceToNow(new Date(issue.first_seen), { addSuffix: true }),
+      issues: [issue.issue_type, issue.ai_diagnosis || "Pending analysis"].filter(Boolean),
+    }));
+  }, [uxIssues]);
+
+  // Auto-select first issue
+  useMemo(() => {
+    if (issueHotspots.length > 0 && !selectedIssue) {
+      setSelectedIssue(issueHotspots[0].id);
+    }
+  }, [issueHotspots, selectedIssue]);
+
+  // Count by severity
+  const criticalCount = issueHotspots.filter(i => i.severity === "critical").length;
+  const highCount = issueHotspots.filter(i => i.severity === "high").length;
 
   const getSeverityColor = (severity: string) => {
     switch (severity) {
@@ -104,6 +92,19 @@ export const TraceflowUXIntelligence = () => {
       default: return <Badge variant="secondary" className="text-[10px]">Low</Badge>;
     }
   };
+
+  // Generate heatmap spots from real data or use placeholders
+  const heatmapSpots = heatmapData && heatmapData.length > 0 
+    ? heatmapData.slice(0, 10).map((d, i) => ({
+        x: (d.x || 0) % 100,
+        y: (d.y || 0) % 100,
+        type: d.type === "rage_click" ? "rage" : d.type === "dead_click" ? "dead" : "normal",
+      }))
+    : [
+        { x: 45, y: 30, type: "rage" },
+        { x: 60, y: 55, type: "dead" },
+        { x: 25, y: 70, type: "normal" },
+      ];
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50/30">
@@ -253,7 +254,7 @@ export const TraceflowUXIntelligence = () => {
                   </div>
 
                   {/* Heatmap hotspots */}
-                  {mockHeatmapData.map((spot, i) => (
+                  {heatmapSpots.map((spot, i) => (
                     <button
                       key={i}
                       className={cn(
