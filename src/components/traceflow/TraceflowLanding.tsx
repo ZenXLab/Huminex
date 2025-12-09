@@ -475,9 +475,9 @@ export const TraceflowLanding = () => {
               <a href="#features" className="px-4 py-2 text-sm font-medium text-foreground/70 hover:text-foreground hover:bg-muted/50 rounded-lg transition-colors">
                 Features
               </a>
-              <a href="#how-it-works" className="px-4 py-2 text-sm font-medium text-foreground/70 hover:text-foreground hover:bg-muted/50 rounded-lg transition-colors">
+              <Link to="/traceflow/how-it-works" className="px-4 py-2 text-sm font-medium text-foreground/70 hover:text-foreground hover:bg-muted/50 rounded-lg transition-colors">
                 How It Works
-              </a>
+              </Link>
               <a href="#case-studies" className="px-4 py-2 text-sm font-medium text-foreground/70 hover:text-foreground hover:bg-muted/50 rounded-lg transition-colors">
                 Case Studies
               </a>
@@ -955,65 +955,126 @@ export const TraceflowLanding = () => {
         </div>
       </section>
 
-      {/* Case Studies Section */}
-      <section id="case-studies" className="py-16 lg:py-24 bg-background">
+      {/* Case Studies Section - Horizontally Scrollable */}
+      <section id="case-studies" className="py-16 lg:py-24 bg-background overflow-hidden">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             <Badge className="mb-4 bg-emerald-100 text-emerald-700 border-emerald-200">
-              Customer Success
+              <TrendingUp className="h-3 w-3 mr-1" />
+              Investor-Grade Results
             </Badge>
             <h2 className="text-3xl lg:text-4xl font-bold mb-4">
-              Real Results Across <span className="bg-gradient-to-r from-[#0B3D91] to-[#00C2D8] bg-clip-text text-transparent">Industries</span>
+              Proven ROI Across <span className="bg-gradient-to-r from-[#0B3D91] to-[#00C2D8] bg-clip-text text-transparent">8 Industries</span>
             </h2>
-            <p className="text-muted-foreground max-w-2xl mx-auto">
-              See how leading companies use TRACEFLOW to improve conversions, reduce support costs, and accelerate engineering velocity.
+            <p className="text-muted-foreground max-w-2xl mx-auto mb-2">
+              See how leading enterprises use TRACEFLOW to drive measurable business outcomes.
+            </p>
+            <p className="text-sm text-muted-foreground">
+              <span className="font-medium text-foreground">Scroll horizontally</span> to explore all case studies →
             </p>
           </div>
+        </div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {/* Horizontally scrollable container */}
+        <div className="relative">
+          {/* Gradient overlays for scroll indication */}
+          <div className="absolute left-0 top-0 bottom-0 w-20 bg-gradient-to-r from-background to-transparent z-10 pointer-events-none" />
+          <div className="absolute right-0 top-0 bottom-0 w-20 bg-gradient-to-l from-background to-transparent z-10 pointer-events-none" />
+          
+          <div className="flex gap-6 overflow-x-auto pb-6 px-4 sm:px-6 lg:px-8 scrollbar-hide snap-x snap-mandatory" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+            {/* Add padding for first/last items */}
+            <div className="flex-shrink-0 w-4 lg:w-[calc((100vw-1280px)/2)]" />
+            
             {caseStudies.map((study) => {
               const Icon = study.logo;
               return (
-                <Card key={study.id} className="group hover:shadow-xl transition-all duration-300 overflow-hidden">
-                  <div className={cn("h-1.5 bg-gradient-to-r", study.color)} />
+                <Card 
+                  key={study.id} 
+                  className="flex-shrink-0 w-[380px] lg:w-[420px] group hover:shadow-2xl transition-all duration-300 overflow-hidden snap-center border-2 hover:border-[#0B3D91]/30"
+                >
+                  <div className={cn("h-2 bg-gradient-to-r", study.color)} />
                   <CardContent className="p-6">
-                    <div className="flex items-center justify-between mb-4">
+                    {/* Header with company info and key metrics */}
+                    <div className="flex items-start justify-between mb-5">
                       <div className="flex items-center gap-3">
-                        <div className={cn("w-10 h-10 rounded-lg bg-gradient-to-br flex items-center justify-center", study.color)}>
-                          <Icon className="h-5 w-5 text-white" />
+                        <div className={cn("w-12 h-12 rounded-xl bg-gradient-to-br flex items-center justify-center shadow-lg", study.color)}>
+                          <Icon className="h-6 w-6 text-white" />
                         </div>
                         <div>
-                          <h4 className="font-semibold text-sm">{study.company}</h4>
-                          <p className="text-xs text-muted-foreground">{study.industry}</p>
+                          <h4 className="font-bold text-base">{study.company}</h4>
+                          <div className="flex items-center gap-2">
+                            <Badge variant="outline" className="text-[10px] py-0">{study.industry}</Badge>
+                            <span className="text-[10px] text-muted-foreground">{study.companySize}</span>
+                          </div>
                         </div>
                       </div>
-                      <div className="text-right">
-                        <p className="text-2xl font-bold bg-gradient-to-r from-[#0B3D91] to-[#00C2D8] bg-clip-text text-transparent">
+                    </div>
+
+                    {/* Key Metrics Grid */}
+                    <div className="grid grid-cols-3 gap-3 mb-5 p-3 rounded-xl bg-gradient-to-br from-[#0B3D91]/5 to-[#00C2D8]/5 border border-[#0B3D91]/10">
+                      <div className="text-center">
+                        <p className="text-xl font-bold bg-gradient-to-r from-[#0B3D91] to-[#00C2D8] bg-clip-text text-transparent">
                           {study.metric}
                         </p>
-                        <p className="text-[10px] text-muted-foreground">{study.metricLabel}</p>
+                        <p className="text-[9px] text-muted-foreground leading-tight">{study.metricLabel}</p>
+                      </div>
+                      <div className="text-center border-x border-[#0B3D91]/10">
+                        <p className="text-xl font-bold text-emerald-600">
+                          {study.revenue}
+                        </p>
+                        <p className="text-[9px] text-muted-foreground leading-tight">{study.revenueLabel}</p>
+                      </div>
+                      <div className="text-center">
+                        <p className="text-xl font-bold text-[#FF8A00]">
+                          {study.timeToValue}
+                        </p>
+                        <p className="text-[9px] text-muted-foreground leading-tight">Time to Value</p>
                       </div>
                     </div>
 
+                    {/* Challenge & Solution */}
                     <div className="space-y-3 mb-4">
                       <div>
-                        <p className="text-xs font-medium text-muted-foreground mb-1">Challenge</p>
-                        <p className="text-sm text-foreground/80">{study.challenge}</p>
+                        <p className="text-xs font-semibold text-red-600 mb-1 flex items-center gap-1">
+                          <span className="w-1.5 h-1.5 rounded-full bg-red-500" />
+                          Challenge
+                        </p>
+                        <p className="text-xs text-foreground/80 leading-relaxed">{study.challenge}</p>
                       </div>
                       <div>
-                        <p className="text-xs font-medium text-muted-foreground mb-1">Solution</p>
-                        <p className="text-sm text-foreground/80">{study.solution}</p>
+                        <p className="text-xs font-semibold text-emerald-600 mb-1 flex items-center gap-1">
+                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                          TRACEFLOW Solution
+                        </p>
+                        <p className="text-xs text-foreground/80 leading-relaxed">{study.solution}</p>
                       </div>
                     </div>
 
+                    {/* Results List */}
+                    <div className="mb-4 p-3 rounded-lg bg-muted/50">
+                      <p className="text-xs font-semibold mb-2">Key Results:</p>
+                      <div className="grid grid-cols-2 gap-1">
+                        {study.results?.slice(0, 4).map((result, i) => (
+                          <div key={i} className="flex items-center gap-1.5">
+                            <CheckCircle className="h-3 w-3 text-emerald-500 flex-shrink-0" />
+                            <span className="text-[10px] text-foreground/80">{result}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Testimonial */}
                     <div className="pt-4 border-t border-border">
-                      <p className="text-sm italic text-foreground/70 mb-2">"{study.testimonial}"</p>
-                      <div className="flex items-center gap-2">
-                        <div className="w-6 h-6 rounded-full bg-gradient-to-br from-[#0B3D91] to-[#00C2D8] flex items-center justify-center text-white text-[10px] font-medium">
-                          {study.author.split(' ').map(n => n[0]).join('')}
+                      <div className="relative">
+                        <Quote className="absolute -top-1 -left-1 h-4 w-4 text-[#0B3D91]/20" />
+                        <p className="text-xs italic text-foreground/70 mb-3 pl-4 leading-relaxed">"{study.testimonial}"</p>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#0B3D91] to-[#00C2D8] flex items-center justify-center text-white text-xs font-semibold shadow-lg">
+                          {study.avatar}
                         </div>
                         <div>
-                          <p className="text-xs font-medium">{study.author}</p>
+                          <p className="text-xs font-semibold">{study.author}</p>
                           <p className="text-[10px] text-muted-foreground">{study.role}</p>
                         </div>
                       </div>
@@ -1022,6 +1083,21 @@ export const TraceflowLanding = () => {
                 </Card>
               );
             })}
+            
+            {/* Add padding for last item */}
+            <div className="flex-shrink-0 w-4 lg:w-[calc((100vw-1280px)/2)]" />
+          </div>
+        </div>
+
+        {/* Scroll hint for mobile */}
+        <div className="flex justify-center mt-4 lg:hidden">
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <div className="flex gap-1">
+              {caseStudies.map((_, i) => (
+                <div key={i} className="w-2 h-2 rounded-full bg-[#0B3D91]/30" />
+              ))}
+            </div>
+            <span>Swipe to explore</span>
           </div>
         </div>
       </section>

@@ -40,6 +40,7 @@ import TraceflowDashboardPage from "./pages/TraceflowDashboard";
 import { TraceflowAuth } from "./pages/traceflow/TraceflowAuth";
 import { TraceflowOnboarding } from "./pages/traceflow/TraceflowOnboarding";
 import { TraceflowBilling } from "./pages/traceflow/TraceflowBilling";
+import TraceflowHowItWorks from "./pages/traceflow/TraceflowHowItWorks";
 
 // Admin pages
 import AdminAuth from "./pages/admin/AdminAuth";
@@ -99,6 +100,7 @@ const AnimatedRoutes = () => {
           <Route path="/traceflow/login" element={<TraceflowAuth />} />
           <Route path="/traceflow/onboarding" element={<TraceflowOnboarding />} />
           <Route path="/traceflow/billing" element={<TraceflowBilling />} />
+          <Route path="/traceflow/how-it-works" element={<TraceflowHowItWorks />} />
           <Route path="/traceflow/dashboard" element={<TraceflowDashboardPage />} />
           <Route path="/auth" element={<Auth />} />
           <Route path="/reset-password" element={<ResetPassword />} />
