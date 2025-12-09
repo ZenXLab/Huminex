@@ -217,24 +217,6 @@ export const PortalSidebar = ({ sidebarOpen, setSidebarOpen, user, profile, sign
                       </Link>
                     );
                   })}
-                    
-                    return (
-                      <Link
-                        key={item.name}
-                        to={item.href}
-                        className={cn(
-                          "flex items-center gap-3 px-3 py-2 rounded-xl transition-all duration-200 group",
-                          active 
-                            ? "bg-primary/10 text-primary" 
-                            : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
-                        )}
-                        onClick={() => setSidebarOpen(false)}
-                      >
-                        <Icon className={cn("w-4 h-4", active ? "text-primary" : "group-hover:text-foreground")} />
-                        <span className="text-sm font-medium">{item.name}</span>
-                      </Link>
-                    );
-                  })}
                 </div>
               </div>
             ))}
