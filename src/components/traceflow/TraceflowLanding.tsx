@@ -137,7 +137,7 @@ const featureCategories = [
   }
 ];
 
-// Case studies data
+// Case studies data - Investor-grade comprehensive case studies
 const caseStudies = [
   {
     id: 1,
@@ -146,11 +146,22 @@ const caseStudies = [
     logo: ShoppingCart,
     metric: "32%",
     metricLabel: "Conversion Increase",
-    challenge: "High cart abandonment rate with no visibility into why users dropped off during checkout.",
-    solution: "TRACEFLOW's AI Cortex identified payment gateway timeouts causing 68% of abandonments. Auto-generated Jira tickets led to 3-day fix.",
-    testimonial: "We recovered ₹2.3Cr in monthly revenue within 6 weeks of implementing TRACEFLOW.",
+    revenue: "₹2.3Cr",
+    revenueLabel: "Monthly Revenue Recovered",
+    timeToValue: "6 weeks",
+    challenge: "High cart abandonment rate with no visibility into why users dropped off during checkout. Traditional analytics showed WHERE users left but not WHY.",
+    solution: "TRACEFLOW's AI Cortex identified payment gateway timeouts causing 68% of abandonments. Session replay + distributed tracing pinpointed the exact API bottleneck. Auto-generated Jira tickets with code-level fix suggestions led to 3-day resolution.",
+    results: [
+      "32% increase in checkout conversion",
+      "68% reduction in payment failures",
+      "₹2.3Cr monthly revenue recovered",
+      "3-day mean time to resolution"
+    ],
+    testimonial: "We recovered ₹2.3Cr in monthly revenue within 6 weeks of implementing TRACEFLOW. The AI session summaries saved our support team 20+ hours per week.",
     author: "Priya Sharma",
-    role: "VP Product, ShopMax",
+    role: "VP Product, ShopMax India",
+    avatar: "PS",
+    companySize: "500+ employees",
     color: "from-orange-500 to-red-500"
   },
   {
@@ -160,11 +171,22 @@ const caseStudies = [
     logo: Landmark,
     metric: "70%",
     metricLabel: "Faster Issue Resolution",
-    challenge: "Compliance requirements made debugging slow. Engineers spent hours watching session replays.",
-    solution: "AI Session Summaries reduced triage time from 4 hours to 45 minutes. Zero-PII mode ensured full compliance.",
-    testimonial: "TRACEFLOW's tokenization-first approach let us stay compliant while getting full visibility.",
+    revenue: "$1.2M",
+    revenueLabel: "Annual Support Cost Savings",
+    timeToValue: "4 weeks",
+    challenge: "Compliance requirements made debugging slow. Engineers spent 4+ hours watching session replays. Zero-PII requirements blocked most analytics tools.",
+    solution: "AI Session Summaries reduced triage time from 4 hours to 45 minutes. Zero-PII tokenization mode ensured GDPR/PCI-DSS compliance while maintaining full behavioral visibility.",
+    results: [
+      "70% faster issue resolution",
+      "4 hours → 45 minutes triage time",
+      "100% PCI-DSS compliance maintained",
+      "$1.2M annual support cost savings"
+    ],
+    testimonial: "TRACEFLOW's tokenization-first approach let us stay compliant while getting full visibility. No other tool offered this level of compliance with this level of insight.",
     author: "Rahul Mehta",
-    role: "CTO, PaySecure",
+    role: "CTO, PaySecure Bank",
+    avatar: "RM",
+    companySize: "2000+ employees",
     color: "from-blue-500 to-cyan-500"
   },
   {
@@ -174,11 +196,22 @@ const caseStudies = [
     logo: Heart,
     metric: "45%",
     metricLabel: "Reduced Support Tickets",
-    challenge: "Patients struggling with appointment booking but support couldn't reproduce issues.",
-    solution: "Session replay + voice fusion aligned complaints with exact user journeys. UX Intelligence auto-detected form accessibility issues.",
-    testimonial: "Our patient satisfaction scores jumped 28 points after fixing the issues TRACEFLOW found.",
+    revenue: "28pts",
+    revenueLabel: "NPS Score Improvement",
+    timeToValue: "8 weeks",
+    challenge: "Patients struggling with appointment booking but support couldn't reproduce issues. Voice complaints didn't match logged data. HIPAA compliance required.",
+    solution: "Session replay + voice fusion aligned patient complaints with exact user journeys. UX Intelligence auto-detected form accessibility issues affecting elderly users. HIPAA-compliant deployment.",
+    results: [
+      "45% reduction in support tickets",
+      "28-point NPS improvement",
+      "23 accessibility issues detected",
+      "100% HIPAA compliance"
+    ],
+    testimonial: "Our patient satisfaction scores jumped 28 points after fixing the issues TRACEFLOW found. The voice + session fusion is revolutionary for understanding patient frustration.",
     author: "Dr. Anita Desai",
-    role: "Digital Head, MediCare",
+    role: "Digital Transformation Head, MediCare Plus",
+    avatar: "AD",
+    companySize: "5000+ employees",
     color: "from-pink-500 to-rose-500"
   },
   {
@@ -188,11 +221,22 @@ const caseStudies = [
     logo: GraduationCap,
     metric: "58%",
     metricLabel: "Higher Course Completion",
-    challenge: "Students dropping off mid-course with no insight into why content wasn't engaging.",
-    solution: "Journey Intelligence mapped learning paths. AI identified confusing UI patterns in video player controls.",
-    testimonial: "TRACEFLOW showed us exactly where students got frustrated. Course completion doubled.",
+    revenue: "2.4x",
+    revenueLabel: "Student Engagement Increase",
+    timeToValue: "5 weeks",
+    challenge: "Students dropping off mid-course with no insight into why content wasn't engaging. Traditional analytics showed course exit rates but not behavioral causes.",
+    solution: "Journey Intelligence mapped complete learning paths. AI identified confusing UI patterns in video player controls and content navigation. Heatmaps revealed ignored UI elements.",
+    results: [
+      "58% higher course completion",
+      "2.4x student engagement increase",
+      "12 critical UX issues identified",
+      "40% reduction in drop-off"
+    ],
+    testimonial: "TRACEFLOW showed us exactly where students got frustrated. Course completion doubled after we fixed the video player controls the AI identified.",
     author: "Vikram Singh",
-    role: "Founder, LearnFirst",
+    role: "Founder & CEO, LearnFirst EdTech",
+    avatar: "VS",
+    companySize: "200+ employees",
     color: "from-emerald-500 to-teal-500"
   },
   {
@@ -202,11 +246,22 @@ const caseStudies = [
     logo: Factory,
     metric: "89%",
     metricLabel: "Faster Onboarding",
-    challenge: "Internal ERP tool had poor adoption. Employees avoided digital workflows.",
-    solution: "UX DNA Mapping revealed 23 inconsistent UI patterns. Component-level fixes improved usability dramatically.",
-    testimonial: "Our factory floor adoption went from 34% to 91% in 3 months.",
+    revenue: "57%",
+    revenueLabel: "Adoption Rate Increase",
+    timeToValue: "12 weeks",
+    challenge: "Internal ERP tool had poor adoption. Employees avoided digital workflows and reverted to paper processes. No visibility into employee struggles.",
+    solution: "UX DNA Mapping revealed 23 inconsistent UI patterns confusing users. Component-level anomaly detection found slow-loading modules. AI-generated training recommendations.",
+    results: [
+      "89% faster employee onboarding",
+      "34% → 91% adoption rate",
+      "23 UI inconsistencies fixed",
+      "₹45L annual productivity gains"
+    ],
+    testimonial: "Our factory floor adoption went from 34% to 91% in 3 months. TRACEFLOW's UX DNA Mapping found issues we'd been blind to for years.",
     author: "Suresh Kumar",
-    role: "IT Director, TechFab",
+    role: "IT Director, TechFab Industries",
+    avatar: "SK",
+    companySize: "3000+ employees",
     color: "from-slate-500 to-zinc-600"
   },
   {
@@ -216,12 +271,73 @@ const caseStudies = [
     logo: Truck,
     metric: "4.2x",
     metricLabel: "ROI in 6 Months",
-    challenge: "Driver app crashes causing delivery delays. No correlation between app issues and operational impact.",
-    solution: "Observability Layer correlated mobile crashes with route failures. Experience-to-Code linked issues to specific commits.",
-    testimonial: "We now fix app issues before they impact deliveries. Game changer for operations.",
+    revenue: "₹1.8Cr",
+    revenueLabel: "Annual Cost Savings",
+    timeToValue: "3 weeks",
+    challenge: "Driver app crashes causing delivery delays. No correlation between app issues and operational impact. Engineering and ops teams blamed each other.",
+    solution: "Observability Layer correlated mobile crashes with route failures using OTel-powered distributed tracing. Experience-to-Code linked issues to specific commits and developers.",
+    results: [
+      "4.2x ROI in 6 months",
+      "60% reduction in app crashes",
+      "₹1.8Cr annual cost savings",
+      "Proactive issue detection"
+    ],
+    testimonial: "We now fix app issues before they impact deliveries. The experience-to-code correlation ended the blame game between engineering and operations.",
     author: "Deepak Raj",
-    role: "Tech Lead, FastTrack",
+    role: "VP Technology, FastTrack Delivery",
+    avatar: "DR",
+    companySize: "8000+ employees",
     color: "from-amber-500 to-yellow-500"
+  },
+  {
+    id: 7,
+    industry: "SaaS",
+    company: "CloudOps Platform",
+    logo: Building2,
+    metric: "35%",
+    metricLabel: "Churn Reduction",
+    revenue: "$2.1M",
+    revenueLabel: "ARR Saved",
+    timeToValue: "6 weeks",
+    challenge: "High churn rate with no visibility into product friction. Customer success team couldn't identify at-risk accounts until too late.",
+    solution: "Journey Causality Engine identified that users who skipped onboarding wizard churned 4x more. AI Churn Prediction flagged at-risk accounts 30 days in advance.",
+    results: [
+      "35% reduction in churn",
+      "$2.1M ARR saved annually",
+      "30-day churn prediction accuracy",
+      "2.3x feature adoption increase"
+    ],
+    testimonial: "TRACEFLOW's churn prediction saved us $2.1M in ARR. We now proactively reach out to at-risk customers before they even think about leaving.",
+    author: "Sarah Chen",
+    role: "Chief Customer Officer, CloudOps",
+    avatar: "SC",
+    companySize: "150+ employees",
+    color: "from-violet-500 to-purple-500"
+  },
+  {
+    id: 8,
+    industry: "Insurance",
+    company: "SecureLife Insurance",
+    logo: Shield,
+    metric: "52%",
+    metricLabel: "Faster Claims Processing",
+    revenue: "89%",
+    revenueLabel: "Customer Satisfaction",
+    timeToValue: "10 weeks",
+    challenge: "Digital claims process had high abandonment. Customers called support frustrated. No visibility into mobile app experience.",
+    solution: "Mobile gesture capture revealed swipe confusion in claims wizard. AI Session Intelligence auto-summarized support escalations with linked sessions.",
+    results: [
+      "52% faster claims processing",
+      "89% customer satisfaction score",
+      "40% reduction in support calls",
+      "Mobile-first optimization"
+    ],
+    testimonial: "TRACEFLOW revealed that our mobile claims wizard was causing 60% of abandonments due to gesture confusion. The fix took 2 days and transformed our metrics.",
+    author: "Amit Patel",
+    role: "Digital Head, SecureLife Insurance",
+    avatar: "AP",
+    companySize: "4000+ employees",
+    color: "from-indigo-500 to-blue-500"
   }
 ];
 
