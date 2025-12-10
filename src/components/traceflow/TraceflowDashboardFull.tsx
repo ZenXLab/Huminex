@@ -38,6 +38,7 @@ import { TraceflowClickAnalysis } from "./TraceflowClickAnalysis";
 import { TraceflowScrollDepth } from "./TraceflowScrollDepth";
 import { TraceflowRecentEvents } from "./TraceflowRecentEvents";
 import { TraceflowPrivacyControls } from "./TraceflowPrivacyControls";
+import { TraceflowFeatureMatrixDashboard } from "./TraceflowFeatureMatrixDashboard";
 import { useTraceflowAuth } from "@/hooks/useTraceflowAuth";
 import { useTraceflowRealtime } from "@/hooks/useTraceflowRBAC";
 
