@@ -3,6 +3,7 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Switch } from "@/components/ui/switch";
+import { FeatureStageIndicator } from "@/components/ui/feature-badge";
 import { 
   GitBranch, 
   RefreshCw, 
@@ -53,7 +54,10 @@ export const TemporalWorkflowsModule = () => {
               <GitBranch className="h-4 w-4 text-white" />
             </div>
             <div>
-              <CardTitle className="text-sm">Temporal Workflows</CardTitle>
+              <div className="flex items-center gap-1.5">
+                <CardTitle className="text-sm">Temporal Workflows</CardTitle>
+                <FeatureStageIndicator featureId="temporal-workflows-module" size="sm" />
+              </div>
               <p className="text-xs text-muted-foreground">Durable orchestration layer</p>
             </div>
           </div>

@@ -3,6 +3,7 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Switch } from "@/components/ui/switch";
+import { FeatureStageIndicator } from "@/components/ui/feature-badge";
 import { 
   Database, 
   HardDrive, 
@@ -54,7 +55,10 @@ export const StorageIndexingModule = () => {
               <Database className="h-4 w-4 text-white" />
             </div>
             <div>
-              <CardTitle className="text-sm">Storage & Indexing</CardTitle>
+              <div className="flex items-center gap-1.5">
+                <CardTitle className="text-sm">Storage & Indexing</CardTitle>
+                <FeatureStageIndicator featureId="storage-indexing-module" size="sm" />
+              </div>
               <p className="text-xs text-muted-foreground">Objects, metadata & vectors</p>
             </div>
           </div>

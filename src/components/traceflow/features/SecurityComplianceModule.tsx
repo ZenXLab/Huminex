@@ -26,6 +26,7 @@ export const SecurityComplianceModule = () => {
       description="Enterprise-grade security with zero-PII architecture and compliance frameworks"
       icon={<Shield className="h-5 w-5 text-blue-500" />}
       category="I"
+      featureId="security-compliance-module"
       stats={securityData.stats}
       status={featureMatrixStatus['I']}
       accentColor="blue"

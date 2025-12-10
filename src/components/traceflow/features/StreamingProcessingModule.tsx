@@ -3,6 +3,7 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Switch } from "@/components/ui/switch";
+import { FeatureStageIndicator } from "@/components/ui/feature-badge";
 import { 
   Radio, 
   Zap, 
@@ -54,7 +55,10 @@ export const StreamingProcessingModule = () => {
               <Radio className="h-4 w-4 text-white" />
             </div>
             <div>
-              <CardTitle className="text-sm">Streaming & Processing</CardTitle>
+              <div className="flex items-center gap-1.5">
+                <CardTitle className="text-sm">Streaming & Processing</CardTitle>
+                <FeatureStageIndicator featureId="streaming-module" size="sm" />
+              </div>
               <p className="text-xs text-muted-foreground">Event backbone & workers</p>
             </div>
           </div>

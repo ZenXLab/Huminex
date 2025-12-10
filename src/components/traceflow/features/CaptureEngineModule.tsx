@@ -27,6 +27,7 @@ export const CaptureEngineModule = () => {
       description="Full-stack event capture across web, mobile, and hybrid applications"
       icon={<Radio className="h-5 w-5 text-primary" />}
       category="A"
+      featureId="capture-engine-module"
       stats={captureEngineData.stats}
       status={featureMatrixStatus['A']}
       accentColor="primary"

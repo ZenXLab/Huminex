@@ -44,6 +44,7 @@ export const AIAgentSystemModule = () => {
       description="NeuroRouter-powered multi-LLM orchestration with specialized AI agents"
       icon={<Bot className="h-5 w-5 text-purple-500" />}
       category="D"
+      featureId="ai-agent-module"
       stats={aiAgentSystemData.stats}
       status={featureMatrixStatus['D']}
       accentColor="purple"

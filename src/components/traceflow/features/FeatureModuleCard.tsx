@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
+import { FeatureBadge } from "@/components/ui/feature-badge";
 import {
   ChevronDown,
   ChevronUp,
@@ -35,6 +36,7 @@ interface FeatureModuleCardProps {
   description: string;
   icon: React.ReactNode;
   category: string;
+  featureId?: string; // For automatic badge lifecycle
   stats?: StatItem[];
   status: {
     implemented: number;
@@ -55,6 +57,7 @@ export const FeatureModuleCard = ({
   description,
   icon,
   category,
+  featureId,
   stats,
   status,
   children,
@@ -130,10 +133,11 @@ export const FeatureModuleCard = ({
                   {icon}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-1">
+                  <div className="flex items-center gap-2 mb-1 flex-wrap">
                     <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-4">
                       {category}
                     </Badge>
+                    {featureId && <FeatureBadge featureId={featureId} />}
                     <CardTitle className="text-sm font-semibold truncate">{title}</CardTitle>
                   </div>
                   <CardDescription className="text-xs line-clamp-1">{description}</CardDescription>

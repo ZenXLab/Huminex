@@ -26,6 +26,7 @@ export const EnterpriseRunnerModule = () => {
       description="Self-hosted ingest agent with local processing, tokenization, and buffering"
       icon={<Server className="h-5 w-5 text-emerald-500" />}
       category="B"
+      featureId="enterprise-runner-module"
       stats={enterpriseRunnerData.stats}
       status={featureMatrixStatus['B']}
       accentColor="emerald"
