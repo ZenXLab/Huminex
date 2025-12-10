@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
+import { TraceflowCompetitiveMatrix } from "./TraceflowCompetitiveMatrix";
 import {
   Carousel,
   CarouselContent,
@@ -475,6 +476,10 @@ export const TraceflowLanding = () => {
               <a href="#features" className="px-4 py-2 text-sm font-medium text-foreground/70 hover:text-foreground hover:bg-muted/50 rounded-lg transition-colors">
                 Features
               </a>
+              <a href="#why-traceflow" className="px-4 py-2 text-sm font-medium text-foreground/70 hover:text-foreground hover:bg-muted/50 rounded-lg transition-colors flex items-center gap-1.5">
+                <Crown className="h-3 w-3 text-[#FF8A00]" />
+                Why TRACEFLOW
+              </a>
               <Link to="/traceflow/how-it-works" className="px-4 py-2 text-sm font-medium text-foreground/70 hover:text-foreground hover:bg-muted/50 rounded-lg transition-colors">
                 How It Works
               </Link>
@@ -527,9 +532,13 @@ export const TraceflowLanding = () => {
             <a href="#features" onClick={() => setMobileMenuOpen(false)} className="block px-4 py-3 text-sm font-medium text-foreground/80 hover:bg-muted/50 rounded-lg">
               Features
             </a>
-            <a href="#how-it-works" onClick={() => setMobileMenuOpen(false)} className="block px-4 py-3 text-sm font-medium text-foreground/80 hover:bg-muted/50 rounded-lg">
-              How It Works
+            <a href="#why-traceflow" onClick={() => setMobileMenuOpen(false)} className="block px-4 py-3 text-sm font-medium text-foreground/80 hover:bg-muted/50 rounded-lg flex items-center gap-2">
+              <Crown className="h-3 w-3 text-[#FF8A00]" />
+              Why TRACEFLOW
             </a>
+            <Link to="/traceflow/how-it-works" onClick={() => setMobileMenuOpen(false)} className="block px-4 py-3 text-sm font-medium text-foreground/80 hover:bg-muted/50 rounded-lg">
+              How It Works
+            </Link>
             <a href="#case-studies" onClick={() => setMobileMenuOpen(false)} className="block px-4 py-3 text-sm font-medium text-foreground/80 hover:bg-muted/50 rounded-lg">
               Case Studies
             </a>
@@ -903,6 +912,9 @@ export const TraceflowLanding = () => {
           </div>
         </div>
       </section>
+
+      {/* Why TRACEFLOW - Competitive Matrix */}
+      <TraceflowCompetitiveMatrix />
 
       {/* World-First Features / How It Works */}
       <section id="how-it-works" className="py-16 lg:py-24 bg-gradient-to-br from-[#0B3D91] via-[#0B3D91] to-[#00C2D8] text-white relative overflow-hidden">
