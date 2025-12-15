@@ -4,16 +4,6 @@ project_id = "wnentybljoyjhizsdhrt"
 [functions.razorpay-webhook]
 verify_jwt = false
 
-# TRACEFLOW functions - public for capture, authenticated for analysis
-[functions.traceflow-capture]
-verify_jwt = false
-
-[functions.traceflow-neurorouter]
-verify_jwt = true
-
-[functions.traceflow-ai-analyze]
-verify_jwt = true
-
 # Functions that require JWT authentication
 [functions.send-invoice-email]
 verify_jwt = true
