@@ -272,10 +272,12 @@ export const Header = ({ onQuoteClick }: HeaderProps) => {
 
           {/* Desktop Navigation */}
           <div className="hidden lg:flex items-center gap-0.5" role="menubar">
-            {/* TRACEFLOW Flagship Product */}
-            <Link 
-              to="/traceflow"
-              className="relative flex items-center gap-1.5 px-3 py-2 text-foreground font-semibold text-sm rounded-lg transition-all duration-200 group bg-gradient-to-r from-[#0B3D91]/10 to-[#00C2D8]/10 hover:from-[#0B3D91]/20 hover:to-[#00C2D8]/20 border border-[#00C2D8]/20"
+            {/* TRACEFLOW Flagship Product - External Link */}
+            <a 
+              href="https://traceflow.cropxon.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="relative flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1.5 sm:py-2 text-foreground font-semibold text-xs sm:text-sm rounded-lg transition-all duration-200 group bg-gradient-to-r from-[#0B3D91]/10 to-[#00C2D8]/10 hover:from-[#0B3D91]/20 hover:to-[#00C2D8]/20 border border-[#00C2D8]/20 hover:scale-[1.02] hover:shadow-lg hover:shadow-[#00C2D8]/10"
             >
               <div className="absolute -top-1 -right-1">
                 <span className="relative flex h-2 w-2">
@@ -283,10 +285,10 @@ export const Header = ({ onQuoteClick }: HeaderProps) => {
                   <span className="relative inline-flex rounded-full h-2 w-2 bg-[#FF8A00]"></span>
                 </span>
               </div>
-              <Zap className="w-4 h-4 text-[#00C2D8]" />
-              <span className="bg-gradient-to-r from-[#0B3D91] to-[#00C2D8] bg-clip-text text-transparent">TRACEFLOW</span>
-              <span className="text-[9px] font-bold text-[#FF8A00] uppercase tracking-wide">DXI</span>
-            </Link>
+              <Zap className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#00C2D8]" />
+              <span className="bg-gradient-to-r from-[#0B3D91] to-[#00C2D8] bg-clip-text text-transparent whitespace-nowrap">TRACEFLOW</span>
+              <span className="text-[8px] sm:text-[9px] font-bold text-[#FF8A00] uppercase tracking-wide">DXI</span>
+            </a>
 
             {/* Features Dropdown */}
             <div 
@@ -581,24 +583,29 @@ export const Header = ({ onQuoteClick }: HeaderProps) => {
           }`}
         >
           <div className="py-4">
-            {/* TRACEFLOW Flagship Link - Mobile */}
-            <Link
-              to="/traceflow"
+            {/* TRACEFLOW Flagship Link - Mobile (External) */}
+            <a
+              href="https://traceflow.cropxon.com"
+              target="_blank"
+              rel="noopener noreferrer"
               onClick={() => setMobileMenuOpen(false)}
-              className="flex items-center gap-3 mx-4 mb-4 px-4 py-3 rounded-xl bg-gradient-to-r from-[#0B3D91]/10 to-[#00C2D8]/10 border border-[#00C2D8]/20"
+              className="flex items-center gap-3 mx-4 mb-4 px-4 py-3 rounded-xl bg-gradient-to-r from-[#0B3D91]/10 to-[#00C2D8]/10 border border-[#00C2D8]/20 hover:from-[#0B3D91]/15 hover:to-[#00C2D8]/15 transition-all duration-200 active:scale-[0.98]"
             >
-              <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-[#0B3D91] to-[#00C2D8] flex items-center justify-center">
+              <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-[#0B3D91] to-[#00C2D8] flex items-center justify-center shadow-lg shadow-[#00C2D8]/20">
                 <Zap className="w-5 h-5 text-white" />
               </div>
-              <div className="flex-1">
+              <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
                   <span className="font-semibold bg-gradient-to-r from-[#0B3D91] to-[#00C2D8] bg-clip-text text-transparent">TRACEFLOW</span>
                   <span className="text-[9px] font-bold text-[#FF8A00] uppercase tracking-wide px-1.5 py-0.5 bg-[#FF8A00]/10 rounded">DXI</span>
                 </div>
                 <span className="text-xs text-muted-foreground">Digital Experience Intelligence</span>
               </div>
-              <ChevronRight className="w-4 h-4 text-muted-foreground" />
-            </Link>
+              <div className="flex items-center gap-1 text-muted-foreground">
+                <span className="text-[10px] hidden xs:inline">Visit</span>
+                <ChevronRight className="w-4 h-4" />
+              </div>
+            </a>
 
             {/* Mobile Sections */}
             {renderMobileSection("Features", modules, "features", Sparkles)}
