@@ -54,7 +54,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link, useLocation } from "react-router-dom";
-import huminexLogo from "@/assets/huminex-logo.png";
+import huminexIcon from "@/assets/huminex-icon.png";
 import { useAuth } from "@/hooks/useAuth";
 import { useTheme } from "@/hooks/useTheme";
 
@@ -249,46 +249,29 @@ export const Header = ({ onQuoteClick }: HeaderProps) => {
       <nav className="container mx-auto px-4 lg:px-8" aria-label="Main navigation">
         <div className={`flex items-center justify-between transition-all duration-300 ${isScrolled ? 'h-14' : 'h-16 lg:h-18'}`}>
           {/* Logo */}
-          <Link to="/" className="flex items-center gap-2.5 group" aria-label="CropXon HUMINEX Home">
+          <Link to="/" className="flex items-center gap-2.5 group" aria-label="HUMINEX by CropXon Home">
             <div className="relative">
               <div className="absolute inset-0 bg-primary/20 blur-2xl rounded-full opacity-0 group-hover:opacity-100 transition-all duration-500" />
               <img 
-                src={huminexLogo} 
-                alt="CropXon HUMINEX Logo" 
+                src={huminexIcon} 
+                alt="HUMINEX Logo" 
                 className={`relative object-contain transition-all duration-300 group-hover:scale-105 ${isScrolled ? 'h-7 lg:h-8 w-7 lg:w-8' : 'h-9 lg:h-10 w-9 lg:w-10'}`}
                 width={40}
                 height={40}
               />
             </div>
             <div className="flex flex-col">
-              <span className={`text-foreground font-heading font-bold tracking-tight leading-none transition-all duration-300 ${isScrolled ? 'text-xs lg:text-sm' : 'text-sm lg:text-base'}`}>
-                CropXon
-              </span>
-              <span className={`text-primary font-heading font-semibold leading-none mt-0.5 transition-all duration-300 ${isScrolled ? 'text-[10px]' : 'text-xs'}`}>
+              <span className={`text-primary font-heading font-bold tracking-tight leading-none transition-all duration-300 ${isScrolled ? 'text-sm lg:text-base' : 'text-base lg:text-lg'}`}>
                 HUMINEX
+              </span>
+              <span className={`text-muted-foreground font-medium leading-none mt-0.5 transition-all duration-300 ${isScrolled ? 'text-[9px]' : 'text-[10px]'}`}>
+                by CROPXON
               </span>
             </div>
           </Link>
 
           {/* Desktop Navigation */}
           <div className="hidden lg:flex items-center gap-0.5" role="menubar">
-            {/* TRACEFLOW Flagship Product - External Link */}
-            <a 
-              href="https://traceflow.cropxon.com"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="relative flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1.5 sm:py-2 text-foreground font-semibold text-xs sm:text-sm rounded-lg transition-all duration-200 group bg-gradient-to-r from-[#0B3D91]/10 to-[#00C2D8]/10 hover:from-[#0B3D91]/20 hover:to-[#00C2D8]/20 border border-[#00C2D8]/20 hover:scale-[1.02] hover:shadow-lg hover:shadow-[#00C2D8]/10"
-            >
-              <div className="absolute -top-1 -right-1">
-                <span className="relative flex h-2 w-2">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#FF8A00] opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-2 w-2 bg-[#FF8A00]"></span>
-                </span>
-              </div>
-              <Zap className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#00C2D8]" />
-              <span className="bg-gradient-to-r from-[#0B3D91] to-[#00C2D8] bg-clip-text text-transparent whitespace-nowrap">TRACEFLOW</span>
-              <span className="text-[8px] sm:text-[9px] font-bold text-[#FF8A00] uppercase tracking-wide">DXI</span>
-            </a>
 
             {/* Features Dropdown */}
             <div 
@@ -583,31 +566,6 @@ export const Header = ({ onQuoteClick }: HeaderProps) => {
           }`}
         >
           <div className="py-4">
-            {/* TRACEFLOW Flagship Link - Mobile (External) */}
-            <a
-              href="https://traceflow.cropxon.com"
-              target="_blank"
-              rel="noopener noreferrer"
-              onClick={() => setMobileMenuOpen(false)}
-              className="flex items-center gap-3 mx-4 mb-4 px-4 py-3 rounded-xl bg-gradient-to-r from-[#0B3D91]/10 to-[#00C2D8]/10 border border-[#00C2D8]/20 hover:from-[#0B3D91]/15 hover:to-[#00C2D8]/15 transition-all duration-200 active:scale-[0.98]"
-            >
-              <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-[#0B3D91] to-[#00C2D8] flex items-center justify-center shadow-lg shadow-[#00C2D8]/20">
-                <Zap className="w-5 h-5 text-white" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2">
-                  <span className="font-semibold bg-gradient-to-r from-[#0B3D91] to-[#00C2D8] bg-clip-text text-transparent">TRACEFLOW</span>
-                  <span className="text-[9px] font-bold text-[#FF8A00] uppercase tracking-wide px-1.5 py-0.5 bg-[#FF8A00]/10 rounded">DXI</span>
-                </div>
-                <span className="text-xs text-muted-foreground">Digital Experience Intelligence</span>
-              </div>
-              <div className="flex items-center gap-1 text-muted-foreground">
-                <span className="text-[10px] hidden xs:inline">Visit</span>
-                <ChevronRight className="w-4 h-4" />
-              </div>
-            </a>
-
-            {/* Mobile Sections */}
             {renderMobileSection("Features", modules, "features", Sparkles)}
             {renderMobileSection("Industries", industries, "industries", Globe)}
             {renderMobileSection("Services", services, "services", Code)}

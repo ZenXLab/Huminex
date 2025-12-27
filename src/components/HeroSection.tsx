@@ -4,7 +4,7 @@ import { ArrowRight, Calculator, Sparkles } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useState, useEffect } from "react";
-import huminexLogo from "@/assets/huminex-logo.png";
+import huminexIcon from "@/assets/huminex-icon.png";
 
 interface HeroSectionProps {
   onQuoteClick?: () => void;
@@ -68,7 +68,7 @@ export const HeroSection = ({ onQuoteClick }: HeroSectionProps) => {
               <div className="relative w-28 h-28 sm:w-32 sm:h-32 flex items-center justify-center">
                 <div className="absolute inset-0 rounded-full bg-gradient-to-br from-primary/20 to-accent/20 animate-[spin_8s_ease-in-out_infinite]" />
                 <img 
-                  src={huminexLogo} 
+                  src={huminexIcon} 
                   alt="HUMINEX" 
                   className="relative h-20 w-20 sm:h-24 sm:w-24 object-contain animate-float drop-shadow-2xl z-10 group-hover:scale-110 transition-transform duration-500"
                 />
