@@ -1,6 +1,6 @@
 import { Mail, MapPin, FileText, Shield, HeadphonesIcon, ArrowUpRight, Building2 } from "lucide-react";
 import { Link } from "react-router-dom";
-import huminexLogo from "@/assets/huminex-logo.png";
+import huminexIcon from "@/assets/huminex-icon.png";
 
 const footerLinks = {
   services: [
@@ -47,8 +47,8 @@ export const Footer = () => {
             <Link to="/" className="inline-block group mb-4">
               <div className="flex items-center gap-3">
                 <img 
-                  src={huminexLogo} 
-                  alt="CropXon Innovations Pvt. Ltd." 
+                  src={huminexIcon} 
+                  alt="HUMINEX by CropXon" 
                   className="h-12 w-auto transition-transform duration-300 group-hover:scale-105 dark:brightness-110 dark:contrast-125" 
                 />
               </div>
