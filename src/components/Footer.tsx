@@ -1,6 +1,6 @@
 import { Mail, MapPin, FileText, Shield, HeadphonesIcon, ArrowUpRight, Building2 } from "lucide-react";
 import { Link } from "react-router-dom";
-import cropxonLogo from "@/assets/cropxon-logo.png";
+import huminexLogo from "@/assets/huminex-logo.png";
 
 const footerLinks = {
   services: [
@@ -27,10 +27,10 @@ const footerLinks = {
 };
 
 const contactEmails = [
-  { label: "General", email: "hello@atlas.cropxon.com", icon: Mail },
-  { label: "Support", email: "support@atlas.cropxon.com", icon: HeadphonesIcon },
-  { label: "Legal", email: "legal@atlas.cropxon.com", icon: FileText },
-  { label: "HR", email: "hr@atlas.cropxon.com", icon: Shield },
+  { label: "General", email: "hello@huminex.cropxon.com", icon: Mail },
+  { label: "Support", email: "support@huminex.cropxon.com", icon: HeadphonesIcon },
+  { label: "Legal", email: "legal@huminex.cropxon.com", icon: FileText },
+  { label: "HR", email: "hr@huminex.cropxon.com", icon: Shield },
 ];
 
 export const Footer = () => {
@@ -47,7 +47,7 @@ export const Footer = () => {
             <Link to="/" className="inline-block group mb-4">
               <div className="flex items-center gap-3">
                 <img 
-                  src={cropxonLogo} 
+                  src={huminexLogo} 
                   alt="CropXon Innovations Pvt. Ltd." 
                   className="h-12 w-auto transition-transform duration-300 group-hover:scale-105 dark:brightness-110 dark:contrast-125" 
                 />
@@ -56,7 +56,7 @@ export const Footer = () => {
             <p className="text-lg font-heading font-bold text-foreground mb-1 tracking-tight">
               CropXon Innovations Pvt. Ltd.
             </p>
-            <p className="text-base font-medium text-primary mb-3">ATLAS Division</p>
+            <p className="text-base font-medium text-primary mb-3">HUMINEX Division</p>
             <p className="text-muted-foreground mb-8 max-w-sm leading-relaxed text-sm">
               Consulting & Digital Transformation wing of CropXon Innovations Pvt. Ltd. 
               Building the next generation of enterprise solutions.
@@ -160,8 +160,8 @@ export const Footer = () => {
           <div className="flex items-center gap-2 text-xs">
             <span className="text-foreground font-medium">© {new Date().getFullYear()} CropXon Innovations Pvt. Ltd.</span>
             <span className="text-muted-foreground">•</span>
-            <a href="https://atlas.cropxon.com" className="text-primary hover:text-primary/80 transition-colors font-semibold">
-              atlas.cropxon.com
+            <a href="https://huminex.cropxon.com" className="text-primary hover:text-primary/80 transition-colors font-semibold">
+              huminex.cropxon.com
             </a>
           </div>
 

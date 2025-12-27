@@ -54,7 +54,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link, useLocation } from "react-router-dom";
-import cropxonIcon from "@/assets/cropxon-icon.png";
+import huminexLogo from "@/assets/huminex-logo.png";
 import { useAuth } from "@/hooks/useAuth";
 import { useTheme } from "@/hooks/useTheme";
 
@@ -122,7 +122,7 @@ const resources: MenuItem[] = [
 ];
 
 const company: MenuItem[] = [
-  { name: "About ATLAS", href: "/about", icon: Building2, description: "Our Story" },
+  { name: "About HUMINEX", href: "/about", icon: Building2, description: "Our Story" },
   { name: "Leadership", href: "/about#team", icon: Users, description: "Meet the Team" },
   { name: "Careers", href: "/contact", icon: Handshake, description: "Join Us" },
   { name: "Contact", href: "/contact", icon: Mail, description: "Get in Touch" },
@@ -249,12 +249,12 @@ export const Header = ({ onQuoteClick }: HeaderProps) => {
       <nav className="container mx-auto px-4 lg:px-8" aria-label="Main navigation">
         <div className={`flex items-center justify-between transition-all duration-300 ${isScrolled ? 'h-14' : 'h-16 lg:h-18'}`}>
           {/* Logo */}
-          <Link to="/" className="flex items-center gap-2.5 group" aria-label="CropXon ATLAS Home">
+          <Link to="/" className="flex items-center gap-2.5 group" aria-label="CropXon HUMINEX Home">
             <div className="relative">
               <div className="absolute inset-0 bg-primary/20 blur-2xl rounded-full opacity-0 group-hover:opacity-100 transition-all duration-500" />
               <img 
-                src={cropxonIcon} 
-                alt="CropXon ATLAS Logo" 
+                src={huminexLogo} 
+                alt="CropXon HUMINEX Logo" 
                 className={`relative object-contain transition-all duration-300 group-hover:scale-105 ${isScrolled ? 'h-7 lg:h-8 w-7 lg:w-8' : 'h-9 lg:h-10 w-9 lg:w-10'}`}
                 width={40}
                 height={40}
@@ -265,7 +265,7 @@ export const Header = ({ onQuoteClick }: HeaderProps) => {
                 CropXon
               </span>
               <span className={`text-primary font-heading font-semibold leading-none mt-0.5 transition-all duration-300 ${isScrolled ? 'text-[10px]' : 'text-xs'}`}>
-                ATLAS
+                HUMINEX
               </span>
             </div>
           </Link>

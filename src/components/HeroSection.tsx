@@ -4,7 +4,7 @@ import { ArrowRight, Calculator, Sparkles } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useState, useEffect } from "react";
-import cropxonIcon from "@/assets/cropxon-icon.png";
+import huminexLogo from "@/assets/huminex-logo.png";
 
 interface HeroSectionProps {
   onQuoteClick?: () => void;
@@ -54,7 +54,7 @@ export const HeroSection = ({ onQuoteClick }: HeroSectionProps) => {
 
       <div className="container mx-auto px-4 lg:px-8 relative z-10">
         <div className="max-w-5xl mx-auto text-center">
-          {/* Animated ATLAS Logo & Name */}
+          {/* Animated HUMINEX Logo & Name */}
           <div className="flex flex-col items-center justify-center mb-10 animate-fade-in-up">
             <div className="relative group">
               {/* Outer glow ring */}
@@ -68,8 +68,8 @@ export const HeroSection = ({ onQuoteClick }: HeroSectionProps) => {
               <div className="relative w-28 h-28 sm:w-32 sm:h-32 flex items-center justify-center">
                 <div className="absolute inset-0 rounded-full bg-gradient-to-br from-primary/20 to-accent/20 animate-[spin_8s_ease-in-out_infinite]" />
                 <img 
-                  src={cropxonIcon} 
-                  alt="ATLAS" 
+                  src={huminexLogo} 
+                  alt="HUMINEX" 
                   className="relative h-20 w-20 sm:h-24 sm:w-24 object-contain animate-float drop-shadow-2xl z-10 group-hover:scale-110 transition-transform duration-500"
                 />
               </div>
@@ -83,17 +83,17 @@ export const HeroSection = ({ onQuoteClick }: HeroSectionProps) => {
               </div>
             </div>
 
-            {/* Animated ATLAS Text */}
+            {/* Animated HUMINEX Text */}
             <div className="mt-8 relative">
-              {/* ATLAS Name with Glow */}
+              {/* HUMINEX Name with Glow */}
               <div className="relative inline-block">
                 {/* Background glow */}
                 <div className="absolute inset-0 blur-2xl bg-gradient-to-r from-primary/30 via-accent/30 to-primary/30 animate-pulse" />
                 
-                {/* Main ATLAS text */}
+                {/* Main HUMINEX text */}
                 <h2 className="relative text-6xl sm:text-7xl md:text-8xl lg:text-9xl font-heading font-black tracking-tight">
                   <span className="bg-gradient-to-r from-primary via-accent to-primary bg-clip-text text-transparent bg-[length:200%_auto] animate-shimmer">
-                    ATLAS
+                    HUMINEX
                   </span>
                 </h2>
               </div>
