@@ -15,7 +15,7 @@ export const AdminPortalSettings = () => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [settings, setSettings] = useState({
-    site_name: "ATLAS Portal",
+    site_name: "HUMINEX Portal",
     site_description: "Enterprise Consulting & Digital Transformation",
     support_email: "support@cropxon.com",
     enable_client_registration: true,

@@ -288,7 +288,7 @@ export default function Onboarding() {
               <WelcomeAnimation />
 
               <h1 className="text-4xl lg:text-5xl font-heading font-bold text-foreground mb-4 tracking-tight">
-                Welcome to <span className="text-gradient">ATLAS</span>
+                Welcome to <span className="text-gradient">HUMINEX</span>
               </h1>
               <p className="text-lg text-muted-foreground mb-2">
                 Built for the Next Generation of Innovation.
@@ -554,7 +554,7 @@ export default function Onboarding() {
           {currentStep === 5 && (
             <div className="animate-fade-in-up">
               <div className="text-center mb-8">
-                <h2 className="text-2xl font-heading font-bold text-foreground mb-2">What brings you to ATLAS?</h2>
+                <h2 className="text-2xl font-heading font-bold text-foreground mb-2">What brings you to HUMINEX?</h2>
                 <p className="text-muted-foreground">Select the services you're interested in</p>
               </div>
 
@@ -613,7 +613,7 @@ export default function Onboarding() {
               <SuccessAnimation />
 
               <h1 className="text-3xl lg:text-4xl font-heading font-bold text-foreground mb-4 tracking-tight">
-                Your ATLAS Workspace Is Ready
+                Your HUMINEX Workspace Is Ready
               </h1>
               <p className="text-lg text-muted-foreground mb-10">
                 Welcome aboard! Let's build something amazing together.

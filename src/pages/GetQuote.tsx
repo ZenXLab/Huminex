@@ -276,8 +276,8 @@ const GetQuote = () => {
       if (sessionError) throw sessionError;
       
       // Store session ID for onboarding
-      localStorage.setItem('atlas_onboarding_session', session.id);
-      localStorage.setItem('atlas_client_id', clientId);
+      localStorage.setItem('huminex_onboarding_session', session.id);
+      localStorage.setItem('huminex_client_id', clientId);
       
       toast.success('Quote saved! Redirecting to onboarding...');
       navigate('/onboarding');

@@ -309,7 +309,7 @@ export const ProximaAIWidget: React.FC = () => {
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && handleSendQuery()}
-            placeholder="Ask ATLAS: Why is attrition risk high in Ops?"
+            placeholder="Ask HUMINEX: Why is attrition risk high in Ops?"
             className="h-14 pl-5 pr-14 bg-gradient-to-r from-[#F7F9FC] to-white border-gray-200 rounded-2xl focus:ring-2 focus:ring-[#005EEB]/20 text-base"
           />
           <Button

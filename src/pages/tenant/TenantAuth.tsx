@@ -41,7 +41,7 @@ const TenantAuth = () => {
   // Skip login for development/testing - enters as tenant super admin
   const handleSkipLogin = () => {
     enableDevMode("client");
-    localStorage.setItem("atlas_tenant_role", "super_admin");
+    localStorage.setItem("huminex_tenant_role", "super_admin");
     toast.success("Development mode: Tenant Super Admin access enabled");
     navigate("/tenant/dashboard");
   };
@@ -91,7 +91,7 @@ const TenantAuth = () => {
           toast.error(error.message);
         }
       } else {
-        toast.success("Welcome to ATLAS Admin Console!");
+        toast.success("Welcome to HUMINEX Admin Console!");
       }
     } catch (error) {
       if (error instanceof z.ZodError) {
@@ -136,7 +136,7 @@ const TenantAuth = () => {
             <div>
               <span className="text-2xl font-bold text-[#0F1E3A]">CropXon</span>
               <div className="flex items-center justify-center gap-2 mt-1">
-                <span className="text-[#005EEB] font-semibold text-sm">ATLAS</span>
+                <span className="text-[#005EEB] font-semibold text-sm">HUMINEX</span>
                 <span className="h-4 w-px bg-[#E5E7EB]" />
                 <span className="text-[#6B7280] text-xs uppercase tracking-wider">Owner / Super Admin</span>
               </div>

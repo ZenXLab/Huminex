@@ -160,7 +160,7 @@ const AdminAuth = () => {
 
   return (
     <div className="min-h-screen bg-[#0A0F1C] flex items-center justify-center relative overflow-hidden">
-      {/* ATLAS Internal Branding Background */}
+      {/* HUMINEX Internal Branding Background */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-0 left-0 w-[800px] h-[800px] bg-gradient-radial from-[#00363D]/30 via-[#00363D]/10 to-transparent rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2" />
         <div className="absolute bottom-0 right-0 w-[600px] h-[600px] bg-gradient-radial from-[#00A6A6]/20 via-[#4FF2F2]/5 to-transparent rounded-full blur-3xl translate-x-1/2 translate-y-1/2" />
@@ -187,7 +187,7 @@ const AdminAuth = () => {
           Back to Home
         </a>
 
-        {/* ATLAS Internal Logo */}
+        {/* HUMINEX Internal Logo */}
         <div className="text-center mb-8">
           <a href="/" className="inline-flex flex-col items-center gap-3">
             <div className="relative">
@@ -195,7 +195,7 @@ const AdminAuth = () => {
               <img src={cropxonIcon} alt="CropXon" className="h-16 w-16 relative z-10" />
             </div>
             <div>
-              <span className="text-2xl font-heading font-bold text-white">ATLAS</span>
+              <span className="text-2xl font-heading font-bold text-white">HUMINEX</span>
               <div className="flex items-center justify-center gap-2 mt-1">
                 <span className="text-[#4FF2F2] font-semibold text-sm">Internal Admin</span>
                 <span className="h-4 w-px bg-[#2A3A4A]" />
