@@ -1,7 +1,7 @@
-# 🏗️ ATLAS System Architecture
+# 🏗️ HUMINEX System Architecture
 
 > **Comprehensive Technical Reference**
-> Last Updated: **December 7, 2025 @ 19:00 UTC**
+> Last Updated: **December 28, 2025 @ 19:00 UTC**
 
 ---
 
@@ -21,9 +21,9 @@
 
 ## 🌐 System Overview
 
-### What is ATLAS?
+### What is HUMINEX?
 
-ATLAS (Advanced Technology for Leadership, Automation & Solutions) is an **AI-powered Workforce Operating System** that unifies:
+HUMINEX (Human Intelligence & Experience) is an **AI-powered Workforce Operating System** by CropXon Innovations that unifies:
 
 | Domain | Modules | Description |
 |--------|---------|-------------|
@@ -37,7 +37,7 @@ ATLAS (Advanced Technology for Leadership, Automation & Solutions) is an **AI-po
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│                            ATLAS PLATFORM                                    │
+│                            HUMINEX PLATFORM                                  │
 ├─────────────────────────────────────────────────────────────────────────────┤
 │                                                                              │
 │  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐    │

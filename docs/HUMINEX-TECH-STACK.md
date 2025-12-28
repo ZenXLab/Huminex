@@ -1,14 +1,14 @@
-# ATLAS Platform - Technology Stack & Architecture
+# HUMINEX Platform - Technology Stack & Architecture
 
 > **Version**: 1.0.0  
-> **Last Updated**: December 9, 2025  
+> **Last Updated**: December 28, 2025  
 > **Target**: Scalable Billion-Dollar SaaS Enterprise
 
 ---
 
 ## 🎯 Vision Statement
 
-ATLAS is architected to be a **world-class enterprise Workforce Operating System** capable of scaling from startup to billion-dollar enterprise. The technology choices prioritize:
+HUMINEX is architected to be a **world-class enterprise Workforce Operating System** capable of scaling from startup to billion-dollar enterprise. The technology choices prioritize:
 
 - **Scalability**: Handle millions of users across thousands of tenants
 - **Security**: Enterprise-grade security with SOC2, ISO27001, GDPR compliance
@@ -246,7 +246,7 @@ CREATE POLICY "Tenant isolation" ON employees
 ┌─────────────────────────────────────────────────────────────┐
 │                    RBAC Structure                            │
 ├─────────────────────────────────────────────────────────────┤
-│  Platform Level (ATLAS Admin)                               │
+│  Platform Level (HUMINEX Admin)                              │
 │  ├── admin: Full platform access                            │
 │  └── user: Standard client access                           │
 ├─────────────────────────────────────────────────────────────┤

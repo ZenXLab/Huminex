@@ -1,12 +1,12 @@
-# ATLAS Setup & Deployment Guide
+# HUMINEX Setup & Deployment Guide
 
 > **Version**: 3.3.0  
-> **Last Updated**: December 7, 2025 @ 17:30 UTC  
-> **Author**: CropXon ATLAS Team
+> **Last Updated**: December 28, 2025 @ 17:30 UTC  
+> **Author**: CropXon HUMINEX Team
 
 ## Overview
 
-This guide covers the complete setup and deployment of the ATLAS Workforce Operating System, including:
+This guide covers the complete setup and deployment of the HUMINEX Workforce Operating System, including:
 - Supabase project configuration
 - Database schema deployment (52 tables, 7 functions, 2 triggers)
 - Edge function deployment (10 deployed, 5 documented)
@@ -163,7 +163,7 @@ Add these secrets in Lovable Cloud:
 | `RESEND_API_KEY` | Get from [resend.com](https://resend.com) |
 
 ### 2. Run Database Migration
-Execute the SQL from `docs/ATLAS-DATABASE-SCHEMA.sql` in your Supabase SQL Editor.
+Execute the SQL from `docs/HUMINEX-DATABASE-SCHEMA.sql` in your Supabase SQL Editor.
 
 ### 3. Configure Auth
 Enable email/password authentication with auto-confirm.
@@ -197,7 +197,7 @@ Lovable Cloud automatically provisions and manages your Supabase project. The fo
 ### Step 1: Run the Main Schema
 
 1. Open Supabase Dashboard → SQL Editor
-2. Copy the entire contents of `docs/ATLAS-DATABASE-SCHEMA.sql`
+2. Copy the entire contents of `docs/HUMINEX-DATABASE-SCHEMA.sql`
 3. Execute the SQL
 4. Verify tables were created in Table Editor
 
@@ -479,7 +479,7 @@ After setup, verify these work:
 ```sql
 -- Test quote number generation
 SELECT public.generate_quote_number();
--- Expected: ATL-2024-0001
+-- Expected: HMX-2024-0001
 
 -- Test has_role function
 SELECT public.has_role('user-uuid-here', 'admin');
