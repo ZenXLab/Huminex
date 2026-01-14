@@ -4,13 +4,44 @@ import { ArrowRight, Sparkles } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useState, useEffect, useRef } from "react";
-import huminexIcon from "@/assets/huminex-icon.png";
 import { HeroDashboardPreview } from "./HeroDashboardPreview";
 import { motion, useScroll, useTransform, useSpring } from "framer-motion";
 
 interface HeroSectionProps {
   onQuoteClick?: () => void;
 }
+
+// SVG H Logo Component - Stylish and fits perfectly in circle
+const HLogo = ({ className = "" }: { className?: string }) => (
+  <svg
+    viewBox="0 0 100 100"
+    className={className}
+    fill="none"
+  >
+    <defs>
+      <linearGradient id="hLogoGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stopColor="#0EA5E9" />
+        <stop offset="50%" stopColor="#06B6D4" />
+        <stop offset="100%" stopColor="#22D3EE" />
+      </linearGradient>
+      <filter id="hGlow" x="-50%" y="-50%" width="200%" height="200%">
+        <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+        <feMerge>
+          <feMergeNode in="coloredBlur"/>
+          <feMergeNode in="SourceGraphic"/>
+        </feMerge>
+      </filter>
+    </defs>
+    <path
+      d="M25 15 L25 85 M25 50 L75 50 M75 15 L75 85"
+      stroke="url(#hLogoGradient)"
+      strokeWidth="14"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      filter="url(#hGlow)"
+    />
+  </svg>
+);
 
 export const HeroSection = ({ onQuoteClick }: HeroSectionProps) => {
   const navigate = useNavigate();
@@ -126,35 +157,48 @@ export const HeroSection = ({ onQuoteClick }: HeroSectionProps) => {
               transition={{ duration: 0.8, ease: "easeOut" }}
             >
               {/* Outer glow ring */}
-              <div className="absolute inset-0 rounded-full bg-gradient-to-r from-primary via-accent to-primary opacity-20 blur-2xl animate-pulse-glow scale-150" />
+              <div className="absolute inset-[-20px] rounded-full bg-gradient-to-r from-primary via-accent to-primary opacity-20 blur-2xl animate-pulse-glow" />
               
               {/* Spinning ring */}
               <motion.div 
-                className="absolute inset-[-12px] rounded-full border-2 border-dashed border-primary/30"
+                className="absolute inset-[-16px] rounded-full border-2 border-dashed border-primary/40"
                 animate={{ rotate: 360 }}
                 transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
               />
               <motion.div 
-                className="absolute inset-[-24px] rounded-full border border-accent/20"
+                className="absolute inset-[-28px] rounded-full border border-accent/25"
                 animate={{ rotate: -360 }}
                 transition={{ duration: 30, repeat: Infinity, ease: "linear" }}
               />
               
-              {/* Logo container - Clean H without background */}
-              <div className="relative w-24 h-24 sm:w-28 sm:h-28 flex items-center justify-center">
+              {/* Main circle container with H Logo inside */}
+              <motion.div 
+                className="relative w-28 h-28 sm:w-36 sm:h-36 rounded-full flex items-center justify-center border-2 border-primary/30 bg-gradient-to-br from-primary/10 via-transparent to-accent/10"
+                animate={{ 
+                  boxShadow: [
+                    "0 0 30px rgba(14, 165, 233, 0.2)",
+                    "0 0 50px rgba(14, 165, 233, 0.4)",
+                    "0 0 30px rgba(14, 165, 233, 0.2)"
+                  ]
+                }}
+                transition={{ duration: 3, repeat: Infinity }}
+              >
+                {/* Inner gradient circle */}
                 <motion.div 
-                  className="absolute inset-0 rounded-full bg-gradient-to-br from-primary/20 to-accent/20"
+                  className="absolute inset-2 rounded-full bg-gradient-to-br from-primary/5 to-accent/5"
                   animate={{ rotate: 360 }}
-                  transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
+                  transition={{ duration: 10, repeat: Infinity, ease: "linear" }}
                 />
-                <motion.img 
-                  src={huminexIcon} 
-                  alt="HUMINEX" 
-                  className="relative h-16 w-16 sm:h-20 sm:w-20 object-contain drop-shadow-2xl z-10 group-hover:scale-110 transition-transform duration-500"
-                  animate={{ y: [0, -5, 0] }}
+                
+                {/* Stylish H Logo - SVG fits perfectly */}
+                <motion.div
+                  className="relative z-10"
+                  animate={{ y: [0, -3, 0] }}
                   transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-                />
-              </div>
+                >
+                  <HLogo className="w-16 h-16 sm:w-20 sm:h-20 drop-shadow-2xl" />
+                </motion.div>
+              </motion.div>
 
               {/* Orbiting dots */}
               <motion.div 
@@ -162,20 +206,20 @@ export const HeroSection = ({ onQuoteClick }: HeroSectionProps) => {
                 animate={{ rotate: 360 }}
                 transition={{ duration: 10, repeat: Infinity, ease: "linear" }}
               >
-                <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-2 w-2 h-2 rounded-full bg-primary shadow-lg shadow-primary/50" />
+                <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-4 w-2.5 h-2.5 rounded-full bg-primary shadow-lg shadow-primary/50" />
               </motion.div>
               <motion.div 
                 className="absolute inset-0"
                 animate={{ rotate: -360 }}
                 transition={{ duration: 15, repeat: Infinity, ease: "linear" }}
               >
-                <div className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-2 w-1.5 h-1.5 rounded-full bg-accent shadow-lg shadow-accent/50" />
+                <div className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-4 w-2 h-2 rounded-full bg-accent shadow-lg shadow-accent/50" />
               </motion.div>
             </motion.div>
 
             {/* Animated HUMINEX Text */}
             <motion.div 
-              className="mt-6 relative"
+              className="mt-8 relative"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.3 }}
