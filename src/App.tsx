@@ -7,7 +7,9 @@ import { HelmetProvider } from "react-helmet-async";
 import { AnimatePresence, motion } from "framer-motion";
 import { ClickstreamTracker } from "@/components/ClickstreamTracker";
 import { SessionRecorder } from "@/components/SessionRecorder";
+import { SplashScreen } from "@/components/SplashScreen";
 import { useScrollToTop } from "@/hooks/useScrollToTop";
+import { useState, useEffect } from "react";
 import Index from "./pages/Index";
 import Features from "./pages/Features";
 import ModuleDetail from "./pages/modules/ModuleDetail";
@@ -96,7 +98,7 @@ const AnimatedRoutes = () => {
           <Route path="/portal/login" element={<PortalAuth />} />
           <Route path="/portal/*" element={<Portal />} />
           
-          {/* Admin Dashboard Routes - ATLAS Global Admin (CropXon Internal) */}
+          {/* Admin Dashboard Routes - HUMINEX Global Admin (CropXon Internal) */}
           <Route path="/admin/login" element={<AdminAuth />} />
           <Route path="/admin/*" element={<AdminPage />} />
           
@@ -121,17 +123,46 @@ const AnimatedRoutes = () => {
   );
 };
 
+const AppContent = () => {
+  const [showSplash, setShowSplash] = useState(true);
+  const [hasShownSplash, setHasShownSplash] = useState(false);
+
+  useEffect(() => {
+    // Check if splash has been shown in this session
+    const splashShown = sessionStorage.getItem('huminex_splash_shown');
+    if (splashShown) {
+      setShowSplash(false);
+      setHasShownSplash(true);
+    }
+  }, []);
+
+  const handleSplashComplete = () => {
+    setShowSplash(false);
+    setHasShownSplash(true);
+    sessionStorage.setItem('huminex_splash_shown', 'true');
+  };
+
+  return (
+    <>
+      {showSplash && !hasShownSplash && (
+        <SplashScreen onComplete={handleSplashComplete} />
+      )}
+      <BrowserRouter>
+        <ClickstreamTracker />
+        <SessionRecorder enabled={true} />
+        <AnimatedRoutes />
+      </BrowserRouter>
+    </>
+  );
+};
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <HelmetProvider>
       <TooltipProvider>
         <Toaster />
         <Sonner />
-        <BrowserRouter>
-          <ClickstreamTracker />
-          <SessionRecorder enabled={true} />
-          <AnimatedRoutes />
-        </BrowserRouter>
+        <AppContent />
       </TooltipProvider>
     </HelmetProvider>
   </QueryClientProvider>
