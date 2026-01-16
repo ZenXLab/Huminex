@@ -96,7 +96,7 @@ export const TenantHeader: React.FC = () => {
             <Sparkles className="w-5 h-5 text-white" />
           </div>
           <div className="flex flex-col">
-            <span className="text-[10px] font-bold text-[#005EEB] uppercase tracking-widest">ATLAS</span>
+            <span className="text-[10px] font-bold text-[#005EEB] uppercase tracking-widest">HUMINEX</span>
             <span className="text-sm font-semibold text-[#0F1E3A] truncate max-w-[160px]">
               {tenantName}
             </span>

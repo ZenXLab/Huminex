@@ -6,42 +6,11 @@ import { useAuth } from "@/hooks/useAuth";
 import { useState, useEffect, useRef } from "react";
 import { HeroDashboardPreview } from "./HeroDashboardPreview";
 import { motion, useScroll, useTransform, useSpring } from "framer-motion";
+import huminexIcon from "@/assets/huminex-icon.png";
 
 interface HeroSectionProps {
   onQuoteClick?: () => void;
 }
-
-// SVG H Logo Component - Stylish and fits perfectly in circle
-const HLogo = ({ className = "" }: { className?: string }) => (
-  <svg
-    viewBox="0 0 100 100"
-    className={className}
-    fill="none"
-  >
-    <defs>
-      <linearGradient id="hLogoGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-        <stop offset="0%" stopColor="#0EA5E9" />
-        <stop offset="50%" stopColor="#06B6D4" />
-        <stop offset="100%" stopColor="#22D3EE" />
-      </linearGradient>
-      <filter id="hGlow" x="-50%" y="-50%" width="200%" height="200%">
-        <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
-        <feMerge>
-          <feMergeNode in="coloredBlur"/>
-          <feMergeNode in="SourceGraphic"/>
-        </feMerge>
-      </filter>
-    </defs>
-    <path
-      d="M25 15 L25 85 M25 50 L75 50 M75 15 L75 85"
-      stroke="url(#hLogoGradient)"
-      strokeWidth="14"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      filter="url(#hGlow)"
-    />
-  </svg>
-);
 
 export const HeroSection = ({ onQuoteClick }: HeroSectionProps) => {
   const navigate = useNavigate();
@@ -190,13 +159,17 @@ export const HeroSection = ({ onQuoteClick }: HeroSectionProps) => {
                   transition={{ duration: 10, repeat: Infinity, ease: "linear" }}
                 />
                 
-                {/* Stylish H Logo - SVG fits perfectly */}
+                {/* HUMINEX Hexagonal Logo */}
                 <motion.div
                   className="relative z-10"
                   animate={{ y: [0, -3, 0] }}
                   transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
                 >
-                  <HLogo className="w-16 h-16 sm:w-20 sm:h-20 drop-shadow-2xl" />
+                  <img 
+                    src={huminexIcon} 
+                    alt="HUMINEX" 
+                    className="w-20 h-20 sm:w-24 sm:h-24 object-contain drop-shadow-2xl"
+                  />
                 </motion.div>
               </motion.div>
 

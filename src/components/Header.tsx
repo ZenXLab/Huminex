@@ -255,9 +255,9 @@ export const Header = ({ onQuoteClick }: HeaderProps) => {
               <img 
                 src={huminexIcon} 
                 alt="HUMINEX Logo" 
-                className={`relative object-contain transition-all duration-300 group-hover:scale-105 ${isScrolled ? 'h-7 lg:h-8 w-7 lg:w-8' : 'h-9 lg:h-10 w-9 lg:w-10'}`}
-                width={40}
-                height={40}
+                className={`relative object-contain transition-all duration-300 group-hover:scale-105 ${isScrolled ? 'h-10 lg:h-11 w-10 lg:w-11' : 'h-12 lg:h-14 w-12 lg:w-14'}`}
+                width={56}
+                height={56}
               />
             </div>
             <div className="flex flex-col">

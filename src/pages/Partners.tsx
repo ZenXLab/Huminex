@@ -29,21 +29,21 @@ const partnerTypes = [
     id: "implementation",
     name: "Implementation Partner",
     icon: Code,
-    description: "Deploy and customize ATLAS for enterprise clients",
+    description: "Deploy and customize HUMINEX for enterprise clients",
     benefits: ["Revenue share on projects", "Technical training", "Lead referrals", "Partner portal access"]
   },
   {
     id: "reseller",
     name: "Reseller / VAR",
     icon: Building2,
-    description: "Sell ATLAS licenses with your value-added services",
+    description: "Sell HUMINEX licenses with your value-added services",
     benefits: ["Wholesale pricing", "Marketing support", "Co-branded materials", "Dedicated account manager"]
   },
   {
     id: "technology",
     name: "Technology Partner",
     icon: Zap,
-    description: "Integrate your solution with ATLAS ecosystem",
+    description: "Integrate your solution with HUMINEX ecosystem",
     benefits: ["API access", "Technical documentation", "Joint go-to-market", "Integration listing"]
   },
   {
@@ -57,7 +57,7 @@ const partnerTypes = [
 
 const internalServices = [
   {
-    name: "Managed ATLAS Operations",
+    name: "Managed HUMINEX Operations",
     description: "Full-service payroll, compliance, and HR operations managed by CropXon team",
     features: ["Dedicated ops team", "SLA-backed delivery", "Compliance guarantee", "24/7 support"]
   },
@@ -125,10 +125,10 @@ const Partners = () => {
   return (
     <>
       <Helmet>
-        <title>Partner with ATLAS | CropXon Technology Partner Program</title>
+        <title>Partner with HUMINEX | CropXon Technology Partner Program</title>
         <meta 
           name="description" 
-          content="Join the ATLAS partner ecosystem. Become an implementation partner, reseller, or technology partner. Grow your business with India's leading workforce platform." 
+          content="Join the HUMINEX partner ecosystem. Become an implementation partner, reseller, or technology partner. Grow your business with India's leading workforce platform." 
         />
       </Helmet>
 
@@ -144,7 +144,7 @@ const Partners = () => {
                 Partner Program
               </Badge>
               <h1 className="text-4xl md:text-5xl lg:text-6xl font-heading font-bold text-foreground mb-6">
-                Grow with ATLAS
+                Grow with HUMINEX
               </h1>
               <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
                 Join our partner ecosystem and unlock new revenue streams while delivering world-class workforce solutions to your clients.
@@ -298,7 +298,7 @@ const Partners = () => {
                         id="message"
                         value={formData.message}
                         onChange={(e) => setFormData({...formData, message: e.target.value})}
-                        placeholder="How would you like to partner with ATLAS?"
+                        placeholder="How would you like to partner with HUMINEX?"
                         rows={4}
                       />
                     </div>

@@ -113,9 +113,9 @@ const Contact = () => {
   return (
     <>
       <Helmet>
-        <title>Contact Us | CropXon ATLAS - Get in Touch</title>
-        <meta name="description" content="Contact CropXon ATLAS for enterprise workforce solutions. Reach out for demos, support, or partnership inquiries." />
-        <link rel="canonical" href="https://atlas.cropxon.com/contact" />
+        <title>Contact Us | CropXon HUMINEX - Get in Touch</title>
+        <meta name="description" content="Contact CropXon HUMINEX for enterprise workforce solutions. Reach out for demos, support, or partnership inquiries." />
+        <link rel="canonical" href="https://huminex.cropxon.com/contact" />
       </Helmet>
 
       <div className="min-h-screen bg-background">
@@ -344,7 +344,7 @@ const Contact = () => {
                     Want a Custom Enterprise Demo?
                   </h3>
                   <p className="text-muted-foreground mb-6 text-sm">
-                    Let ATLAS show you how your organization can run 10x faster, 5x smarter.
+                    Let HUMINEX show you how your organization can run 10x faster, 5x smarter.
                   </p>
                   <Link to="/get-quote">
                     <Button className="group shadow-lg shadow-primary/20">

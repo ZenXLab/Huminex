@@ -18,7 +18,7 @@ export const AboutSection = () => {
           {/* Content */}
           <div className={`transition-all duration-700 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
             <span className="inline-block px-4 py-1.5 bg-primary/10 border border-primary/20 rounded-full text-primary text-xs font-semibold tracking-wide uppercase mb-6">
-              About ATLAS
+              About HUMINEX
             </span>
             
             <h2 className="text-3xl sm:text-4xl lg:text-5xl font-heading font-extrabold tracking-tight mb-6 text-foreground">
@@ -27,7 +27,7 @@ export const AboutSection = () => {
             </h2>
             
             <p className="text-base lg:text-lg text-muted-foreground mb-6 leading-relaxed">
-              ATLAS is an enterprise-grade, multi-tenant SaaS platform that unifies every core organizational 
+              HUMINEX is an enterprise-grade, multi-tenant SaaS platform that unifies every core organizational 
               workflow — hiring, onboarding, payroll, attendance, compliance, asset management, identity & access, 
               background verification, performance, finance, projects, automation flows, and AI-driven insights — 
               into one intelligent system.
@@ -35,7 +35,7 @@ export const AboutSection = () => {
 
             <p className="text-sm lg:text-base text-muted-foreground mb-8 leading-relaxed">
               Built with deep automation (Temporal), real-time events, secure multi-tenancy, enterprise SSO, 
-              and a modular architecture, ATLAS helps companies operate faster, smarter, and with zero manual inefficiency.
+              and a modular architecture, HUMINEX helps companies operate faster, smarter, and with zero manual inefficiency.
             </p>
 
             <div className={`grid sm:grid-cols-2 gap-3 stagger-children ${isVisible ? 'visible' : ''}`}>
