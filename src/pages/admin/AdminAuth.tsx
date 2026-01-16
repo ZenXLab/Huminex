@@ -213,7 +213,7 @@ const AdminAuth = () => {
                   <Shield className="h-8 w-8 text-[#4FF2F2]" />
                 </div>
                 <h1 className="text-2xl font-heading font-bold text-white mb-2">
-                  ATLAS Global Admin
+                  HUMINEX Global Admin
                 </h1>
                 <p className="text-[#6B8A8E] text-sm">
                   Authorized CropXon personnel only

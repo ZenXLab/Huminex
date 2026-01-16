@@ -298,7 +298,7 @@ export const InvoicePreviewModal = ({
         key: data.keyId,
         amount: data.amount,
         currency: data.currency,
-        name: 'ATLAS by CropXon',
+        name: 'HUMINEX by CropXon',
         description: `${plan.name} - ${isAnnual ? 'Annual' : 'Monthly'} Plan`,
         order_id: data.orderId,
         handler: async function(response: any) {
@@ -404,7 +404,7 @@ export const InvoicePreviewModal = ({
                 </div>
                 <div>
                   <h3 className="text-2xl font-heading font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-                    ATLAS
+                    HUMINEX
                   </h3>
                   <p className="text-sm text-muted-foreground font-medium">
                     by CropXon Innovations Pvt Ltd
@@ -662,7 +662,7 @@ export const InvoicePreviewModal = ({
                 <Mail className="w-3 h-3" /> support@cropxon.com
               </span>
               <span className="flex items-center gap-1">
-                <Globe className="w-3 h-3" /> atlas.cropxon.com
+                <Globe className="w-3 h-3" /> huminex.cropxon.com
               </span>
             </div>
             <p>CropXon Innovations Pvt Ltd • GSTIN: ************ • CIN: **************</p>

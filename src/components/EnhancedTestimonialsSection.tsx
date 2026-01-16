@@ -21,7 +21,7 @@ interface Testimonial {
 
 const testimonials: Testimonial[] = [
   {
-    quote: "ATLAS transformed our HR operations completely. We went from 3 separate systems to one unified platform. Payroll processing that took 5 days now happens in 4 hours.",
+    quote: "HUMINEX transformed our HR operations completely. We went from 3 separate systems to one unified platform. Payroll processing that took 5 days now happens in 4 hours.",
     author: "Priya Sharma",
     role: "CHRO",
     company: "TechServe India",
@@ -69,7 +69,7 @@ const testimonials: Testimonial[] = [
     isIndian: false
   },
   {
-    quote: "Managing 15 retail locations with different shift patterns was a nightmare. ATLAS attendance and roster management changed everything.",
+    quote: "Managing 15 retail locations with different shift patterns was a nightmare. HUMINEX attendance and roster management changed everything.",
     author: "Amit Patel",
     role: "Operations Director",
     company: "RetailMax",
@@ -101,7 +101,7 @@ const testimonials: Testimonial[] = [
     isIndian: false
   },
   {
-    quote: "From a 50-person startup to 500+ employees in 2 years, ATLAS scaled with us without any system changes. The OpZenix automation is game-changing.",
+    quote: "From a 50-person startup to 500+ employees in 2 years, HUMINEX scaled with us without any system changes. The OpZenix automation is game-changing.",
     author: "Neha Reddy",
     role: "Co-Founder & CEO",
     company: "HealthTech Solutions",
@@ -225,7 +225,7 @@ export const EnhancedTestimonialsSection = () => {
             Trusted by <span className="text-gradient">Industry Leaders</span>
           </h2>
           <p className="text-lg text-muted-foreground">
-            See how enterprises across industries are transforming with ATLAS.
+            See how enterprises across industries are transforming with HUMINEX.
           </p>
         </div>
 
@@ -317,7 +317,7 @@ export const EnhancedTestimonialsSection = () => {
         {/* CTA */}
         <div className={`text-center mt-16 transition-all duration-700 delay-500 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
           <p className="text-muted-foreground mb-6">
-            Join 200+ enterprises already transforming with ATLAS
+            Join 200+ enterprises already transforming with HUMINEX
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <Button size="lg" className="group shadow-lg shadow-primary/20" onClick={handleStartFreeTrial}>

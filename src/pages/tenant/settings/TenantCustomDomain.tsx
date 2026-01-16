@@ -71,8 +71,8 @@ const domains: Domain[] = [
 ];
 
 const dnsRecords = [
-  { type: "CNAME", name: "hr", value: "tenant-acme.atlas.app", ttl: "3600" },
-  { type: "TXT", name: "_atlas-verify", value: "atlas-verify=abc123xyz789", ttl: "3600" }
+  { type: "CNAME", name: "hr", value: "tenant-acme.huminex.app", ttl: "3600" },
+  { type: "TXT", name: "_huminex-verify", value: "huminex-verify=abc123xyz789", ttl: "3600" }
 ];
 
 const TenantCustomDomain: React.FC = () => {

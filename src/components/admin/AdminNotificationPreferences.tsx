@@ -142,7 +142,7 @@ export const AdminNotificationPreferences: React.FC = () => {
     }
     
     await showLocalNotification('Test Notification', {
-      body: 'This is a test notification from ATLAS Admin',
+      body: 'This is a test notification from HUMINEX Admin',
       tag: 'test-notification',
       requireInteraction: false
     });

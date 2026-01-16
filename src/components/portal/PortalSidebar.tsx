@@ -96,10 +96,10 @@ export const PortalSidebar = ({ sidebarOpen, setSidebarOpen, user, profile, sign
         {/* Logo & Plan Info */}
         <div className="p-4 border-b border-border/60">
           <Link to="/" className="flex items-center gap-2.5">
-            <img src={cropxonIcon} alt="ATLAS" className="h-9 w-9" />
+            <img src={cropxonIcon} alt="HUMINEX" className="h-9 w-9" />
             <div>
               <span className="text-foreground font-heading font-bold text-sm block">CropXon</span>
-              <span className="text-primary font-heading font-semibold text-xs">ATLAS Portal</span>
+              <span className="text-primary font-heading font-semibold text-xs">HUMINEX Portal</span>
             </div>
           </Link>
           <div className="mt-3 flex flex-col gap-1.5">

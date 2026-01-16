@@ -1,5 +1,6 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { useState, useEffect } from "react";
+import huminexIcon from "@/assets/huminex-icon.png";
 
 interface SplashScreenProps {
   onComplete: () => void;
@@ -76,42 +77,15 @@ export const SplashScreen = ({ onComplete }: SplashScreenProps) => {
               }}
               transition={{ duration: 2, repeat: Infinity }}
             >
-              {/* Stylish H using SVG */}
-              <motion.svg
-                viewBox="0 0 100 100"
-                className="w-20 h-20 sm:w-24 sm:h-24"
-                initial={{ opacity: 0, pathLength: 0 }}
-                animate={{ opacity: 1, pathLength: 1 }}
+              {/* HUMINEX Hexagonal Logo */}
+              <motion.img
+                src={huminexIcon}
+                alt="HUMINEX"
+                className="w-20 h-20 sm:w-24 sm:h-24 object-contain drop-shadow-2xl"
+                initial={{ opacity: 0, scale: 0.5 }}
+                animate={{ opacity: 1, scale: 1 }}
                 transition={{ duration: 0.8, delay: 0.3 }}
-              >
-                <defs>
-                  <linearGradient id="hGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" stopColor="#0EA5E9" />
-                    <stop offset="50%" stopColor="#06B6D4" />
-                    <stop offset="100%" stopColor="#22D3EE" />
-                  </linearGradient>
-                  <filter id="glow">
-                    <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
-                    <feMerge>
-                      <feMergeNode in="coloredBlur"/>
-                      <feMergeNode in="SourceGraphic"/>
-                    </feMerge>
-                  </filter>
-                </defs>
-                {/* H Letter Path */}
-                <motion.path
-                  d="M25 15 L25 85 M25 50 L75 50 M75 15 L75 85"
-                  stroke="url(#hGradient)"
-                  strokeWidth="12"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  fill="none"
-                  filter="url(#glow)"
-                  initial={{ pathLength: 0 }}
-                  animate={{ pathLength: 1 }}
-                  transition={{ duration: 1, delay: 0.2, ease: "easeInOut" }}
-                />
-              </motion.svg>
+              />
             </motion.div>
 
             {/* Orbiting particles */}

@@ -2,7 +2,7 @@ import { Quote, Star, CheckCircle2 } from "lucide-react";
 
 const testimonials = [
   {
-    quote: "ATLAS transformed our digital infrastructure in ways we never imagined possible. Their AI-first approach delivered results that exceeded our expectations.",
+    quote: "HUMINEX transformed our digital infrastructure in ways we never imagined possible. Their AI-first approach delivered results that exceeded our expectations.",
     author: "Rajesh Kumar",
     role: "CTO, TechServe India",
     location: "Mumbai, India",
@@ -14,7 +14,7 @@ const testimonials = [
     location: "Singapore",
   },
   {
-    quote: "From strategy to execution, ATLAS delivered a complete digital transformation that positioned us as industry leaders.",
+    quote: "From strategy to execution, HUMINEX delivered a complete digital transformation that positioned us as industry leaders.",
     author: "Michael Chen",
     role: "CEO, InnovateTech",
     location: "Dubai, UAE",

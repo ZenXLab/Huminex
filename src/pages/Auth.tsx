@@ -123,7 +123,7 @@ const Auth = () => {
           toast.error(error.message);
         }
       } else {
-        toast.success("Account created successfully! Welcome to ATLAS.");
+        toast.success("Account created successfully! Welcome to HUMINEX.");
       }
     } catch (error) {
       if (error instanceof z.ZodError) {
@@ -156,7 +156,7 @@ const Auth = () => {
             <img src={cropxonIcon} alt="CropXon" className="h-16 w-16" />
             <div>
               <span className="text-2xl font-heading font-bold text-foreground">CropXon</span>
-              <span className="block text-primary font-heading font-semibold text-sm">ATLAS</span>
+              <span className="block text-primary font-heading font-semibold text-sm">HUMINEX</span>
             </div>
           </a>
         </div>
@@ -170,7 +170,7 @@ const Auth = () => {
             <p className="text-muted-foreground text-sm">
               {isLogin
                 ? "Sign in to access your dashboard"
-                : "Join ATLAS to manage your quotes & invoices"}
+                : "Join HUMINEX to manage your quotes & invoices"}
             </p>
           </div>
 
