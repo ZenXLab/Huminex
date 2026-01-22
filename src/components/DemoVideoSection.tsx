@@ -24,7 +24,7 @@ export const DemoVideoSection = () => {
   };
 
   const automationSteps = [
-    { icon: Users, title: "Employee Joins", description: "New hire added to ATLAS", color: "from-blue-500 to-cyan-500" },
+    { icon: Users, title: "Employee Joins", description: "New hire added to HUMINEX", color: "from-blue-500 to-cyan-500" },
     { icon: Bot, title: "AI Processes", description: "Automated onboarding begins", color: "from-purple-500 to-violet-500" },
     { icon: Zap, title: "Workflows Trigger", description: "Documents, access, payroll setup", color: "from-amber-500 to-orange-500" },
     { icon: CheckCircle2, title: "Complete", description: "Employee productive in hours", color: "from-green-500 to-emerald-500" },
@@ -46,13 +46,13 @@ export const DemoVideoSection = () => {
         <div className={`text-center max-w-3xl mx-auto mb-16 transition-all duration-700 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
           <span className="inline-flex items-center gap-2 px-4 py-1.5 bg-accent/10 border border-accent/20 rounded-full text-accent text-xs font-semibold tracking-wide uppercase mb-6">
             <Zap className="w-4 h-4" />
-            See ATLAS in Action
+            See HUMINEX in Action
           </span>
           <h2 className="text-3xl sm:text-4xl lg:text-5xl font-heading font-extrabold tracking-tight mb-6">
             Experience the <span className="text-gradient">Future of Work</span>
           </h2>
           <p className="text-lg text-muted-foreground">
-            Watch how ATLAS revolutionizes workforce management with AI-powered automation. From hire to retire — in seconds.
+            Watch how HUMINEX revolutionizes workforce management with AI-powered automation. From hire to retire — in seconds.
           </p>
         </div>
 

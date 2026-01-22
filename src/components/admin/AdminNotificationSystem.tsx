@@ -79,7 +79,7 @@ const TYPE_TO_CATEGORY: Record<string, string> = {
 
 // Mock templates
 const notificationTemplates: NotificationTemplate[] = [
-  { id: "1", name: "Welcome Email", subject: "Welcome to ATLAS!", body: "Thank you for joining ATLAS. Your account is now active.", type: "email" },
+  { id: "1", name: "Welcome Email", subject: "Welcome to HUMINEX!", body: "Thank you for joining HUMINEX. Your account is now active.", type: "email" },
   { id: "2", name: "Invoice Reminder", subject: "Invoice Due Reminder", body: "Your invoice #{{invoice_number}} is due in {{days}} days.", type: "email" },
   { id: "3", name: "Feature Unlock", subject: "New Feature Unlocked!", body: "Congratulations! {{feature_name}} is now available in your dashboard.", type: "push" },
   { id: "4", name: "Security Alert", subject: "Security Alert", body: "A new login was detected from {{location}} at {{time}}.", type: "both" },

@@ -54,10 +54,10 @@ export const TenantGuard: React.FC<TenantGuardProps> = ({
 
   // In dev mode, allow access if tenant role is set
   if (isDevMode) {
-    const tenantRole = localStorage.getItem("atlas_tenant_role");
+    const tenantRole = localStorage.getItem("huminex_tenant_role");
     if (!tenantRole || tenantRole !== "super_admin") {
       // Set the role for dev mode access
-      localStorage.setItem("atlas_tenant_role", "super_admin");
+      localStorage.setItem("huminex_tenant_role", "super_admin");
     }
   }
 

@@ -18,7 +18,7 @@ import {
 } from "lucide-react";
 import { useScrollAnimation } from "@/hooks/useScrollAnimation";
 
-const atlasModules = [
+const huminexModules = [
   {
     icon: Users,
     title: "Workforce",
@@ -186,7 +186,7 @@ export const PillarsSection = () => {
 
         {/* Modules Grid */}
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 lg:gap-5">
-          {atlasModules.map((module, index) => {
+          {huminexModules.map((module, index) => {
             const Icon = module.icon;
             return (
               <Link

@@ -4,7 +4,7 @@ import { ChevronDown, HelpCircle } from "lucide-react";
 const faqs = [
   {
     question: "How does the 30-day free trial work?",
-    answer: "Start using ATLAS completely free for 30 days with full access to all features. No credit card required. If you love it (you will!), simply choose a plan and continue. No hidden catches."
+    answer: "Start using HUMINEX completely free for 30 days with full access to all features. No credit card required. If you love it (you will!), simply choose a plan and continue. No hidden catches."
   },
   {
     question: "Can I switch plans later?",
@@ -50,7 +50,7 @@ export const PricingFAQ = () => {
           Frequently Asked Questions
         </h3>
         <p className="text-muted-foreground">
-          Everything you need to know about ATLAS pricing and billing.
+          Everything you need to know about HUMINEX pricing and billing.
         </p>
       </div>
 

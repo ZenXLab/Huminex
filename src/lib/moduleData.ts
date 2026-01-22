@@ -178,7 +178,7 @@ export const modules: ModuleData[] = [
     slug: "projects-tasks",
     icon: FolderKanban,
     title: "Projects & Tasks",
-    tagline: "Plan it. Track it. Bill it. All on ATLAS.",
+    tagline: "Plan it. Track it. Bill it. All on HUMINEX.",
     heroDescription: "Complete project management where Operations, HR, and Finance come together for unified resource and billing management.",
     description: "Complete project management where Operations, HR, and Finance come together. Project creation, task assignment, time tracking, billable hours, milestones, and resource management.",
     features: [

@@ -36,10 +36,10 @@ const ModuleDetail = () => {
   return (
     <>
       <Helmet>
-        <title>{module.title} | CropXon ATLAS - Enterprise Workforce OS</title>
-        <meta name="description" content={`${module.heroDescription} - Part of ATLAS, the unified workforce operating system.`} />
-        <meta name="keywords" content={`${module.title}, ATLAS, workforce management, HR software, ${module.features.slice(0, 5).join(', ')}`} />
-        <link rel="canonical" href={`https://atlas.cropxon.com/modules/${module.slug}`} />
+        <title>{module.title} | CropXon HUMINEX - Enterprise Workforce OS</title>
+        <meta name="description" content={`${module.heroDescription} - Part of HUMINEX, the unified workforce operating system.`} />
+        <meta name="keywords" content={`${module.title}, HUMINEX, workforce management, HR software, ${module.features.slice(0, 5).join(', ')}`} />
+        <link rel="canonical" href={`https://huminex.cropxon.com/modules/${module.slug}`} />
       </Helmet>
 
       <main className="min-h-screen bg-background">
@@ -149,7 +149,7 @@ const ModuleDetail = () => {
                 Key Benefits
               </span>
               <h2 className="text-3xl sm:text-4xl font-heading font-extrabold tracking-tight mb-6">
-                Why Choose <span className="text-gradient">ATLAS {module.title}</span>
+                Why Choose <span className="text-gradient">HUMINEX {module.title}</span>
               </h2>
             </div>
 
@@ -190,7 +190,7 @@ const ModuleDetail = () => {
                 <span className="text-gradient">{module.title}</span> in Action
               </h2>
               <p className="text-lg text-muted-foreground">
-                See how organizations across industries are transforming with ATLAS.
+                See how organizations across industries are transforming with HUMINEX.
               </p>
             </div>
 
@@ -262,7 +262,7 @@ const ModuleDetail = () => {
                 Ready to Transform with {module.title}?
               </h2>
               <p className="text-lg text-muted-foreground mb-8 max-w-2xl mx-auto">
-                Join hundreds of enterprises that trust ATLAS to manage their workforce.
+                Join hundreds of enterprises that trust HUMINEX to manage their workforce.
               </p>
               <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
                 <Link to="/get-quote">

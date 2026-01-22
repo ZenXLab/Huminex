@@ -1,9 +1,9 @@
-// ATLAS Service Worker with Advanced Caching
+// HUMINEX Service Worker with Advanced Caching
 const CACHE_VERSION = 'v2';
-const STATIC_CACHE = `atlas-static-${CACHE_VERSION}`;
-const DYNAMIC_CACHE = `atlas-dynamic-${CACHE_VERSION}`;
-const API_CACHE = `atlas-api-${CACHE_VERSION}`;
-const ADMIN_CACHE = `atlas-admin-${CACHE_VERSION}`;
+const STATIC_CACHE = `huminex-static-${CACHE_VERSION}`;
+const DYNAMIC_CACHE = `huminex-dynamic-${CACHE_VERSION}`;
+const API_CACHE = `huminex-api-${CACHE_VERSION}`;
+const ADMIN_CACHE = `huminex-admin-${CACHE_VERSION}`;
 
 // Assets to pre-cache on install
 const STATIC_ASSETS = [
@@ -21,7 +21,7 @@ const CACHE_DURATIONS = {
 
 // Install event - pre-cache essential assets
 self.addEventListener('install', (event) => {
-  console.log('[SW] Installing ATLAS Service Worker');
+  console.log('[SW] Installing HUMINEX Service Worker');
   event.waitUntil(
     caches.open(STATIC_CACHE).then((cache) => {
       console.log('[SW] Pre-caching static assets');
@@ -35,7 +35,7 @@ self.addEventListener('install', (event) => {
 
 // Activate event - cleanup old caches
 self.addEventListener('activate', (event) => {
-  console.log('[SW] Activating ATLAS Service Worker');
+  console.log('[SW] Activating HUMINEX Service Worker');
   const currentCaches = [STATIC_CACHE, DYNAMIC_CACHE, API_CACHE, ADMIN_CACHE];
   
   event.waitUntil(
@@ -211,11 +211,11 @@ self.addEventListener('push', (event) => {
   console.log('[SW] Push notification received');
   
   let notificationData = {
-    title: 'ATLAS Notification',
+    title: 'HUMINEX Notification',
     body: 'You have a new notification',
     icon: '/favicon.png',
     badge: '/favicon.png',
-    tag: 'atlas-notification',
+    tag: 'huminex-notification',
     requireInteraction: false,
     data: {}
   };
@@ -228,7 +228,7 @@ self.addEventListener('push', (event) => {
         body: data.message || data.body || notificationData.body,
         icon: data.icon || notificationData.icon,
         badge: data.badge || notificationData.badge,
-        tag: data.tag || `atlas-${Date.now()}`,
+        tag: data.tag || `huminex-${Date.now()}`,
         requireInteraction: data.priority === 'urgent' || data.priority === 'high',
         data: {
           url: data.action_url || data.url || '/',

@@ -19,10 +19,10 @@ const Features = () => {
   return (
     <>
       <Helmet>
-        <title>Features | CropXon ATLAS - Enterprise Workforce Operating System</title>
-        <meta name="description" content="Explore all 15 modules of ATLAS - the unified workforce OS for HR, Payroll, Compliance, Finance, Recruitment, Projects, AI, and Automation." />
-        <meta name="keywords" content="ATLAS features, HR software, payroll system, workforce management, compliance automation, AI HR, enterprise software" />
-        <link rel="canonical" href="https://atlas.cropxon.com/features" />
+        <title>Features | CropXon HUMINEX - Enterprise Workforce Operating System</title>
+        <meta name="description" content="Explore all 15 modules of HUMINEX - the unified workforce OS for HR, Payroll, Compliance, Finance, Recruitment, Projects, AI, and Automation." />
+        <meta name="keywords" content="HUMINEX features, HR software, payroll system, workforce management, compliance automation, AI HR, enterprise software" />
+        <link rel="canonical" href="https://huminex.cropxon.com/features" />
       </Helmet>
 
       <div className="min-h-screen bg-background">
@@ -52,7 +52,7 @@ const Features = () => {
               </h1>
               
               <p className="text-lg lg:text-xl text-muted-foreground max-w-3xl mx-auto mb-8">
-                ATLAS is an AI-powered Workforce OS that automates HR, Payroll, Compliance, Finance, 
+                HUMINEX is an AI-powered Workforce OS that automates HR, Payroll, Compliance, Finance, 
                 Recruitment, Projects, and Operations for modern enterprises.
               </p>
 
@@ -155,7 +155,7 @@ const Features = () => {
                 Ready to Transform Your Organization?
               </h2>
               <p className="text-lg text-muted-foreground mb-8 max-w-2xl mx-auto">
-                Join hundreds of enterprises that trust ATLAS to manage their workforce, 
+                Join hundreds of enterprises that trust HUMINEX to manage their workforce, 
                 streamline operations, and drive growth.
               </p>
               <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
