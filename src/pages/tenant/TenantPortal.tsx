@@ -58,7 +58,7 @@ const PlaceholderPage: React.FC<{ title: string; description: string }> = ({ tit
  * 
  * This is the Tenant Organization Admin Panel - visible ONLY to the client's 
  * internal Super Admin / Admin roles. This is where a company configures 
- * their entire ATLAS workspace.
+ * their entire HUMINEX workspace.
  * 
  * Used for:
  * - Org structure setup

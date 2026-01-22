@@ -25,7 +25,7 @@ interface UseABTestOptions {
 
 // Generate or retrieve session ID for anonymous users
 const getSessionId = (): string => {
-  const key = "atlas_ab_session_id";
+  const key = "huminex_ab_session_id";
   let sessionId = sessionStorage.getItem(key);
   if (!sessionId) {
     sessionId = `session_${Date.now()}_${Math.random().toString(36).substring(2, 15)}`;

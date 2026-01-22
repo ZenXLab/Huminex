@@ -79,7 +79,7 @@ const PortalAuth = () => {
           toast.error(error.message);
         }
       } else {
-        toast.success("Welcome back to ATLAS Portal!");
+        toast.success("Welcome back to HUMINEX Portal!");
       }
     } catch (error) {
       if (error instanceof z.ZodError) {
@@ -112,7 +112,7 @@ const PortalAuth = () => {
             <img src={cropxonIcon} alt="CropXon" className="h-16 w-16" />
             <div>
               <span className="text-2xl font-heading font-bold text-foreground">CropXon</span>
-              <span className="block text-primary font-heading font-semibold text-sm">ATLAS Portal</span>
+              <span className="block text-primary font-heading font-semibold text-sm">HUMINEX Portal</span>
             </div>
           </Link>
         </div>

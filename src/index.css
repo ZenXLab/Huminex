@@ -6,7 +6,7 @@
 
 @layer base {
   :root {
-    /* ATLAS Premium Brand Colors - Light Theme */
+    /* HUMINEX Premium Brand Colors - Light Theme */
     --background: 180 15% 98%;
     --foreground: 190 80% 10%;
 
@@ -37,7 +37,7 @@
 
     --radius: 0.75rem;
 
-    /* Premium ATLAS tokens */
+    /* Premium HUMINEX tokens */
     --electric-purple: 262 83% 58%;
     --neon-cyan: 188 94% 43%;
     --hot-pink: 330 81% 60%;

@@ -3,8 +3,8 @@ import { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 
 // Dev mode bypass key - ONLY works in development environment
-export const DEV_MODE_KEY = "atlas_dev_mode";
-export const DEV_MODE_TYPE_KEY = "atlas_dev_mode_type";
+export const DEV_MODE_KEY = "huminex_dev_mode";
+export const DEV_MODE_TYPE_KEY = "huminex_dev_mode_type";
 
 // Check if dev mode is allowed (only in development builds)
 const isDevModeAllowed = (): boolean => {
