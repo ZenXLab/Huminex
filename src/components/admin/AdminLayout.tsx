@@ -6,7 +6,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
-import cropxonIcon from "@/assets/cropxon-icon.png";
+import huminexIcon from "@/assets/huminex-icon.png";
 import { AdminNotificationBell } from "./AdminNotificationBell";
 import { prefetchAdminModule, prefetchCriticalModulesOnIdle } from "@/lib/adminPrefetch";
 import { SyncIndicator } from "@/components/ui/sync-indicator";
@@ -238,8 +238,8 @@ export const AdminLayout = ({ children }: AdminLayoutProps) => {
 
   const handleSignOut = async () => {
     await supabase.auth.signOut();
-    localStorage.removeItem("atlas_dev_mode");
-    localStorage.removeItem("atlas_dev_mode_type");
+    localStorage.removeItem("huminex_dev_mode");
+    localStorage.removeItem("huminex_dev_mode_type");
     navigate("/admin/login");
   };
 
@@ -282,12 +282,12 @@ export const AdminLayout = ({ children }: AdminLayoutProps) => {
             <Link to="/admin" className={cn("flex items-center gap-3", collapsed && "justify-center")}>
               <div className="relative">
                 <div className="absolute inset-0 bg-primary/30 blur-xl rounded-full" />
-                <img src={cropxonIcon} alt="CropXon" className="relative h-9 w-9" />
+                <img src={huminexIcon} alt="HUMINEX" className="relative h-10 w-10" />
               </div>
               {!collapsed && (
                 <div>
-                  <span className="text-foreground font-heading font-bold text-sm">CropXon</span>
-                  <span className="block text-primary font-heading font-semibold text-xs">ATLAS Admin</span>
+                  <span className="text-foreground font-heading font-bold text-sm">HUMINEX</span>
+                  <span className="block text-primary font-heading font-semibold text-xs">Admin Console</span>
                 </div>
               )}
             </Link>

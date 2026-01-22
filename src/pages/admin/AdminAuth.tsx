@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import cropxonIcon from "@/assets/cropxon-icon.png";
+import huminexIcon from "@/assets/huminex-icon.png";
 import { Eye, EyeOff, Mail, Lock, Shield, ArrowLeft, Loader2, SkipForward } from "lucide-react";
 import { z } from "zod";
 import { useAuth } from "@/hooks/useAuth";
@@ -192,7 +192,7 @@ const AdminAuth = () => {
           <a href="/" className="inline-flex flex-col items-center gap-3">
             <div className="relative">
               <div className="absolute inset-0 bg-[#00A6A6]/30 rounded-2xl blur-xl scale-150 animate-pulse" />
-              <img src={cropxonIcon} alt="CropXon" className="h-16 w-16 relative z-10" />
+              <img src={huminexIcon} alt="HUMINEX" className="h-16 w-16 relative z-10" />
             </div>
             <div>
               <span className="text-2xl font-heading font-bold text-white">HUMINEX</span>

@@ -7,7 +7,7 @@ import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const projects = [
-  { id: 1, name: "ATLAS Platform v2.0", status: "in-progress", progress: 65, priority: "high", dueDate: "Dec 31, 2025", team: 8, tasks: { completed: 24, total: 37 } },
+  { id: 1, name: "HUMINEX Platform v2.0", status: "in-progress", progress: 65, priority: "high", dueDate: "Dec 31, 2025", team: 8, tasks: { completed: 24, total: 37 } },
   { id: 2, name: "Mobile App Development", status: "in-progress", progress: 40, priority: "medium", dueDate: "Jan 15, 2026", team: 5, tasks: { completed: 12, total: 30 } },
   { id: 3, name: "Data Migration Project", status: "completed", progress: 100, priority: "high", dueDate: "Nov 30, 2025", team: 4, tasks: { completed: 18, total: 18 } },
   { id: 4, name: "Security Audit 2025", status: "planning", progress: 15, priority: "high", dueDate: "Feb 28, 2026", team: 3, tasks: { completed: 2, total: 15 } },
@@ -15,7 +15,7 @@ const projects = [
 ];
 
 const tasks = [
-  { id: 1, title: "Review API documentation", project: "ATLAS Platform v2.0", assignee: "Priya S.", priority: "high", dueDate: "Today", status: "in-progress" },
+  { id: 1, title: "Review API documentation", project: "HUMINEX Platform v2.0", assignee: "Priya S.", priority: "high", dueDate: "Today", status: "in-progress" },
   { id: 2, title: "Fix login authentication bug", project: "Mobile App", assignee: "Rahul V.", priority: "high", dueDate: "Today", status: "todo" },
   { id: 3, title: "Design system components", project: "Employee Portal", assignee: "Sneha R.", priority: "medium", dueDate: "Tomorrow", status: "in-progress" },
   { id: 4, title: "Database schema review", project: "Data Migration", assignee: "Vikram S.", priority: "low", dueDate: "Dec 10", status: "completed" },

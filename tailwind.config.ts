@@ -62,7 +62,7 @@ export default {
           border: "hsl(var(--sidebar-border))",
           ring: "hsl(var(--sidebar-ring))",
         },
-        // Premium ATLAS Colors
+        // Premium HUMINEX Colors
         electric: {
           purple: "hsl(var(--electric-purple))",
         },

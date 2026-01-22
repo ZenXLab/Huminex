@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { NetworkBackground } from "@/components/NetworkBackground";
-import cropxonIcon from "@/assets/cropxon-icon.png";
+import huminexIcon from "@/assets/huminex-icon.png";
 import { Eye, EyeOff, Mail, Lock, User, Building, ArrowLeft } from "lucide-react";
 import { z } from "zod";
 
@@ -153,10 +153,10 @@ const Auth = () => {
         {/* Logo */}
         <div className="text-center mb-8">
           <a href="/" className="inline-flex flex-col items-center gap-2">
-            <img src={cropxonIcon} alt="CropXon" className="h-16 w-16" />
+            <img src={huminexIcon} alt="HUMINEX" className="h-16 w-16" />
             <div>
-              <span className="text-2xl font-heading font-bold text-foreground">CropXon</span>
-              <span className="block text-primary font-heading font-semibold text-sm">HUMINEX</span>
+              <span className="text-2xl font-heading font-bold text-foreground">HUMINEX</span>
+              <span className="block text-primary font-heading font-semibold text-sm">Workforce OS</span>
             </div>
           </a>
         </div>
