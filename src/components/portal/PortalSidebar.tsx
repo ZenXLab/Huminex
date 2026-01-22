@@ -7,7 +7,7 @@ import { useClientTier } from "@/hooks/useClientTier";
 import { useEmployeeRole, isModuleAccessibleByRole, EmployeeRole } from "@/hooks/useEmployeeRole";
 import { useSidebarAccessSync } from "@/hooks/useWidgetAccessSync";
 import { TierUpgradePrompt, getRequiredTierForModule } from "@/components/portal/TierUpgradePrompt";
-import cropxonIcon from "@/assets/cropxon-icon.png";
+import huminexIcon from "@/assets/huminex-icon.png";
 import { 
   LayoutDashboard, FolderKanban, FileText, Receipt, HeadphonesIcon, Calendar,
   Brain, Settings, LogOut, Users, Star, BookOpen, Server, Crown, Lock, Sparkles
@@ -96,10 +96,10 @@ export const PortalSidebar = ({ sidebarOpen, setSidebarOpen, user, profile, sign
         {/* Logo & Plan Info */}
         <div className="p-4 border-b border-border/60">
           <Link to="/" className="flex items-center gap-2.5">
-            <img src={cropxonIcon} alt="HUMINEX" className="h-9 w-9" />
+            <img src={huminexIcon} alt="HUMINEX" className="h-10 w-10" />
             <div>
-              <span className="text-foreground font-heading font-bold text-sm block">CropXon</span>
-              <span className="text-primary font-heading font-semibold text-xs">HUMINEX Portal</span>
+              <span className="text-foreground font-heading font-bold text-sm block">HUMINEX</span>
+              <span className="text-primary font-heading font-semibold text-xs">Employee Portal</span>
             </div>
           </Link>
           <div className="mt-3 flex flex-col gap-1.5">

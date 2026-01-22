@@ -28,14 +28,14 @@ const teamMembers = [
   {
     name: "Abhi",
     role: "Founder & Chief Architect",
-    description: "The mind behind ATLAS. Daydreamer. Night coder. Vision-led builder.",
+    description: "The mind behind HUMINEX. Daydreamer. Night coder. Vision-led builder.",
     avatar: "A",
     gradient: "from-violet-500 to-purple-600"
   },
   {
     name: "Engineering Team",
     role: "AI & Automation",
-    description: "Building the neural pathways of ATLAS with cutting-edge AI/ML.",
+    description: "Building the neural pathways of HUMINEX with cutting-edge AI/ML.",
     avatar: "AI",
     gradient: "from-cyan-500 to-blue-600"
   },
@@ -56,14 +56,14 @@ const teamMembers = [
   {
     name: "DevSecOps",
     role: "Security & Infrastructure",
-    description: "Ensuring ATLAS is secure, fast, and always available.",
+    description: "Ensuring HUMINEX is secure, fast, and always available.",
     avatar: "DO",
     gradient: "from-amber-500 to-orange-600"
   },
   {
     name: "Customer Success",
     role: "Support & Experience",
-    description: "Because ATLAS puts humans first. Always.",
+    description: "Because HUMINEX puts humans first. Always.",
     avatar: "CS",
     gradient: "from-indigo-500 to-violet-600"
   }
@@ -98,9 +98,9 @@ const About = () => {
   return (
     <>
       <Helmet>
-        <title>About Us | CropXon ATLAS - The Story Behind the Workforce OS</title>
-        <meta name="description" content="Discover the story of ATLAS - from a late-night idea to the world's first AI-powered Workforce Operating System. Meet the team building the future of work." />
-        <link rel="canonical" href="https://atlas.cropxon.com/about" />
+        <title>About Us | HUMINEX by CropXon - The Story Behind the Workforce OS</title>
+        <meta name="description" content="Discover the story of HUMINEX - from a late-night idea to the world's first AI-powered Workforce Operating System. Meet the team building the future of work." />
+        <link rel="canonical" href="https://huminex.cropxon.com/about" />
       </Helmet>
 
       <div className="min-h-screen bg-background">
@@ -249,7 +249,7 @@ const About = () => {
 
                 <div className="text-center pt-12">
                   <p className="text-2xl lg:text-3xl font-heading font-bold text-foreground mb-4">
-                    And then — <span className="text-gradient">ATLAS came alive.</span>
+                    And then — <span className="text-gradient">HUMINEX came alive.</span>
                   </p>
                   <p className="text-muted-foreground">
                     Not just as a product. But as a purpose. A movement. A belief that:
@@ -311,7 +311,7 @@ const About = () => {
             <div className={`text-center mt-16 transition-all duration-700 delay-400 ${missionVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
               <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
                 Something <span className="text-primary font-semibold">Workday</span> did for Fortune 50.<br />
-                <span className="text-gradient font-bold text-2xl">ATLAS will do for everyone.</span>
+                <span className="text-gradient font-bold text-2xl">HUMINEX will do for everyone.</span>
               </p>
             </div>
           </div>
@@ -350,8 +350,8 @@ const About = () => {
 
             <div className={`text-center mt-16 p-8 bg-gradient-to-r from-primary/10 via-accent/10 to-primary/10 border border-primary/20 rounded-2xl max-w-4xl mx-auto transition-all duration-700 delay-400 ${visionVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
               <p className="text-2xl lg:text-3xl font-heading font-bold text-foreground">
-                ATLAS is not software.<br />
-                <span className="text-gradient">ATLAS is infrastructure for the future of organizations.</span>
+                HUMINEX is not software.<br />
+                <span className="text-gradient">HUMINEX is infrastructure for the future of organizations.</span>
               </p>
             </div>
           </div>
@@ -370,7 +370,7 @@ const About = () => {
                 The Team
               </span>
               <h2 className="text-4xl sm:text-5xl lg:text-6xl font-heading font-black mb-6">
-                Builders of <span className="text-gradient">ATLAS</span>
+                Builders of <span className="text-gradient">HUMINEX</span>
               </h2>
               <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
                 A passionate team of engineers, designers, and dreamers building the future of work.

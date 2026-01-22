@@ -591,4 +591,4 @@ FOR SELECT USING (auth.uid() = user_id);
 
 ---
 
-*End of ATLAS Setup Guide*
+*End of HUMINEX Setup Guide*

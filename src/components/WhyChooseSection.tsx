@@ -88,10 +88,10 @@ export const WhyChooseSection = () => {
         {/* Section Header */}
         <div className={`text-center max-w-3xl mx-auto mb-16 transition-all duration-700 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
           <span className="inline-block px-4 py-1.5 bg-primary/10 border border-primary/20 rounded-full text-primary text-xs font-semibold tracking-wide uppercase mb-6">
-            Why ATLAS
+            Why HUMINEX
           </span>
           <h2 className="text-3xl sm:text-4xl lg:text-5xl font-heading font-extrabold tracking-tight mb-6 text-foreground">
-            Why Choose <span className="text-gradient">ATLAS</span>?
+            Why Choose <span className="text-gradient">HUMINEX</span>?
           </h2>
           <p className="text-base lg:text-lg text-muted-foreground">
             Enterprise-grade capabilities with the agility and innovation of a modern consultancy.

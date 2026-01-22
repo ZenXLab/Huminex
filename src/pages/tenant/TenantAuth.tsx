@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import cropxonIcon from "@/assets/cropxon-icon.png";
+import huminexIcon from "@/assets/huminex-icon.png";
 import { 
   Eye, 
   EyeOff, 
@@ -131,12 +131,12 @@ const TenantAuth = () => {
           <Link to="/" className="inline-flex flex-col items-center gap-3">
             <div className="relative">
               <div className="absolute inset-0 bg-[#005EEB]/20 rounded-2xl blur-xl scale-150" />
-              <img src={cropxonIcon} alt="CropXon" className="h-16 w-16 relative z-10" />
+              <img src={huminexIcon} alt="HUMINEX" className="h-16 w-16 relative z-10" />
             </div>
             <div>
-              <span className="text-2xl font-bold text-[#0F1E3A]">CropXon</span>
+              <span className="text-2xl font-bold text-[#0F1E3A]">HUMINEX</span>
               <div className="flex items-center justify-center gap-2 mt-1">
-                <span className="text-[#005EEB] font-semibold text-sm">HUMINEX</span>
+                <span className="text-[#005EEB] font-semibold text-sm">Workforce OS</span>
                 <span className="h-4 w-px bg-[#E5E7EB]" />
                 <span className="text-[#6B7280] text-xs uppercase tracking-wider">Owner / Super Admin</span>
               </div>

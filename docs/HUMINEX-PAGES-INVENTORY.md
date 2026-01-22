@@ -1,4 +1,4 @@
-# ATLAS Platform - Complete Pages Inventory
+# HUMINEX Platform - Complete Pages Inventory
 
 > **Version**: 1.0.0  
 > **Last Updated**: December 9, 2025  
@@ -24,7 +24,7 @@
 | Route | Page | Purpose | Use Case |
 |-------|------|---------|----------|
 | `/` | Home (Index) | Landing page with hero, stats, features, testimonials | First impression, lead generation |
-| `/features` | Features Overview | Showcase all 15 ATLAS modules | Product discovery |
+| `/features` | Features Overview | Showcase all 15 HUMINEX modules | Product discovery |
 | `/about` | About Us | Company story, mission, team, values | Build trust and credibility |
 | `/contact` | Contact Us | Contact form, support channels, API docs | Customer communication |
 | `/pricing` | Pricing | Plans, tiers, comparison, calculators | Purchase decisions |
